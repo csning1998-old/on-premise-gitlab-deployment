@@ -1,16 +1,6 @@
 ---
 - name: Section C. Install and Configure container runtime
   block:
-    - name: "Step 1. Install CRI-O dependencies"
-      ansible.builtin.apt:
-        name:
-          - software-properties-common
-          - gpg
-          - curl
-          - apt-transport-https
-          - ca-certificates
-        state: present
-
     - name: "Step 2a. Download CRI-O GPG key"
       ansible.builtin.get_url:
         url: https://pkgs.k8s.io/addons:/cri-o:/stable:/v1.32/deb/Release.key

@@ -1,24 +1,6 @@
 ---
 - name: Section B. Run Kubernetes prerequisites setup
   block:
-    - name: "Step 1. Update cache and install basic packages"
-      ansible.builtin.apt:
-        name:
-          - wget
-          - git
-          - curl
-          - vim
-          - jq
-          - snapd
-          - tree
-          - gh
-          - htop
-          - net-tools
-        state: present
-        update_cache: true
-        cache_valid_time: 3600
-      no_log: true
-
     - name: "Step 2. Enable bridge traffic modules"
       ansible.builtin.template:
         src: B-k8s_modules.j2

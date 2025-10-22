@@ -1,14 +1,6 @@
 ---
 - name: "Section B: Install Redis Server from Official Repository"
   block:
-    - name: "Step B1. Install prerequisites for adding apt repository"
-      ansible.builtin.apt:
-        name:
-          - curl
-          - gpg
-        state: present
-        update_cache: true
-
     - name: "Step B2. Create directory for apt keyrings"
       ansible.builtin.file:
         path: /etc/apt/keyrings

@@ -2,13 +2,6 @@
 - name: "Section A: Ensure Snapd service is ready"
   become: true
   block:
-    - name: "Step A1. Install prerequisites for Snap"
-      ansible.builtin.apt:
-        name:
-          - snapd
-        state: present
-        update_cache: true
-
     - name: "Step A2. Ensure snapd service is started and enabled"
       ansible.builtin.systemd:
         name: snapd
