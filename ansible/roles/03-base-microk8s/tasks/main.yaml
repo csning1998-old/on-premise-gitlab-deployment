@@ -1,5 +1,5 @@
 ---
-- name: "Section A: Ensure Snapd service is ready"
+- name: "Block A: Ensure Snapd service is ready"
   become: true
   block:
     - name: "Step A2. Ensure snapd service is started and enabled"
@@ -15,7 +15,7 @@
       retries: 10
       delay: 5
 
-- name: "Section B: Install MicroK8s and create aliases"
+- name: "Block B: Install MicroK8s and create aliases"
   become: true
   block:
     - name: "Step B1. Install MicroK8s via Snap"
@@ -36,7 +36,7 @@
         creates: "{{ item.creates_path }}"
       loop: "{{ microk8s_base.aliases }}"
 
-- name: "Section C: Add SSH user to the 'microk8s' group for basic access"
+- name: "Block C: Add SSH user to the 'microk8s' group for basic access"
   become: true
   block:
     - name: "Step C1. Add user to the 'microk8s' group"
@@ -45,7 +45,7 @@
         groups: "{{ microk8s_base.user_group }}"
         append: true
 
-- name: "Section D: Reset MicroK8s state for golden image"
+- name: "Block D: Reset MicroK8s state for golden image"
   become: true
   block:
     - name: "Step D1. Leave the current cluster to reset node state"

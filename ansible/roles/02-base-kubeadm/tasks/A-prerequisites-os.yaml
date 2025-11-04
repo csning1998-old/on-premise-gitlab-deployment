@@ -1,5 +1,5 @@
 ---
-- name: Section A. Run OS prerequisites setup
+- name: Block A. Run OS prerequisites setup
   block:
     - name: "Step 1. Action: Add Universe and Multiverse repositories"
       ansible.builtin.apt_repository:

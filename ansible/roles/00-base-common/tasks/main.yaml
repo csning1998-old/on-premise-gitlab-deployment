@@ -1,5 +1,5 @@
 ---
-- name: "Section A: Install Common Base Packages"
+- name: "Step 1. Install Common Base Packages"
   ansible.builtin.apt:
     name: "{{ common.ubuntu.packages }}"
     state: present

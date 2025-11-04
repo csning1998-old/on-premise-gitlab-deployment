@@ -1,5 +1,5 @@
 ---
-- name: "Section A: Install PostgreSQL Server via Official Apt Repository"
+- name: "Block A: Install PostgreSQL Server via Official Apt Repository"
   become: true
   block:
     - name: "Step 1. Ensure PostgreSQL common GPG key directory exists"
