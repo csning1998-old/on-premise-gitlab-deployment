@@ -1,0 +1,26 @@
+---
+kubeadm_join_cmd:
+  paths:
+    ca_cert: "/etc/kubernetes/pki/ca.crt"
+    shell_executable: "/bin/bash"
+
+  kubeconfig:
+    name: "KUBECONFIG"
+    path: "/etc/kubernetes/admin.conf"
+
+  commands:
+    token_create: "kubeadm token create"
+    upload_certs: "kubeadm init phase upload-certs --upload-certs"
+
+  asserts:
+    kubeconfig_fail_msg: "Cannot generate join parameters because kubeadm init seems to have failed (admin.conf not found)."
+
+  facts:
+    # Make the generated facts (token, hash, key) available to subsequent plays
+    cacheable: true
+
+_kubeadm_join_cmd_get_ca_hash: |
+  set -o pipefail
+  openssl x509 -pubkey -in {{ kubeadm_join_cmd.paths.ca_cert }} |
+  openssl rsa -pubin -outform der 2>/dev/null |
+  openssl dgst -sha256 -hex | sed 's/^.* //'

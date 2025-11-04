@@ -1,5 +1,5 @@
 ---
-- name: "Section 0: Dynamically discover the Host-only network interface"
+- name: "Block 0: Dynamically discover the Host-only network interface"
   block:
     - name: "Step 1. Find the NAT interface to exclude"
       ansible.builtin.shell:
@@ -29,68 +29,66 @@
         msg: "Could not dynamically determine the Host-Only network interface."
       when: k8s_ha_interface is not defined or k8s_ha_interface | length == 0
 
-- name: "Section A: Install HAProxy and Keepalived packages"
+- name: "Block A: Install HAProxy and Keepalived packages"
   block:
     - name: "Step 1. Allow binding to non-local IP addresses"
       ansible.posix.sysctl:
-        name: net.ipv4.ip_nonlocal_bind
-        value: "1"
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
         state: present
         reload: true
+      loop: "{{ kubeadm_ha_lb.sysctl_settings }}"
 
     - name: "Step 2. Install Necessary Packages"
       ansible.builtin.apt:
-        name:
-          - keepalived
-          - haproxy
-          - rsyslog
-          - etcd-client
+        name: "{{ kubeadm_ha_lb.packages.apt }}"
         state: present
         update_cache: true
 
-- name: "Section B: Configure Keepalived"
+- name: "Block B: Configure Keepalived"
   block:
     - name: "Step 1. Ensure keepalived_script user exists for security context"
       ansible.builtin.user:
-        name: keepalived_script
-        system: true
-        shell: /sbin/nologin
+        name: "{{ item.name }}"
+        system: "{{ item.system | default(omit) }}"
+        shell: "{{ item.shell | default(omit) }}"
         state: present
+      loop: "{{ kubeadm_ha_lb.users }}"
 
     - name: "Step 2. Configure Keepalived from template"
       ansible.builtin.template:
-        src: keepalived.conf.j2 # This template uses k8s_ha_virtual_ip etc.
-        dest: /etc/keepalived/keepalived.conf
+        src: keepalived.conf.j2
+        dest: "{{ kubeadm_ha_lb.config_paths.keepalived }}"
         owner: root
         group: root
         mode: "0644"
-      notify: Restart keepalived # Notify handler to restart the service on change
+      notify: Restart keepalived
 
     - name: "Step 3. Verify Keepalived configuration syntax"
-      ansible.builtin.command: keepalived --config-test
+      ansible.builtin.command: "keepalived --config-test -f {{ kubeadm_ha_lb.config_paths.keepalived }}"
       changed_when: false
 
-- name: "Section C: Configure HAProxy"
+- name: "Block C: Configure HAProxy"
   block:
     - name: "Step 1. Configure HAProxy from template"
       ansible.builtin.template:
-        src: haproxy.cfg.j2 # This template loops through groups['master']
-        dest: /etc/haproxy/haproxy.cfg
+        src: haproxy.cfg.j2
+        dest: "{{ kubeadm_ha_lb.config_paths.haproxy }}"
         owner: root
         group: root
         mode: "0644"
-      notify: Restart haproxy # Notify handler to restart the service on change
+      notify: Restart haproxy
 
     - name: "Step 2. Verify HAProxy configuration syntax"
-      ansible.builtin.command: haproxy -c -f /etc/haproxy/haproxy.cfg
+      ansible.builtin.command: "haproxy -c -f {{ kubeadm_ha_lb.config_paths.haproxy }}"
       changed_when: false
 
-- name: "Section D: Configure Logging"
+- name: "Block D: Configure Logging"
   block:
     - name: "Step 1. Ensure rsyslog is configured for keepalived"
       ansible.builtin.lineinfile:
-        path: /etc/rsyslog.conf
-        line: "local0.* /var/log/keepalived.log"
+        path: "{{ kubeadm_ha_lb.config_paths.rsyslog }}"
+        line: "{{ _kubeadm_ha_lb_rsyslog_line }}"
         create: true
         mode: "0644"
       notify: Restart rsyslog
@@ -99,7 +97,7 @@
       # Meta task to ensure rsyslog is restarted before other services
       ansible.builtin.meta: flush_handlers
 
-- name: "Section E: Ensure HA services are running"
+- name: "Block E: Ensure HA services are running"
   block:
     - name: "Ensure Keepalived and HAProxy services are enabled and started"
       # This final task ensures that regardless of changes, the services are running
@@ -110,6 +108,4 @@
         state: started
         enabled: true
         daemon_reload: true # Reload systemd if config has changed
-      loop:
-        - keepalived
-        - haproxy
+      loop: "{{ kubeadm_ha_lb.services }}"

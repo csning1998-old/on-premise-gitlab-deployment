@@ -1,83 +1,83 @@
 ---
-- name: "Section A: Prepare secondary master node for joining"
+- name: "Block A: Prepare secondary master node for joining"
   block:
     - name: "Step 1. Reset any previous kubeadm configuration"
-      ansible.builtin.command: kubeadm reset -f
+      ansible.builtin.command:
+        cmd: "{{ kubeadm_join_secondary.prereqs.reset_cmd }}"
       changed_when: true
 
     - name: "Step 2. Ensure kubelet service is enabled and started"
       ansible.builtin.systemd:
-        name: kubelet
+        name: "{{ kubeadm_join_secondary.prereqs.service_name }}"
         state: started
         enabled: true
 
-- name: "Section B: Join this node to the control plane"
+- name: "Block B: Join this node to the control plane"
   block:
     - name: "Step 0. Create kubeadm join config file from template"
       ansible.builtin.template:
         src: kubeadm-join-config.yaml.j2
-        dest: /tmp/kubeadm-join-config.yaml
-        mode: '0644'
+        dest: "{{ kubeadm_join_secondary.join_config.dest_path }}"
+        mode: "{{ kubeadm_join_secondary.join_config.mode }}"
 
     - name: "Step 1. Execute the control-plane join command"
       ansible.builtin.command: >-
-        kubeadm join --config /tmp/kubeadm-join-config.yaml
-        --ignore-preflight-errors=Port-6443
+        kubeadm join {{ _kubeadm_join_cli_args_string }}
       args:
-        creates: /etc/kubernetes/kubelet.conf
+        creates: "{{ kubeadm_join_secondary.join_cmd.creates_path }}"
       register: kubeadm_join_result
 
     - name: "Step 2. Fail if kubeadm join command failed"
       ansible.builtin.fail:
         msg: |
-          kubeadm join failed on {{ inventory_hostname }}.
+          {{ kubeadm_join_secondary.join_cmd.fail_msg }}
           STDOUT: {{ kubeadm_join_result.stdout | default('N/A') }}
           STDERR: {{ kubeadm_join_result.stderr | default('N/A') }}
       when: kubeadm_join_result.rc is defined and kubeadm_join_result.rc != 0
 
-- name: "Section C: Ensure correct bind-address in kube-apiserver manifest"
+- name: "Block C: Ensure correct bind-address in kube-apiserver manifest"
   block:
     - name: "Step 1. Remove any existing bind-address line"
       ansible.builtin.lineinfile:
-        path: /etc/kubernetes/manifests/kube-apiserver.yaml
+        path: "{{ kubeadm_join_secondary.apiserver_patch.manifest_path }}"
         state: absent
-        regexp: '^(\s+)- --bind-address='
+        regexp: "{{ kubeadm_join_secondary.apiserver_patch.bind_address_regexp }}"
 
     - name: "Step 2. Add the correct bind-address line"
       ansible.builtin.lineinfile:
-        path: /etc/kubernetes/manifests/kube-apiserver.yaml
+        path: "{{ kubeadm_join_secondary.apiserver_patch.manifest_path }}"
         state: present
-        insertafter: '(\s+)- --authorization-mode=Node,RBAC'
-        line: '    - --bind-address={{ advertise_ip }}'
+        insertafter: "{{ kubeadm_join_secondary.apiserver_patch.insert_after_line }}"
+        line: "    - --bind-address={{ advertise_ip }}"
 
-- name: "Section D: Set up kubeconfig on this secondary master"
+- name: "Block D: Set up kubeconfig on this secondary master"
   block:
     - name: "Step 1. Create .kube directory for the root user"
       ansible.builtin.file:
-        path: "/root/.kube"
+        path: "{{ kubeadm_join_secondary.kubeconfig.root_setup.dir }}"
         state: directory
-        mode: '0755'
+        mode: "{{ kubeadm_join_secondary.kubeconfig.root_setup.dir_mode }}"
 
     - name: "Step 2. Copy admin.conf to root's kube config"
       ansible.builtin.copy:
-        src: /etc/kubernetes/admin.conf
-        dest: "/root/.kube/config"
+        src: "{{ kubeadm_join_secondary.kubeconfig.src_file }}"
+        dest: "{{ kubeadm_join_secondary.kubeconfig.root_setup.config_path }}"
         remote_src: true
-        mode: '0600'
+        mode: "{{ kubeadm_join_secondary.kubeconfig.root_setup.config_mode }}"
 
     - name: "Step 3. Create .kube directory for the SSH user"
       ansible.builtin.file:
-        path: "/home/{{ ansible_ssh_user }}/.kube"
+        path: "{{ _kubeadm_join_user_kube_dir }}"
         state: directory
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
-        mode: '0755'
+        mode: "{{ kubeadm_join_secondary.kubeconfig.user_setup.dir_mode }}"
 
     - name: "Step 4. Copy admin.conf to user's kube config"
       ansible.builtin.copy:
-        src: /etc/kubernetes/admin.conf
-        dest: "/home/{{ ansible_ssh_user }}/.kube/config"
+        src: "{{ kubeadm_join_secondary.kubeconfig.src_file }}"
+        dest: "{{ _kubeadm_join_user_kube_config }}"
         remote_src: true
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
-        mode: '0644'
+        mode: "{{ kubeadm_join_secondary.kubeconfig.user_setup.config_mode }}"

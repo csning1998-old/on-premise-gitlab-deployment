@@ -1,11 +1,11 @@
 ---
-apiVersion: kubeadm.k8s.io/v1beta4
-kind: JoinConfiguration
+apiVersion: {{ kubeadm_join_worker.join_config.api_version }}
+kind: {{ kubeadm_join_worker.join_config.kind }}
 nodeRegistration:
   name: "{{ inventory_hostname }}"
   kubeletExtraArgs:
     - name: "cgroup-driver"
-      value: "systemd"
+      value: "{{ kubeadm_join_worker.join_config.cgroup_driver }}"
 discovery:
   bootstrapToken:
 {% if (groups['master'] | length) > 1 %}
@@ -16,4 +16,4 @@ discovery:
     token: "{{ hostvars[groups['master'][0]]['kubeadm_token'] }}"
     caCertHashes:
       - "sha256:{{ hostvars[groups['master'][0]]['kubeadm_ca_hash'] }}"
-    unsafeSkipCAVerification: false
+    unsafeSkipCAVerification: {{ kubeadm_join_worker.join_config.ca_verification_skip | lower }}
