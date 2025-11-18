@@ -31,7 +31,7 @@ variable "kubeadm_cluster_config" {
 
 # Kubernetes Cluster Infrastructure Network Configuration
 
-variable "cluster_infrastructure" {
+variable "kubeadm_infrastructure" {
   description = "All Libvirt-level infrastructure configurations for the Kubernetes Cluster."
   type = object({
     network = object({
