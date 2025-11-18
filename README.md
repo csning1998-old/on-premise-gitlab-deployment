@@ -339,27 +339,27 @@ Libvirt's settings directly impact Terraform's execution permissions, thus some 
 
         ```shell
         vault kv put \
-           -address="https://127.0.0.1:8200" \
-           -ca-cert="${PWD}/vault/tls/ca.pem" \
-           secret/on-premise-gitlab-deployment/variables \
-           ssh_username="some-user-name-for-ssh" \
-           ssh_password="some-user-password-for-ssh" \
-           ssh_password_hash=$(echo -n "$ssh_password" | mkpasswd -m sha-512 -P 0) \
-           vm_username="some-user-name-for-vm" \
-           vm_password="some-user-password-for-vm" \
-           ssh_public_key_path="~/.ssh/some-ssh-key-name.pub" \
-           ssh_private_key_path="~/.ssh/some-ssh-key-name"
+            -address="https://127.0.0.1:8200" \
+            -ca-cert="${PWD}/vault/tls/ca.pem" \
+            secret/on-premise-gitlab-deployment/variables \
+            ssh_username="some-user-name-for-ssh" \
+            ssh_password="some-user-password-for-ssh" \
+            ssh_password_hash=$(echo -n "$ssh_password" | mkpasswd -m sha-512 -P 0) \
+            vm_username="some-user-name-for-vm" \
+            vm_password="some-user-password-for-vm" \
+            ssh_public_key_path="~/.ssh/some-ssh-key-name.pub" \
+            ssh_private_key_path="~/.ssh/some-ssh-key-name"
         ```
 
     - **For Databases**
 
         ```shell
         vault kv put \
-           -address="https://127.0.0.1:8200" \
-           -ca-cert="${PWD}/vault/tls/ca.pem" \
-           secret/on-premise-gitlab-deployment/databases \
-           pg_superuser_password="a-more-secure-pwd-for-superuser" \
-           pg_replication_password="a-more-secure-pwd-for-replication"
+            -address="https://127.0.0.1:8200" \
+            -ca-cert="${PWD}/vault/tls/ca.pem" \
+            secret/on-premise-gitlab-deployment/databases \
+            pg_superuser_password="a-more-secure-pwd-for-superuser" \
+            pg_replication_password="a-more-secure-pwd-for-replication"
         ```
 
     - **Note 1:**
@@ -388,34 +388,51 @@ Libvirt's settings directly impact Terraform's execution permissions, thus some 
     cat << EOF > terraform/layers/10-cluster-provision/terraform.tfvars
     # Defines the hardware and IP addresses for each virtual machine in the cluster.
     kubeadm_cluster_config = {
-       nodes = {
-          masters = [
-             { ip = "172.16.134.200", vcpu = 4, ram = 4096 },
-             { ip = "172.16.134.201", vcpu = 4, ram = 4096 },
-             { ip = "172.16.134.202", vcpu = 4, ram = 4096 }
-          ]
-          workers = [
-             { ip = "172.16.134.210", vcpu = 4, ram = 4096 },
-             { ip = "172.16.134.211", vcpu = 4, ram = 4096 },
-             { ip = "172.16.134.212", vcpu = 4, ram = 4096 }
-          ]
-       }
-       ha_virtual_ip = "172.16.134.250"
+    cluster_name = "10-kubeadm-cluster"
+    nodes = {
+        masters = [
+            { ip = "172.16.134.200", vcpu = 4, ram = 4096 },
+            { ip = "172.16.134.201", vcpu = 4, ram = 4096 },
+            { ip = "172.16.134.202", vcpu = 4, ram = 4096 },
+        ]
+        workers = [
+            { ip = "172.16.134.210", vcpu = 4, ram = 4096 },
+            { ip = "172.16.134.211", vcpu = 4, ram = 4096 },
+            { ip = "172.16.134.212", vcpu = 4, ram = 4096 },
+        ]
+    }
+    ha_virtual_ip = "172.16.134.250"
+    registry_host = "172.16.135.200:5000"
     }
 
     kubeadm_infrastructure = {
-       network = {
-          nat = {
-             name        = "iac-kubeadm-nat-net"
-             cidr        = "172.16.86.0/24"
-             bridge_name = "kubeadm-nat-br" # IFNAMSIZ is 15 user-visible characters with the null terminator included.
-          }
-          hostonly = {
-             name        = "iac-kubeadm-hostonly-net"
-             cidr        = "172.16.134.0/24"
-             bridge_name = "kubeadm-host-br"
-          }
-       }
+        network = {
+            nat = {
+            name_network = "iac-kubeadm-nat-net"
+            name_bridge  = "kubeadm-nat-br"
+
+            ips = {
+                address = "172.16.86.1"
+                prefix  = 24
+                dhcp = {
+                    start = "172.16.86.2"
+                    end   = "172.16.86.254"
+                }
+            }
+        }
+
+        hostonly = {
+            name_network = "iac-kubeadm-hostonly-net"
+            name_bridge  = "kubeadm-host-br"
+
+            ips = {
+                address = "172.16.134.1"
+                prefix  = 24
+                dhcp    = null # dhcp is not used in hostonly network.
+            }
+        }
+    }
+    storage_pool_name = "iac-kubeadm"
     }
     EOF
     ```
@@ -428,31 +445,45 @@ Libvirt's settings directly impact Terraform's execution permissions, thus some 
     cat << EOF > terraform/layers/10-provision-harbor/terraform.tfvars
     # Defines the hardware and IP addresses for each virtual machine in the cluster.
     harbor_cluster_config = {
-       cluster_name = "10-harbor-cluster"
-       nodes = {
-          harbor = [
-             { ip = "172.16.135.200", vcpu = 2, ram = 4096 },
-             { ip = "172.16.135.201", vcpu = 2, ram = 4096 },
-             { ip = "172.16.135.202", vcpu = 2, ram = 4096 },
-          ]
-       }
+    cluster_name = "10-harbor-cluster"
+    nodes = {
+        harbor = [
+            { ip = "172.16.135.200", vcpu = 2, ram = 4096 },
+            { ip = "172.16.135.201", vcpu = 2, ram = 4096 },
+            { ip = "172.16.135.202", vcpu = 2, ram = 4096 },
+        ]
+    }
     }
 
-    kubeadm_infrastructure = {
-       network = {
-          nat = {
-             name        = "iac-registry-nat-net"
-             cidr        = "172.16.87.0/24"
-             bridge_name = "reg-nat-br" # IFNAMSIZ is 15 user-visible characters with the null terminator included.
-          }
-          hostonly = {
-             name        = "iac-registry-hostonly-net"
-             cidr        = "172.16.135.0/24"
-             bridge_name = "reg-host-br"
-          }
-       }
+    harbor_infrastructure = {
+        network = {
+            nat = {
+                name_network = "iac-harbor-nat-net"
+                name_bridge  = "reg-nat-br"
+
+                ips = {
+                    address = "172.16.87.1"
+                    prefix  = 24
+                    dhcp = {
+                        start = "172.16.87.2"
+                        end   = "172.16.87.254"
+                    }
+                }
+            }
+
+            hostonly = {
+                name_network = "iac-harbor-hostonly-net"
+                name_bridge  = "reg-host-br"
+
+                ips = {
+                    address = "172.16.135.1"
+                    prefix  = 24
+                    dhcp    = null
+                }
+            }
+        }
+        storage_pool_name = "iac-harbor"
     }
-    EOF
     ```
 
     This architecture was designed primarily to conform to the structural specifications of the variables in the `terraform/modules/11-provisioner-kvm/variables.tf` module.
@@ -463,38 +494,53 @@ Libvirt's settings directly impact Terraform's execution permissions, thus some 
     cat << EOF > terraform/layers/10-provision-postgres/terraform.tfvars
     # Defines the hardware and IP addresses for each virtual machine in the cluster.
     postgres_cluster_config = {
-       cluster_name = "10-postgres-cluster"
-       nodes = {
-          postgres = [
-             { ip = "172.16.136.200", vcpu = 4, ram = 4096 },
-             # { ip = "172.16.136.201", vcpu = 4, ram = 4096 }, # for HA Postgres
-             # { ip = "172.16.136.202", vcpu = 4, ram = 4096 },
-          ],
-          etcd = [
-             { ip = "172.16.136.210", vcpu = 2, ram = 2048 },
-             # { ip = "172.16.136.211", vcpu = 2, ram = 2048 }, # for HA etcd
-             # { ip = "172.16.136.212", vcpu = 2, ram = 2048 }
-          ],
-          haproxy = [
-             { ip = "172.16.136.220", vcpu = 2, ram = 2048 }
-          ]
-       }
+        cluster_name = "10-postgres-cluster"
+        nodes = {
+            postgres = [
+                { ip = "172.16.136.200", vcpu = 4, ram = 4096 },
+                { ip = "172.16.136.201", vcpu = 4, ram = 4096 },
+                { ip = "172.16.136.202", vcpu = 4, ram = 4096 },
+            ],
+            etcd = [
+                { ip = "172.16.136.210", vcpu = 2, ram = 2048 },
+                { ip = "172.16.136.211", vcpu = 2, ram = 2048 },
+                { ip = "172.16.136.212", vcpu = 2, ram = 2048 }
+            ],
+            haproxy = [
+                { ip = "172.16.136.220", vcpu = 2, ram = 2048 }
+            ]
+        }
     }
 
     postgres_infrastructure = {
-       network = {
-          nat = {
-             name        = "iac-postgres-nat-net"
-             cidr        = "172.16.88.0/24"
-             bridge_name = "pos-nat-br" # IFNAMSIZ is 15 user-visible characters with the null terminator included.
-          }
-          hostonly = {
-             name        = "iac-postgres-hostonly-net"
-             cidr        = "172.16.136.0/24"
-             bridge_name = "pos-host-br"
-          }
-          postgres_allowed_subnet = "172.16.136.0/24"
-       }
+        network = {
+            nat = {
+                name_network = "iac-postgres-nat-net"
+                name_bridge  = "pos-nat-br"
+
+                ips = {
+                    address = "172.16.88.1"
+                    prefix  = 24
+                    dhcp = {
+                    start = "172.16.88.2"
+                    end   = "172.16.88.254"
+                    }
+                }
+            }
+
+            hostonly = {
+                name_network = "iac-postgres-hostonly-net"
+                name_bridge  = "pos-host-br"
+
+                ips = {
+                    address = "172.16.136.1"
+                    prefix  = 24
+                    dhcp    = null
+                }
+            }
+        }
+        postgres_allowed_subnet = "172.16.136.0/24"
+        storage_pool_name       = "iac-postgres"
     }
     EOF
     ```
@@ -502,6 +548,56 @@ Libvirt's settings directly impact Terraform's execution permissions, thus some 
     This architecture was designed primarily to conform to the structural specifications of the variables in the `terraform/modules/11-provisioner-kvm/variables.tf` module.
 
     Because Postgres resources will be callable by other Terraform layers (e.g. GitLab and Harbor in the future), the `bridge_name` and virtual machine naming logic _may still_ be modified.
+
+4. The variable file for the (HA) Redis in `terraform/layers/10-provision-redis/terraform.tfvars` can be created using the following command:
+
+    ```bash
+    cat << EOF > terraform/layers/10-provision-redis/terraform.tfvars
+    # Defines the hardware and IP addresses for each virtual machine in the cluster.
+
+    redis_cluster_config = {
+        cluster_name = "10-redis-cluster"
+        nodes = {
+            redis = [
+                { ip = "172.16.137.200", vcpu = 4, ram = 4096 },
+                { ip = "172.16.137.201", vcpu = 4, ram = 4096 },
+                { ip = "172.16.137.202", vcpu = 4, ram = 4096 },
+            ]
+        }
+    }
+
+    redis_infrastructure = {
+        network = {
+            nat = {
+                name_network = "iac-redis-nat-net"
+                name_bridge  = "redis-nat-br"
+
+                ips = {
+                    address = "172.16.89.1"
+                    prefix  = 24
+                    dhcp = {
+                    start = "172.16.89.2"
+                    end   = "172.16.89.254"
+                    }
+                }
+            }
+
+            hostonly = {
+                name_network = "iac-redis-hostonly-net"
+                name_bridge  = "redis-host-br"
+
+                ips = {
+                    address = "172.16.137.1"
+                    prefix  = 24
+                    dhcp    = null
+                }
+            }
+        }
+        redis_allowed_subnet = "172.16.137.0/24"
+        storage_pool_name    = "iac-redis"
+    }
+    EOF
+    ```
 
 **Note:** The `bridge_name` in `terraform.tfvars` must not exceed 15 characters due to the `IFNAMSIZ(15)` limitation.
 
@@ -556,34 +652,34 @@ The entire automated deployment process is triggered by option `12` _"Rebuild Ku
 
 ```mermaid
 sequenceDiagram
-   actor User
-   participant Entrypoint as entry.sh
-   participant Packer
-   participant Terraform
-   participant Ansible
-   participant Libvirt as Libvirt/QEMU
+    actor User
+    participant Entrypoint as entry.sh
+    participant Packer
+    participant Terraform
+    participant Ansible
+    participant Libvirt as Libvirt/QEMU
 
-   User->>+Entrypoint: Execute 'Rebuild All'
+    User->>+Entrypoint: Execute 'Rebuild All'
 
-   Entrypoint->>+Packer: 1. Execute 'packer_build'
-   Packer->>+Libvirt: 1a. Build VM from ISO
-   note right of Packer: Provisioner 'ansible' is triggered
-   Packer->>+Ansible: 1b. Execute Playbook<br>(00-provision-base-image.yaml)
-   Ansible-->>-Packer: (Bake k8s components into image)
-   Libvirt-->>-Packer: 1c. Output Golden Image (.qcow2)
-   Packer-->>-Entrypoint: Image creation complete
+    Entrypoint->>+Packer: 1. Execute 'packer_build'
+    Packer->>+Libvirt: 1a. Build VM from ISO
+    note right of Packer: Provisioner 'ansible' is triggered
+    Packer->>+Ansible: 1b. Execute Playbook<br>(00-provision-base-image.yaml)
+    Ansible-->>-Packer: (Bake k8s components into image)
+    Libvirt-->>-Packer: 1c. Output Golden Image (.qcow2)
+    Packer-->>-Entrypoint: Image creation complete
 
-   Entrypoint->>+Terraform: 2. Execute 'apply_terraform_10-cluster-provision'
-   note right of Terraform: Reads .tf definitions
-   Terraform->>+Libvirt: 2a. Create Network, Pool, Volumes (from .qcow2), Cloud-init ISOs
-   Terraform->>+Libvirt: 2b. Create and Start VMs (Domains)
-   note right of Terraform: Provisioner 'local-exec' is triggered
-   Terraform->>+Ansible: 2c. Execute Playbook<br>(10-provision-kubeadm.yaml)
-   Ansible->>Libvirt: (via SSH) 2d. Configure HA (Keepalived/HAProxy)
-   Ansible->>Libvirt: (via SSH) 2e. Init/Join Kubernetes Cluster
-   Ansible-->>-Terraform: Playbook execution complete
-   Terraform-->>-Entrypoint: 'apply' complete
-   Entrypoint-->>-User: Display 'Rebuild All workflow completed'
+    Entrypoint->>+Terraform: 2. Execute 'apply_terraform_10-cluster-provision'
+    note right of Terraform: Reads .tf definitions
+    Terraform->>+Libvirt: 2a. Create Network, Pool, Volumes (from .qcow2), Cloud-init ISOs
+    Terraform->>+Libvirt: 2b. Create and Start VMs (Domains)
+    note right of Terraform: Provisioner 'local-exec' is triggered
+    Terraform->>+Ansible: 2c. Execute Playbook<br>(10-provision-kubeadm.yaml)
+    Ansible->>Libvirt: (via SSH) 2d. Configure HA (Keepalived/HAProxy)
+    Ansible->>Libvirt: (via SSH) 2e. Init/Join Kubernetes Cluster
+    Ansible-->>-Terraform: Playbook execution complete
+    Terraform-->>-Entrypoint: 'apply' complete
+    Entrypoint-->>-User: Display 'Rebuild All workflow completed'
 ```
 
 ### B. Toolchain Roles and Responsibilities
