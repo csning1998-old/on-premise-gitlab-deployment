@@ -266,7 +266,7 @@ known_hosts_bootstrapper() {
       # --- Terraform Path: Poll for SSH service to become available ---
       echo "#### Waiting for SSH on ${host} to be ready..."
       local success=false
-      for i in {1..30}; do
+      for ((attempt=1; attempt<=30; attempt++)); do
         if ssh-keyscan -T 2 -H "${host}" >> "${known_hosts_file}" 2>/dev/null; then
           echo "      - Scanned key for ${host} and added to ${known_hosts_file}"
           success=true
