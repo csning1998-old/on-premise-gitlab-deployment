@@ -132,7 +132,7 @@ switch_strategy() {
   env_var_mutator "$var_name" "$new_value"
   echo
   echo "Strategy '${var_name}' in .env updated to '${new_value}'."
-  cd "${SCRIPT_DIR}" && ./entry.sh
+cd "${SCRIPT_DIR}" && exec ./entry.sh
 }
 
 strategy_switch_handler() {
@@ -142,7 +142,7 @@ strategy_switch_handler() {
   rm -rf "$HOME/.ssh/on-premise-gitlab-deployment_config"
   echo "#### Terraform state reset."
   echo "INFO: Purge libvirt resources (VMs, networks, storage pools)"
-  libvirt_resource_purger
+  libvirt_resource_purger "all"
   
   # Check if the storage pool exists before attempting to destroy or undefine
   if sudo virsh pool-info iac-kubeadm >/dev/null 2>&1; then
