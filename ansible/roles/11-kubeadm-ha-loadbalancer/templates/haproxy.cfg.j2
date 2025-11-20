@@ -1,26 +1,28 @@
 global
-    log {{ kubeadm_ha_lb.haproxy_config.log.path }} {{ kubeadm_ha_lb.haproxy_config.log.facility }}
-    maxconn {{ kubeadm_ha_lb.haproxy_config.maxconn }}
-    user {{ kubeadm_ha_lb.haproxy_config.user }}
-    group {{ kubeadm_ha_lb.haproxy_config.group }}
+    log /dev/log local0
+    log /dev/log local1 notice
+    maxconn {{ haproxy_maxconn }}
+    user haproxy
+    group haproxy
     daemon
 
 defaults
     log global
     mode tcp
     option tcplog
-    timeout connect {{ kubeadm_ha_lb.haproxy_config.timeouts.connect }}
-    timeout client {{ kubeadm_ha_lb.haproxy_config.timeouts.client }}
-    timeout server {{ kubeadm_ha_lb.haproxy_config.timeouts.server }}
+    timeout connect {{ haproxy_timeout_connect }}
+    timeout client {{ haproxy_timeout_client }}
+    timeout server {{ haproxy_timeout_server }}
 
 frontend k8s_api
-    bind {{ k8s_ha_virtual_ip }}:{{ kubeadm_ha_lb.haproxy_config.port.frontend }}
+    bind {{ kubeadm_ha_virtual_ip }}:{{ haproxy_frontend_port }}
     mode tcp
     default_backend k8s_api_backend
 
 backend k8s_api_backend
     mode tcp
     balance roundrobin
+    option tcp-check
 {% for host in groups['master'] %}
-    server {{ host }} {{ hostvars[host]['advertise_ip'] }}:{{ kubeadm_ha_lb.haproxy_config.port.backend }} check
+    server {{ host }} {{ hostvars[host]['kubeadm_advertise_ip'] }}:{{ haproxy_backend_port }} check fall 3 rise 2
 {% endfor %}

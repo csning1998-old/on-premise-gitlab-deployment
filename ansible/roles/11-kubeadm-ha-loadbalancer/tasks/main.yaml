@@ -1,5 +1,5 @@
 ---
-- name: "Block 0: Dynamically discover the Host-only network interface"
+- name: "Block A: Dynamically discover the Host-only network interface"
   block:
     - name: "Step 1. Find the NAT interface to exclude"
       ansible.builtin.shell:
@@ -10,7 +10,7 @@
       register: nat_iface_result
       changed_when: false
 
-    - name: "Step 2. Find the Host-only interface by excluding NAT and loopback"
+    - name: "Step 2. Find the Host-only interface"
       ansible.builtin.shell:
         cmd: |
           set -o pipefail
@@ -19,7 +19,7 @@
       register: hostonly_iface_result
       changed_when: false
 
-    - name: "Step 3. Set k8s_ha_interface fact for use in templates"
+    - name: "Step 3. Set k8s_ha_interface fact"
       ansible.builtin.set_fact:
         k8s_ha_interface: "{{ hostonly_iface_result.stdout }}"
       when: hostonly_iface_result.stdout | length > 0
@@ -29,66 +29,72 @@
         msg: "Could not dynamically determine the Host-Only network interface."
       when: k8s_ha_interface is not defined or k8s_ha_interface | length == 0
 
-- name: "Block A: Install HAProxy and Keepalived packages"
+- name: "Block B: Install and Configure HA Services"
   block:
-    - name: "Step 1. Allow binding to non-local IP addresses"
+    - name: "Step 1. Enable non-local binding (Required for VIP)"
       ansible.posix.sysctl:
-        name: "{{ item.name }}"
-        value: "{{ item.value }}"
+        name: "net.ipv4.ip_nonlocal_bind"
+        value: "1"
         state: present
         reload: true
-      loop: "{{ kubeadm_ha_lb.sysctl_settings }}"
 
-    - name: "Step 2. Install Necessary Packages"
+    - name: "Step 2. Install HAProxy and Keepalived"
       ansible.builtin.apt:
-        name: "{{ kubeadm_ha_lb.packages.apt }}"
+        name:
+          - keepalived
+          - haproxy
+          - rsyslog
         state: present
         update_cache: true
 
-- name: "Block B: Configure Keepalived"
-  block:
-    - name: "Step 1. Ensure keepalived_script user exists for security context"
+    - name: "Step 3. Create keepalived_script user"
       ansible.builtin.user:
-        name: "{{ item.name }}"
-        system: "{{ item.system | default(omit) }}"
-        shell: "{{ item.shell | default(omit) }}"
+        name: "keepalived_script"
+        system: true
+        shell: "/usr/sbin/nologin"
         state: present
-      loop: "{{ kubeadm_ha_lb.users }}"
 
-    - name: "Step 2. Configure Keepalived from template"
+- name: "Block C: Configure Services"
+  block:
+    - name: "Step 1. Configure Keepalived"
       ansible.builtin.template:
         src: keepalived.conf.j2
-        dest: "{{ kubeadm_ha_lb.config_paths.keepalived }}"
-        owner: root
-        group: root
+        dest: /etc/keepalived/keepalived.conf
         mode: "0644"
       notify: Restart keepalived
 
-    - name: "Step 3. Verify Keepalived configuration syntax"
-      ansible.builtin.command: "keepalived --config-test -f {{ kubeadm_ha_lb.config_paths.keepalived }}"
-      changed_when: false
-
-- name: "Block C: Configure HAProxy"
-  block:
-    - name: "Step 1. Configure HAProxy from template"
+    - name: "Step 2. Configure HAProxy"
       ansible.builtin.template:
         src: haproxy.cfg.j2
-        dest: "{{ kubeadm_ha_lb.config_paths.haproxy }}"
-        owner: root
-        group: root
+        dest: /etc/haproxy/haproxy.cfg
         mode: "0644"
       notify: Restart haproxy
 
-    - name: "Step 2. Verify HAProxy configuration syntax"
-      ansible.builtin.command: "haproxy -c -f {{ kubeadm_ha_lb.config_paths.haproxy }}"
+    - name: "Step 3. Configure Rsyslog for Keepalived"
+      ansible.builtin.lineinfile:
+        path: /etc/rsyslog.conf
+        line: "local0.* /var/log/keepalived.log"
+        create: true
+        mode: "0644"
+      notify: Restart rsyslog
       changed_when: false
+
+    - name: "4. Ensure services are started and enabled"
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+        daemon_reload: true
+      loop:
+        - keepalived
+        - haproxy
 
 - name: "Block D: Configure Logging"
   block:
     - name: "Step 1. Ensure rsyslog is configured for keepalived"
       ansible.builtin.lineinfile:
-        path: "{{ kubeadm_ha_lb.config_paths.rsyslog }}"
-        line: "{{ _kubeadm_ha_lb_rsyslog_line }}"
+        path: /etc/rsyslog.conf
+        line: "local0.* /var/log/keepalived.log"
         create: true
         mode: "0644"
       notify: Restart rsyslog
@@ -96,16 +102,3 @@
     - name: "Step 2. Force handlers to run now for logging to take effect"
       # Meta task to ensure rsyslog is restarted before other services
       ansible.builtin.meta: flush_handlers
-
-- name: "Block E: Ensure HA services are running"
-  block:
-    - name: "Ensure Keepalived and HAProxy services are enabled and started"
-      # This final task ensures that regardless of changes, the services are running
-      # before this role completes, making the VIP and Load Balancer available
-      # for the next Play.
-      ansible.builtin.systemd:
-        name: "{{ item }}"
-        state: started
-        enabled: true
-        daemon_reload: true # Reload systemd if config has changed
-      loop: "{{ kubeadm_ha_lb.services }}"

@@ -1,21 +1,4 @@
 ---
-kubeadm_join_worker:
-  prereqs:
-    reset_cmd: "kubeadm reset -f"
-    service_name: "kubelet"
-
-  join_config:
-    dest_path: "/tmp/kubeadm-join-config.yaml"
-    mode: "0644"
-
-    api_version: "kubeadm.k8s.io/v1beta4"
-    kind: "JoinConfiguration"
-    cgroup_driver: "systemd"
-    ca_verification_skip: false
-
-  join_cmd:
-    creates_path: "/etc/kubernetes/kubelet.conf"
-    fail_msg: "kubeadm join failed on {{ inventory_hostname }}."
-
-_kubeadm_join_cli_args_string: >
-  --config={{ kubeadm_join_worker.join_config.dest_path }}
+# Join Configuration
+k8s_cgroup_driver: "systemd"
+k8s_join_skip_ca_verification: false

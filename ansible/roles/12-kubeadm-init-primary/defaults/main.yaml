@@ -1,49 +1,22 @@
 ---
-kubeadm_pri:
-  prereqs:
-    paths:
-      journald_log: "/var/log/journal"
-      kube_root: "/etc/kubernetes"
-    services:
-      - "systemd-journald"
-      - "kubelet"
+# Kubernetes Version & CRI
+kubeadm_version: "v1.32.0"
+kubeadm_cri_socket: "unix:///var/run/crio/crio.sock"
+kubeadm_cgroup_driver: "systemd"
 
-  config:
-    dest_path: "/etc/kubernetes/kubeadm-config.yaml"
+# Networking Defaults
+# Defaulting to the inventory variables if they exist to ensure backward compatibility
+kubeadm_pod_subnet: "{{ kubeadm_pod_subnet | default('10.244.0.0/16') }}"
+kubeadm_ha_virtual_ip: "{{ kubeadm_ha_virtual_ip | default('') }}"
+kubeadm_master_ips: "{{ kubeadm_master_ips | default([]) }}"
 
-    version: "v1.32.0"
-    node_registration:
-      cri_endpoint: "unix:///var/run/crio/crio.sock"
-      cgroup_driver: "systemd"
+# API Server Cert SANs (Subject Alternative Names)
+# Including the standard Kubernetes DNS names that were previously hardcoded
+kubeadm_extra_sans:
+  - "kubernetes"
+  - "kubernetes.default"
+  - "kubernetes.default.svc"
+  - "kubernetes.default.svc.cluster.local"
 
-    static_sans:
-      - "kubernetes"
-      - "kubernetes.default"
-      - "kubernetes.default.svc"
-      - "kubernetes.default.svc.cluster.local"
-
-  init:
-    log_path: "/tmp/kubeadm-init.log"
-
-  kubeconfig:
-    path: "/etc/kubernetes/admin.conf"
-    root_setup:
-      dir: "/root/.kube"
-      config_path: "/root/.kube/config"
-      dir_mode: "0755"
-      config_mode: "0600"
-
-    user_setup:
-      dir_name: ".kube"
-      config_name: "config"
-      dir_mode: "0755"
-      config_mode: "0644"
-
-  fetch:
-    dest_file: "kubeconfig"
-    dest_dir: "{{ playbook_dir }}/../fetched"
-    flat: true
-
-_kubeadm_pri_user_kube_dir: "/home/{{ ansible_ssh_user }}/{{ kubeadm_pri.kubeconfig.user_setup.dir_name }}"
-_kubeadm_pri_user_kube_config: "{{ _kubeadm_pri_user_kube_dir }}/{{ kubeadm_pri.kubeconfig.user_setup.config_name }}"
-_kubeadm_pri_fetch_dest_path: "{{ kubeadm_pri.fetch.dest_dir }}/{{ kubeadm_pri.fetch.dest_file }}"
+# Local path to save the fetched kubeconfig
+kubeadm_fetched_kubeconfig_path: "{{ playbook_dir }}/../fetched/kubeconfig"

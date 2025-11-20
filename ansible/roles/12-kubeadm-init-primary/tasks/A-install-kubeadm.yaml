@@ -3,11 +3,11 @@
   block:
     - name: "Step 1. Set advertise_ip fact for this node"
       ansible.builtin.set_fact:
-        advertise_ip: "{{ k8s_master_ips[0] }}"
+        kubeadm_advertise_ip: "{{ kubeadm_master_ips[0] }}"
 
     - name: "Step 2. Ensure journald persistent storage directory exists"
       ansible.builtin.file:
-        path: "{{ kubeadm_pri.prereqs.paths.journald_log }}"
+        path: "/var/log/journal"
         state: directory
         mode: "0755"
 
@@ -24,32 +24,32 @@
 
     - name: "Step 5. Ensure /etc/kubernetes directory exists"
       ansible.builtin.file:
-        path: "{{ kubeadm_pri.prereqs.paths.kube_root }}"
+        path: "/etc/kubernetes"
         state: directory
         mode: "0755"
 
     - name: "Step 6. Create kubeadm config file from template"
       ansible.builtin.template:
         src: kubeadm-config.yaml.j2
-        dest: "{{ kubeadm_pri.config.dest_path }}"
+        dest: "/etc/kubernetes/kubeadm-config.yaml"
         mode: "0644"
 
 - name: "Block B: Run kubeadm init to bootstrap the cluster"
   block:
     - name: "Step 1. Check if admin.conf already exists"
       ansible.builtin.stat:
-        path: "{{ kubeadm_pri.kubeconfig.path }}"
+        path: "/etc/kubernetes/admin.conf"
       register: admin_conf_stat
 
     - name: "Step 2. Run kubeadm init command"
       ansible.builtin.shell: >-
         kubeadm init
-        --config="{{kubeadm_pri.config.dest_path}}" 
+        --config="/etc/kubernetes/kubeadm-config.yaml"
         --upload-certs
         --ignore-preflight-errors=Port-6443
-        > {{ kubeadm_pri.init.log_path }} 2>&1
+        > /tmp/kubeadm-init.log 2>&1
       args:
-        creates: "{{ kubeadm_pri.kubeconfig.path }}"
+        creates: "/etc/kubernetes/admin.conf"
       when: not admin_conf_stat.stat.exists
       register: kubeadm_pri_result
       changed_when: kubeadm_pri_result.rc == 0
@@ -57,50 +57,50 @@
 
     - name: "Step 3. Verify that admin.conf was created"
       ansible.builtin.stat:
-        path: "{{ kubeadm_pri.kubeconfig.path }}"
+        path: "/etc/kubernetes/admin.conf"
       register: admin_conf_stat_post_init
 
     - name: "Step 4. Fail if kubeadm init did not create admin.conf"
       ansible.builtin.fail:
-        msg: "kubeadm init failed to create {{ kubeadm_pri.kubeconfig.path }}. Check {{ kubeadm_pri.init.log_path }} for details."
+        msg: "kubeadm init failed to create /etc/kubernetes/admin.conf. Check /tmp/kubeadm-init.log for details."
       when: not admin_conf_stat_post_init.stat.exists and kubeadm_pri_result is changed
 
 - name: "Block C: Set up kubeconfig to enable kubectl"
   block:
     - name: "Step 1. Create .kube directory for the root user"
       ansible.builtin.file:
-        path: "{{ kubeadm_pri.kubeconfig.root_setup.dir }}"
+        path: "/root/.kube"
         state: directory
-        mode: "{{ kubeadm_pri.kubeconfig.root_setup.dir_mode }}"
+        mode: "0755"
 
     - name: "Step 2. Copy admin.conf to root's kube config"
       ansible.builtin.copy:
-        src: "{{ kubeadm_pri.kubeconfig.path }}"
-        dest: "{{ kubeadm_pri.kubeconfig.root_setup.config_path }}"
+        src: "/etc/kubernetes/admin.conf"
+        dest: "/root/.kube/config"
         remote_src: true
-        mode: "{{ kubeadm_pri.kubeconfig.root_setup.config_mode }}"
+        mode: "0600"
 
     - name: "Step 3. Create .kube directory for the SSH user"
       ansible.builtin.file:
-        path: "{{ _kubeadm_pri_user_kube_dir }}"
+        path: "/home/{{ ansible_ssh_user }}/.kube"
         state: directory
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
-        mode: "{{ kubeadm_pri.kubeconfig.user_setup.dir_mode }}"
+        mode: "0755"
 
     - name: "Step 4. Copy admin.conf to user's kube config"
       ansible.builtin.copy:
-        src: "{{ kubeadm_pri.kubeconfig.path }}"
-        dest: "{{ _kubeadm_pri_user_kube_config }}"
+        src: "/etc/kubernetes/admin.conf"
+        dest: "/home/{{ ansible_ssh_user }}/.kube/config"
         remote_src: true
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
-        mode: "{{ kubeadm_pri.kubeconfig.user_setup.config_mode }}"
+        mode: "0644"
 
 - name: "Block D: Register kubeconfig content as a fact"
   block:
     - name: "Step 1. Fetch admin.conf to a predictable local path"
       ansible.builtin.fetch:
-        src: "{{ kubeadm_pri.kubeconfig.path }}"
-        dest: "{{ _kubeadm_pri_fetch_dest_path }}"
-        flat: "{{ kubeadm_pri.fetch.flat }}"
+        src: "/etc/kubernetes/admin.conf"
+        dest: "{{ kubeadm_fetched_kubeconfig_path }}"
+        flat: true

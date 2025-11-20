@@ -1,18 +1,20 @@
 global_defs {
-    router_id {{ kubeadm_ha_lb.keepalived_config.router_id }}
-    vrrp_version {{ kubeadm_ha_lb.keepalived_config.vrrp_version }}
+    router_id {{ keepalived_router_id }}
+    vrrp_version 2
     enable_script_security
 }
+
 vrrp_instance VI_1 {
     state {{ 'MASTER' if inventory_hostname == groups['master'][0] else 'BACKUP' }}
     interface {{ k8s_ha_interface }}
     
-    virtual_router_id {{ kubeadm_ha_lb.keepalived_config.virtual_router_id }}
-    advert_int {{ kubeadm_ha_lb.keepalived_config.advert_int }}
+    virtual_router_id {{ keepalived_vrrp_id }}
+    advert_int {{ keepalived_advert_int }}
     
+    # Priority logic: First master gets 100, others decrease
     priority {{ 100 - groups['master'].index(inventory_hostname) }}
     
     virtual_ipaddress {
-        {{ k8s_ha_virtual_ip }}
+        {{ kubeadm_ha_virtual_ip }}
     }
 }

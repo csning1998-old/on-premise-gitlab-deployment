@@ -3,31 +3,36 @@
   block:
     - name: "Step 1. Check if admin.conf exists on the primary master"
       ansible.builtin.stat:
-        path: "{{ kubeadm_join_cmd.kubeconfig.path }}"
+        path: "/etc/kubernetes/admin.conf"
       register: kubeconfig
 
     - name: "Step 2. Assert that kubeadm init was successful before proceeding"
       ansible.builtin.assert:
         that: kubeconfig.stat.exists
-        fail_msg: "{{ kubeadm_join_cmd.asserts.kubeconfig_fail_msg }}"
+        fail_msg: "Cannot generate join parameters because kubeadm init seems to have failed (/etc/kubernetes/admin.conf not found)."
 
     - name: "Step 3. Create a new token"
       ansible.builtin.command:
-        cmd: "{{ kubeadm_join_cmd.commands.token_create }}"
+        cmd: "kubeadm token create"
       register: kubeadm_token_result
       changed_when: kubeadm_token_result.rc == 0
 
     - name: "Step 4. Get the CA certificate hash"
       ansible.builtin.shell:
-        cmd: "{{ _kubeadm_join_cmd_get_ca_hash }}"
-        executable: "{{ kubeadm_join_cmd.paths.shell_executable }}"
+        cmd: |
+          set -o pipefail
+          openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt |
+          openssl rsa -pubin -outform der 2>/dev/null |
+          openssl dgst -sha256 -hex | sed 's/^.* //'
+        executable: /bin/bash
       register: kubeadm_ca_hash_result
       changed_when: false
 
     - name: "Step 5. Upload certs and get the certificate key"
       ansible.builtin.command:
-        cmd: "{{ kubeadm_join_cmd.commands.upload_certs }}"
-      environment: "{{ kubeadm_join_cmd.kubeconfig.name }}: {{ kubeadm_join_cmd.kubeconfig.path }}"
+        cmd: "kubeadm init phase upload-certs --upload-certs"
+      environment:
+        KUBECONFIG: "/etc/kubernetes/admin.conf"
       register: cert_key_result
       changed_when: "'certificate key' in cert_key_result.stdout"
 
@@ -36,4 +41,4 @@
         kubeadm_token: "{{ kubeadm_token_result.stdout }}"
         kubeadm_ca_hash: "{{ kubeadm_ca_hash_result.stdout }}"
         kubeadm_cert_key: "{{ cert_key_result.stdout_lines | last }}"
-        cacheable: "{{ kubeadm_join_cmd.facts.cacheable }}"
+        cacheable: true

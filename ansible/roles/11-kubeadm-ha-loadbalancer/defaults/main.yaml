@@ -1,55 +1,13 @@
 ---
-kubeadm_ha_lb:
-  packages:
-    apt:
-      - keepalived
-      - haproxy
-      - rsyslog
-      - etcd-client
+# HAProxy Tuning
+haproxy_maxconn: 4096
+haproxy_frontend_port: 6443
+haproxy_backend_port: 6443
+haproxy_timeout_connect: 5000
+haproxy_timeout_client: 50000
+haproxy_timeout_server: 50000
 
-  sysctl_settings:
-    - name: "net.ipv4.ip_nonlocal_bind"
-      value: "1"
-
-  users:
-    - name: "keepalived_script"
-      system: true
-      shell: "/sbin/nologin"
-
-  config_paths:
-    keepalived: "/etc/keepalived/keepalived.conf"
-    haproxy: "/etc/haproxy/haproxy.cfg"
-    rsyslog: "/etc/rsyslog.conf"
-
-  logging:
-    keepalived_log_file: "/var/log/keepalived.log"
-    rsyslog_line_prefix: "local0.*"
-
-  services:
-    - keepalived
-    - haproxy
-
-  # keepalived.conf.j2 Statics
-  keepalived_config:
-    router_id: "k8s_master"
-    vrrp_version: 2
-    virtual_router_id: 51
-    advert_int: 1
-
-  # haproxy.cfg.j2 Statics
-  haproxy_config:
-    log:
-      path: "/var/log/haproxy.log"
-      facility: "local0"
-    maxconn: 4096
-    user: "haproxy"
-    group: "haproxy"
-    timeouts:
-      connect: 5000
-      client: 50000
-      server: 50000
-    port:
-      frontend: 6443
-      backend: 6443
-
-_kubeadm_ha_lb_rsyslog_line: "{{ kubeadm_ha_lb.logging.rsyslog_line_prefix }} {{ kubeadm_ha_lb.logging.keepalived_log_file }}"
+# Keepalived Tuning
+keepalived_router_id: "k8s_master"
+keepalived_vrrp_id: 51
+keepalived_advert_int: 1
