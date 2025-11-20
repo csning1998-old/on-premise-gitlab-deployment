@@ -61,6 +61,7 @@
         src: keepalived.conf.j2
         dest: /etc/keepalived/keepalived.conf
         mode: "0644"
+        validate: keepalived --config-test %s
       notify: Restart keepalived
 
     - name: "Step 2. Configure HAProxy"
@@ -68,6 +69,7 @@
         src: haproxy.cfg.j2
         dest: /etc/haproxy/haproxy.cfg
         mode: "0644"
+        validate: haproxy -c -f %s
       notify: Restart haproxy
 
     - name: "Step 3. Configure Rsyslog for Keepalived"
@@ -88,17 +90,3 @@
       loop:
         - keepalived
         - haproxy
-
-- name: "Block D: Configure Logging"
-  block:
-    - name: "Step 1. Ensure rsyslog is configured for keepalived"
-      ansible.builtin.lineinfile:
-        path: /etc/rsyslog.conf
-        line: "local0.* /var/log/keepalived.log"
-        create: true
-        mode: "0644"
-      notify: Restart rsyslog
-
-    - name: "Step 2. Force handlers to run now for logging to take effect"
-      # Meta task to ensure rsyslog is restarted before other services
-      ansible.builtin.meta: flush_handlers
