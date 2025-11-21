@@ -48,7 +48,7 @@
         dest: /etc/default/minio
         owner: root
         group: root
-        mode: "0644"
+        mode: "0600"
       notify: Restart MinIO
 
 - name: "Section C: Start Service"
