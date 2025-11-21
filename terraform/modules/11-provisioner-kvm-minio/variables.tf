@@ -16,7 +16,7 @@ variable "vm_config" {
       # Mount multiple disk at once
       data_disks = optional(list(object({
         name_suffix = string
-        size        = number
+        capacity    = number
       })), [])
     }))
     base_image_path = string

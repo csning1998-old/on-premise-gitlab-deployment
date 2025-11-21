@@ -26,7 +26,7 @@ locals {
       for disk in vm_conf.data_disks :
       "${vm_key}-${disk.name_suffix}" => {
         vm_key      = vm_key
-        size        = disk.size
+        capacity    = disk.capacity
         name_suffix = disk.name_suffix
       }
     }
@@ -120,7 +120,7 @@ resource "libvirt_volume" "data_disk" {
   name     = "${each.key}.qcow2"
   pool     = libvirt_pool.storage_pool.name
   format   = "qcow2"
-  capacity = each.value.size
+  capacity = each.value.capacity
 }
 
 resource "libvirt_cloudinit_disk" "cloud_init" {

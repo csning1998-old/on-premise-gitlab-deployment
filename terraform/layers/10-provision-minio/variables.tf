@@ -11,7 +11,7 @@ variable "minio_cluster_config" {
         ram  = number
         data_disks = list(object({
           name_suffix = string
-          size        = number
+          capacity    = number
         }))
       }))
     })
