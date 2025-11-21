@@ -35,22 +35,22 @@
         owner: root
         group: root
 
-    - name: "Step B4. Download MinIO Client and rename to 'mcli'"
+    - name: "Step B4. Download MinIO Client"
       ansible.builtin.get_url:
         url: "https://dl.min.io/client/mc/release/linux-amd64/mc"
-        dest: "/usr/local/bin/mcli"
+        dest: "/usr/local/bin/mc"
         mode: "0755"
         owner: root
         group: root
 
-    - name: "Step B5. Verify mcli installation"
-      ansible.builtin.command: mcli --version
-      register: mcli_version
+    - name: "Step B5. Verify mc installation"
+      ansible.builtin.command: mc --version
+      register: mc_version
       changed_when: false
 
-    - name: "Step B6. Print mcli version"
+    - name: "Step B6. Print mc version"
       ansible.builtin.debug:
-        msg: "MinIO Client installed: {{ mcli_version.stdout }}"
+        msg: "MinIO Client installed: {{ mc_version.stdout }}"
 
 - name: "Block C: System Configuration"
   become: true
