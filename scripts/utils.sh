@@ -17,21 +17,17 @@ run_command() {
     local service_name=""
 
 		# 0. Determine the Container to use
-		if [[ "$cmd_string" == packer* ]]; then
-      service_name="iac-packer"
-      container_name="iac-controller-packer"
-    elif [[ "$cmd_string" == terraform* ]]; then
-      service_name="iac-terraform"
-      container_name="iac-controller-terraform"
-    elif [[ "$cmd_string" == ansible* ]]; then
-      service_name="iac-ansible"
-      container_name="iac-controller-ansible"
-    else
-      # Use Ansible as default.
-      service_name="iac-ansible"
-      container_name="iac-controller-ansible"
-      echo "DEBUG: Command '$cmd_string' does not match specific tools. Defaulting to $service_name."
-    fi
+		case "$cmd_string" in
+      packer*)    service_name="iac-packer" ;;
+      terraform*) service_name="iac-terraform" ;;
+      ansible*)   service_name="iac-ansible" ;;
+      *)          
+        service_name="iac-ansible"
+        echo "DEBUG: Defaulting command '${cmd_string}' to '${service_name}' container." 
+        ;;
+    esac
+
+		local container_name="iac-controller-${service_name#iac-}"
 
     # 1. Check if Podman is installed
     if ! command -v podman >/dev/null 2>&1; then
