@@ -57,27 +57,15 @@ cpu_virt_support_checker() {
 
 # Function: Configure Packer network settings based on strategy
 packer_net_configurator() {
-  local strategy="$1"
   local bridge_val=""
   local device_val="virtio-net"
 
-  echo ">>> Configuring Packer network settings for strategy: ${strategy}..."
-
-  if [[ "${strategy}" == "container" ]]; then
+  if ip link show virbr0 >/dev/null 2>&1; then
+    bridge_val="virbr0"
+    echo "    - Network Mode: Bridge detected (virbr0). Using performance networking."
+  else
+    echo "WARN: 'virbr0' bridge not found. Defaulting to user-mode/SLIRP networking."
     bridge_val=""
-    device_val="virtio-net"
-    echo "    - Mode: Container (Rootless). Using User Mode Networking (SLIRP)."
-    
-  elif [[ "${strategy}" == "native" ]]; then
-    if ip link show virbr0 >/dev/null 2>&1; then
-      bridge_val="virbr0"
-      echo "    - Mode: Native. Detected bridge 'virbr0'."
-    else
-      echo "WARN: Native mode selected but 'virbr0' not found via 'ip link'."
-      echo "      Defaulting to 'virbr0' anyway, but Packer may fail if network is missing."
-      bridge_val="virbr0"
-    fi
-    device_val="virtio-net"
   fi
 
   env_var_mutator "PKR_VAR_NET_BRIDGE" "${bridge_val}"
