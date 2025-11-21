@@ -28,7 +28,8 @@ services:
       timeout: 3s
       retries: 5
 
-  iac-controller:
+  # Common Configuration (x-iac-base)
+  x-iac-base: &iac-base
     build:
       context: .
       dockerfile: Containerfile
@@ -37,15 +38,7 @@ services:
         HOST_GID: ${HOST_GID}
         LIBVIRT_GID: ${LIBVIRT_GID}
         USERNAME: ${UNAME}
-    image: iac-kubeadm-controller:qemu-latest
-    container_name: iac-controller-qemu
-    # privileged: true
-    cap_add:
-      - NET_ADMIN
-      # - SYS_ADMIN
-    devices:
-      - /dev/kvm:/dev/kvm
-      - /dev/net/tun:/dev/net/tun
+    image: on-premise-iac-controller:qemu-latest
     network_mode: "host"
     user: "0:0"
     security_opt:
@@ -65,3 +58,27 @@ services:
       - /dev/net/tun:/dev/net/tun
     tty: true
     stdin_open: true
+
+  # Service 1: Packer (No keep-groups)
+  iac-packer:
+    <<: *iac-base
+    container_name: iac-controller-packer
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/kvm:/dev/kvmrun_command
+      - /dev/net/tun:/dev/net/tun
+
+  # Service 2: Terraform (With keep-groups)
+  iac-terraform:
+    <<: *iac-base
+    container_name: iac-controller-terraform
+    group_add:
+      - "keep-groups" # Needs for libvirt socket
+
+  # Service 3: Ansible (With keep-groups)
+  iac-ansible:
+    <<: *iac-base
+    container_name: iac-controller-ansible
+    group_add:
+      - "keep-groups" # Ensure able to read mapped SSH key
