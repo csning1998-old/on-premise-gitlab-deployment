@@ -32,5 +32,5 @@ variable "net_bridge" {
 
 variable "net_device" {
   type    = string
-  default = "bridge"
+  default = "virtio-net"
 }
