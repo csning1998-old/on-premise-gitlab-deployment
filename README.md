@@ -412,7 +412,7 @@ Libvirt's settings directly impact Terraform's execution permissions, thus some 
 1. You can RENAME the `terraform/layers/*/terraform.tfvars.example` file to `terraform/layers/*/terraform.tfvars` file using the following command:
 
     ```shell
-    cp terraform/layers/*/terraform.tfvars.example terraform/layers/*/terraform.tfvars
+    for f in terraform/layers/*/terraform.tfvars.example; do cp -n "$f" "${f%.example}"; done
     ```
 
     Then, you can modify the `terraform.tfvars` file based on your requirements.
