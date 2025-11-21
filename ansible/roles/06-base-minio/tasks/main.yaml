@@ -15,9 +15,9 @@
 - name: "Block B: Install MinIO via Go"
   become: true
   block:
-    - name: "Step B1. Install MinIO from source (github.com/minio/minio@latest)"
+    - name: "Step B1. Install MinIO from source (github.com/minio/minio@{{ minio_base.release_version }})"
       ansible.builtin.command:
-        cmd: "/usr/bin/go install github.com/minio/minio@latest"
+        cmd: "/usr/bin/go install github.com/minio/minio@{{ minio_base.release_version }}"
       environment:
         GOPATH: "/root/go"
       register: go_install_result

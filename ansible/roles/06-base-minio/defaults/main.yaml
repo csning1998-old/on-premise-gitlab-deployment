@@ -6,3 +6,4 @@ minio_base:
   data_dir: "/var/lib/minio"
   config_dir: "/etc/minio"
   go_package: "golang-go"
+  release_version: "RELEASE.2025-10-15T17-29-55Z"
