@@ -6,7 +6,7 @@ locals {
   }
 
   haproxy_node = { for idx, config in var.vault_cluster_config.nodes.haproxy :
-    "haproxy-node-${format("%02d", idx)}" => config
+    "vault-haproxy-node-${format("%02d", idx)}" => config
   }
   all_nodes_map = merge(
     local.vault_nodes_map,
