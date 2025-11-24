@@ -33,3 +33,23 @@
     - name: "Step B3. Print Vault version"
       ansible.builtin.debug:
         msg: "Vault installed: {{ vault_version_output.stdout }}"
+
+- name: "Block C: Disable Swap"
+  become: true
+  block:
+    - name: "Step 3. Check if swap is active"
+      ansible.builtin.command: swapon --show
+      register: swapon_check
+      changed_when: false
+      failed_when: false
+
+    - name: "Step 4. Disable swap if it is active"
+      ansible.builtin.command: swapoff -a
+      when: swapon_check.stdout != ""
+      changed_when: true
+
+    - name: "Step 5. Comment out swap entries in /etc/fstab"
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+.*)$'
+        replace: '# \1'
