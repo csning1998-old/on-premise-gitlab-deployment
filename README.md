@@ -387,7 +387,8 @@ Libvirt's settings directly impact Terraform's execution permissions, thus some 
             -address="https://127.0.0.1:8200" \
             -ca-cert="${PWD}/vault/tls/ca.pem" \
             secret/on-premise-gitlab-deployment/infrastructure \
-            vault_keepalived_auth_pass="a-more-secure-pwd-for-keepalivedauthpass"
+            vault_keepalived_auth_pass="a-more-secure-pwd-for-keepalivedauthpass" \
+            vault_haproxy_stats_pass="a-more-secure-pwd-for-haproxystatspass"
         ```
 
     - **Note 1:**
