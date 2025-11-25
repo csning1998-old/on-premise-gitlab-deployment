@@ -37,11 +37,6 @@ variable "minio_cluster_config" {
     condition     = alltrue([for node in var.minio_cluster_config.nodes.minio : can(cidrnetmask("${node.ip}/32"))])
     error_message = "All provided MinIO node IP addresses must be valid IPv4 addresses."
   }
-
-  validation {
-    condition     = can(cidrnetmask(var.minio_allowed_subnet))
-    error_message = "MinIO allowed subnet must be a valid CIDR block."
-  }
 }
 
 # Registry Server Infrastructure Network Configuration
@@ -78,4 +73,9 @@ variable "minio_infrastructure" {
     minio_allowed_subnet = optional(string, "172.16.138.0/24")
     storage_pool_name    = optional(string, "iac-minio")
   })
+
+  validation {
+    condition     = can(cidrnetmask(var.minio_infrastructure.minio_allowed_subnet))
+    error_message = "MinIO allowed subnet must be a valid CIDR block."
+  }
 }
