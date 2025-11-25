@@ -31,11 +31,6 @@ variable "postgres_cluster_config" {
   }
 
   validation {
-    condition     = length(var.postgres_cluster_config.nodes.postgres) % 2 != 0
-    error_message = "The number of Postgres nodes must be an odd number (1, 3, 5, etc.) to ensure a stable Postgres quorum."
-  }
-
-  validation {
     condition     = length(var.postgres_cluster_config.nodes.haproxy) >= 1
     error_message = "At least one HAProxy node is required to route traffic to the Postgres cluster."
   }
