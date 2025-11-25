@@ -13,13 +13,13 @@ defaults
     mode    tcp
     option  tcplog
     option  dontlognull
-    timeout connect 5000
-    timeout client  50000
-    timeout server  50000
+    timeout connect {{ vault_haproxy_timeout_connect }}
+    timeout client  {{ vault_haproxy_timeout_client }}
+    timeout server  {{ vault_haproxy_timeout_server }}
 
 # Vault Frontend
 frontend vault_frontend
-    bind *:8200
+    bind *:{{ vault_haproxy_frontend_port }}
     mode tcp
     default_backend vault_backend
 
@@ -38,12 +38,12 @@ backend vault_backend
 
     # SSL Check: since it's self-signed, must use verify none to ignore certificate verification
     {% for host in groups['vault_primary'] | union(groups['vault_standby']) %}
-    server {{ host }} {{ hostvars[host]['advertise_ip'] }}:8200 check check-ssl verify none inter 2s fall 3 rise 2
+    server {{ host }} {{ hostvars[host]['advertise_ip'] }}:{{ vault_port_api }} check check-ssl verify none inter 2s fall 3 rise 2
     {% endfor %}
 
 # Stats Dashboard (Optional, for debugging)
 listen stats
-    bind *:8404
+    bind *:{{ vault_haproxy_stats_port }}
     mode http
     stats enable
     stats uri /

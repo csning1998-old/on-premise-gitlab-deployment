@@ -5,7 +5,7 @@
     - name: "F1. Check Initial Vault Status"
       ansible.builtin.command: vault status -format=json
       environment:
-        VAULT_ADDR: "https://127.0.0.1:8200"
+        VAULT_ADDR: "https://127.0.0.1:{{ vault_port_api }}"
         VAULT_SKIP_VERIFY: "true"
       register: vault_status_check
       changed_when: false
@@ -14,14 +14,14 @@
     - name: "F1.5. Wait for Vault to become Initialized (Raft Join)"
       ansible.builtin.command: vault status -format=json
       environment:
-        VAULT_ADDR: "https://127.0.0.1:8200"
+        VAULT_ADDR: "https://127.0.0.1:{{ vault_port_api }}"
         VAULT_SKIP_VERIFY: "true"
       register: vault_init_check
       until:
         - vault_init_check.rc == 2
         - (vault_init_check.stdout | from_json).initialized == true
-      retries: 12
-      delay: 5
+      retries: "{{ vault_unseal_retries }}"
+      delay: "{{ vault_unseal_delay_seconds }}"
       changed_when: false
       failed_when: false
       when:
@@ -40,7 +40,7 @@
     - name: "F3. Execute Unseal"
       ansible.builtin.command: "vault operator unseal {{ vault_keys.unseal_keys_b64[0] }}"
       environment:
-        VAULT_ADDR: "https://127.0.0.1:8200"
+        VAULT_ADDR: "https://127.0.0.1:{{ vault_port_api }}"
         VAULT_SKIP_VERIFY: "true"
       register: unseal_result
       changed_when: "'Sealed: false' in unseal_result.stdout"
