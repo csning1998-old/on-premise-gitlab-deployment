@@ -21,7 +21,7 @@ variable "vault_cluster_config" {
 
   validation {
     condition     = length(var.vault_cluster_config.nodes.vault) % 2 != 0
-    error_message = "The number of master nodes must be an odd number (1, 3, 5, etc.) to ensure a stable Sentinel quorum."
+    error_message = "The number of Vault nodes must be an odd number (1, 3, 5, etc.) to ensure a stable Raft quorum."
   }
 
   validation {
