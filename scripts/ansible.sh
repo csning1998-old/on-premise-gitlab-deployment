@@ -58,7 +58,7 @@ vault_secret_extractor() {
 
 # [Dev] This function is for faster reset and re-execute the Ansible Playbook
 ansible_playbook_executor() {
-  local playbook_file="$1"  # (e.g., "10-provision-kubeadm.yaml").
+  local playbook_file="$1"  # (e.g., "50-provision-kubeadm.yaml").
   local inventory_file="$2" # (e.g., "inventory-kubeadm-cluster.yaml").
 
   if [ -z "$playbook_file" ] || [ -z "$inventory_file" ]; then
