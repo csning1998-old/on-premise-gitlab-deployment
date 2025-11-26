@@ -9,4 +9,4 @@
   hosts: haproxy_nodes
   become: true
   roles:
-    # - 37-minio-ha-loadbalancer
+    - 37-minio-ha-loadbalancer
