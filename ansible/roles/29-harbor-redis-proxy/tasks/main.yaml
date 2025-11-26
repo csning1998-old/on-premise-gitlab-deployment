@@ -1,0 +1,40 @@
+---
+- name: "Section A: Install and Configure Local HAProxy for Redis"
+  become: true
+  block:
+    - name: "Step A1. Install HAProxy"
+      ansible.builtin.apt:
+        name: haproxy
+        state: present
+        update_cache: true
+
+    - name: "Step A2. Configure HAProxy for Redis Proxy"
+      ansible.builtin.template:
+        src: haproxy-redis.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+        mode: "0644"
+        validate: "haproxy -c -f %s"
+      notify: Restart HAProxy
+
+    - name: "Step A3. Enable and Start HAProxy"
+      ansible.builtin.systemd:
+        name: haproxy
+        state: started
+        enabled: true
+
+- name: "Section B: Fetch kubeconfig for Terraform"
+  run_once: true
+  block:
+    - name: "Step B1. Fetch kubeconfig to controller"
+      ansible.builtin.fetch:
+        src: "/home/{{ ansible_ssh_user }}/.kube/config"
+        dest: "{{ playbook_dir }}/../fetched/kubeconfig-harbor"
+        flat: true
+
+    - name: "Step B2. Replace loopback IP with external IP in fetched kubeconfig"
+      ansible.builtin.replace:
+        path: "{{ playbook_dir }}/../fetched/kubeconfig-harbor"
+        regexp: '127\.0\.0\.1'
+        replace: "{{ hostvars[inventory_hostname]['microk8s_advertise_ip'] | default(ansible_host) }}"
+      delegate_to: localhost
+      become: false

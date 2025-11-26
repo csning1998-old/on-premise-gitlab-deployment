@@ -63,7 +63,9 @@ module "bootstrapper_ansible_cluster" {
       for node in module.provisioner_kvm.all_nodes_map : node
       if startswith(node.key, "harbor-node")
     ],
+    ansible_ssh_user   = data.vault_generic_secret.iac_vars.data["vm_username"]
     harbor_ingress_vip = var.harbor_cluster_config.ha_virtual_ip
+    redis_cluster_ips  = var.external_redis_ips
   })
 
   vm_credentials = {
@@ -71,7 +73,24 @@ module "bootstrapper_ansible_cluster" {
     ssh_private_key_path = data.vault_generic_secret.iac_vars.data["ssh_private_key_path"]
   }
 
-  extra_vars = {}
+  extra_vars = {
+    "redis_requirepass" = data.vault_generic_secret.db_vars.data["redis_requirepass"]
+  }
 
   status_trigger = module.ssh_config_manager_harbor.ssh_access_ready_trigger
+}
+
+data "external" "fetched_kubeconfig" {
+  depends_on = [module.bootstrapper_ansible_cluster]
+
+  program = ["/bin/bash", "-c", <<-EOT
+    set -e
+    KUBECONFIG_PATH="${local.ansible_root_path}/fetched/kubeconfig-harbor"
+    if [ ! -f "$KUBECONFIG_PATH" ]; then
+      echo '{}'
+      exit 0
+    fi
+    jq -n --arg kc "$(cat $KUBECONFIG_PATH)" '{"content": $kc}'
+  EOT
+  ]
 }

@@ -10,6 +10,12 @@ vault_secret_extractor() {
 
   # 1. Determine the key and vault path to fetch by playbook
   case "${playbook_file}" in
+		"10-provision-harbor.yaml")
+      echo "#### Harbor playbook detected. Preparing credentials..." >&2
+      vault_path="secret/on-premise-gitlab-deployment/databases"
+      keys_needed=("redis_requirepass")
+      ;;
+
     "10-provision-postgres.yaml")
       echo "#### Postgres playbook detected. Preparing credentials..." >&2
       vault_path="secret/on-premise-gitlab-deployment/databases"
