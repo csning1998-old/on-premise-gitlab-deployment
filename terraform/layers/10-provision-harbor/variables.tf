@@ -31,14 +31,6 @@ variable "harbor_cluster_config" {
   }
 }
 
-# Redis Cluster IPs for HAProxy backend configuration, should be futher fetched by using remote-state.
-variable "external_redis_ips" {
-  description = "List of Redis Cluster IPs for HAProxy backend configuration."
-  type        = list(string)
-  default     = ["172.16.137.200", "172.16.137.201", "172.16.137.202"]
-}
-
-
 # Registry Server Infrastructure Network Configuration
 
 variable "harbor_infrastructure" {

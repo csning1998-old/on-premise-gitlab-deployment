@@ -65,7 +65,7 @@ module "bootstrapper_ansible_cluster" {
     ],
     ansible_ssh_user   = data.vault_generic_secret.iac_vars.data["vm_username"]
     harbor_ingress_vip = var.harbor_cluster_config.ha_virtual_ip
-    redis_cluster_ips  = var.external_redis_ips
+    redis_cluster_ips  = data.terraform_remote_state.redis_provision.outputs.redis_ip_list
   })
 
   vm_credentials = {
