@@ -42,7 +42,7 @@
         src: keepalived.conf.j2
         dest: /etc/keepalived/keepalived.conf
         mode: "0644"
-      notify: Restart keepalived
+      notify: Restart Keepalived
 
     - name: "Step 4. Configure HAProxy"
       ansible.builtin.template:
