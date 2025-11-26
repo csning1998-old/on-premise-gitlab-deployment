@@ -33,7 +33,7 @@
     - 27-minio-distributed
 
 - name: "Play 6: Configure HAProxy for Load Balancing"
-  hosts: haproxy_nodes
+  hosts: minio_haproxy_nodes
   become: true
   roles:
     - 28-minio-ha-loadbalancer
