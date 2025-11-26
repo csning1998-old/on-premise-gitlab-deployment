@@ -63,7 +63,7 @@ module "bootstrapper_ansible_cluster" {
       for node in module.provisioner_kvm.all_nodes_map : node
       if startswith(node.key, "harbor-node")
     ],
-    ansible_ssh_user = data.vault_generic_secret.iac_vars.data["vm_username"]
+    harbor_ingress_vip = var.harbor_cluster_config.ha_virtual_ip
   })
 
   vm_credentials = {

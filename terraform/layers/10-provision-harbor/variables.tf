@@ -11,6 +11,7 @@ variable "harbor_cluster_config" {
         ram  = number
       }))
     })
+    ha_virtual_ip   = optional(string, "172.16.135.250")
     base_image_path = optional(string, "../../../packer/output/03-base-microk8s/ubuntu-server-24-03-base-microk8s.qcow2")
   })
 
