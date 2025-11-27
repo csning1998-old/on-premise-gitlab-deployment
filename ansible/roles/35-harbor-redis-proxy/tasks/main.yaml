@@ -30,11 +30,3 @@
         src: "/home/{{ ansible_ssh_user }}/.kube/config"
         dest: "{{ playbook_dir }}/../fetched/kubeconfig-harbor"
         flat: true
-
-    - name: "Step B2. Replace loopback IP with external IP in fetched kubeconfig"
-      ansible.builtin.replace:
-        path: "{{ playbook_dir }}/../fetched/kubeconfig-harbor"
-        regexp: '127\.0\.0\.1'
-        replace: "{{ hostvars[inventory_hostname]['microk8s_advertise_ip'] | default(ansible_host) }}"
-      delegate_to: localhost
-      become: false
