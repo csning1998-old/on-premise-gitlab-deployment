@@ -59,6 +59,7 @@ module "bootstrapper_ansible_cluster" {
   }
   inventory_content = templatefile("${path.module}/../../templates/inventory-postgres-cluster.yaml.tftpl", {
     ansible_ssh_user = data.vault_generic_secret.iac_vars.data["vm_username"]
+    service_name     = var.service_name
 
     postgres_etcd_nodes = local.postgres_etcd_nodes_map
     postgres_nodes      = local.postgres_nodes_map
