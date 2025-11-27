@@ -1,4 +1,4 @@
-# Registry Server Topology & Configuration
+# Postgres Cluster Topology & Configuration
 
 variable "postgres_cluster_config" {
   description = "Define the registry server including virtual hardware resources."
@@ -62,7 +62,7 @@ variable "postgres_cluster_config" {
   }
 }
 
-# Registry Server Infrastructure Network Configuration
+# Postgres Cluster Infrastructure Network Configuration
 
 variable "postgres_infrastructure" {
   description = "All Libvirt-level infrastructure configurations for the Postgres Service."

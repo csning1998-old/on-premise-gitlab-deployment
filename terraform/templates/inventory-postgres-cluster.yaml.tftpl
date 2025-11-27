@@ -3,7 +3,7 @@ all:
   vars:
     ansible_user: "${ansible_ssh_user}"
     service_identifier: "${service_name}"
-    postgres_cluster_name: "postgres-${service_name}-cluster"
+    postgres_cluster_name: "${service_name}-postgres-cluster"
 
     etcd_cluster_ips: ${jsonencode(etcd_ips)}
     postgres_cluster_ips: ${jsonencode(postgres_ips)}

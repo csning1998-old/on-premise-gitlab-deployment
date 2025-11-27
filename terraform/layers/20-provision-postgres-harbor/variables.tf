@@ -23,6 +23,8 @@ variable "postgres_cluster_config" {
     })
     base_image_path = optional(string, "../../../packer/output/04-base-postgres/ubuntu-server-24-04-base-postgres.qcow2")
     ha_virtual_ip   = optional(string, "172.16.136.250")
+    inventory_file  = optional(string, "inventory-postgres-harbor.yaml")
+    service_name    = optional(string, "harbor")
   })
 }
 
