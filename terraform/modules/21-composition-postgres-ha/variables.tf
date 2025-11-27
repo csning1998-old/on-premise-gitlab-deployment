@@ -95,3 +95,14 @@ variable "postgres_infrastructure" {
     storage_pool_name       = optional(string, "iac-postgres")
   })
 }
+
+variable "inventory_file" {
+  description = "The name of the generated Ansible inventory file (e.g., inventory-pg-harbor.yaml)."
+  type        = string
+  default     = "inventory-postgres-cluster.yaml"
+}
+
+variable "service_name" {
+  description = "The service identifier (e.g., 'harbor', 'gitlab') used for naming resources."
+  type        = string
+}

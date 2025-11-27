@@ -2,15 +2,15 @@
 locals {
 
   postgres_nodes_map = { for idx, config in var.postgres_cluster_config.nodes.postgres :
-    "postgres-node-${format("%02d", idx)}" => config
+    "postgres-node-${var.service_name}-${format("%02d", idx)}" => config
   }
 
   postgres_etcd_nodes_map = { for idx, config in var.postgres_cluster_config.nodes.etcd :
-    "postgres-etcd-node-${format("%02d", idx)}" => config
+    "postgres-etcd-node-${var.service_name}-${format("%02d", idx)}" => config
   }
 
   haproxy_nodes_map = { for idx, config in var.postgres_cluster_config.nodes.haproxy :
-    "postgres-haproxy-node-${format("%02d", idx)}" => config
+    "postgres-haproxy-node-${var.service_name}-${format("%02d", idx)}" => config
   }
 
   all_nodes_map = merge(
