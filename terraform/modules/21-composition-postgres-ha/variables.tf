@@ -22,7 +22,9 @@ variable "postgres_cluster_config" {
       }))
     })
     base_image_path = optional(string, "../../../packer/output/04-base-postgres/ubuntu-server-24-04-base-postgres.qcow2")
-    ha_virtual_ip   = optional(string, "172.16.136.250")
+    ha_virtual_ip   = string
+    inventory_file  = string # The name of the generated Ansible inventory file.
+    service_name    = string # The service identifier (e.g., 'harbor', 'gitlab') used for naming resources.
   })
 
   # There is no odd number limit for the number of PostgreSQL nodes (e.g. one Primary and multiple Standby nodes)
@@ -91,18 +93,7 @@ variable "postgres_infrastructure" {
         })
       })
     })
-    postgres_allowed_subnet = optional(string, "172.16.136.0/24")
-    storage_pool_name       = optional(string, "iac-postgres")
+    postgres_allowed_subnet = string
+    storage_pool_name       = string
   })
-}
-
-variable "inventory_file" {
-  description = "The name of the generated Ansible inventory file (e.g., inventory-pg-harbor.yaml)."
-  type        = string
-  default     = "inventory-postgres-cluster.yaml"
-}
-
-variable "service_name" {
-  description = "The service identifier (e.g., 'harbor', 'gitlab') used for naming resources."
-  type        = string
 }

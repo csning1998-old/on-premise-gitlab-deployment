@@ -55,11 +55,11 @@ module "bootstrapper_ansible_cluster" {
     root_path       = local.ansible_root_path
     ssh_config_path = module.ssh_config_manager_postgres.ssh_config_file_path
     playbook_file   = "playbooks/20-provision-data-services.yaml"
-    inventory_file  = var.inventory_file
+    inventory_file  = var.postgres_cluster_config.inventory_file
   }
   inventory_content = templatefile("${path.module}/../../templates/inventory-postgres-cluster.yaml.tftpl", {
     ansible_ssh_user = data.vault_generic_secret.iac_vars.data["vm_username"]
-    service_name     = var.service_name
+    service_name     = var.postgres_cluster_config.service_name
 
     postgres_etcd_nodes = local.postgres_etcd_nodes_map
     postgres_nodes      = local.postgres_nodes_map

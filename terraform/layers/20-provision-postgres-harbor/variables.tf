@@ -58,6 +58,6 @@ variable "postgres_infrastructure" {
       })
     })
     postgres_allowed_subnet = optional(string, "172.16.136.0/24")
-    storage_pool_name       = optional(string, "iac-postgres")
+    storage_pool_name       = optional(string, "iac-harbor-postgres")
   })
 }
