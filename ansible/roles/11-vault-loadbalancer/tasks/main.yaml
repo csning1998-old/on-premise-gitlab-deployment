@@ -14,7 +14,7 @@
         dest: /etc/haproxy/haproxy.cfg
         owner: root
         group: root
-        mode: "0644"
+        mode: "0640"
       notify: Restart haproxy
 
     - name: "A3. Install Keepalived (for VIP management)"

@@ -48,7 +48,7 @@
       ansible.builtin.template:
         src: haproxy.cfg.j2
         dest: /etc/haproxy/haproxy.cfg
-        mode: "0644"
+        mode: "0640"
       notify: Restart HAProxy
 
 - name: "Block C: Start Services"
