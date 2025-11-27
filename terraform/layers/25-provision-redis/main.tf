@@ -59,9 +59,14 @@ module "bootstrapper_ansible_cluster" {
   }
 
   inventory_content = templatefile("${path.root}/../../templates/inventory-redis-cluster.yaml.tftpl", {
-    ansible_ssh_user     = data.vault_generic_secret.iac_vars.data["vm_username"]
-    redis_nodes          = local.redis_nodes_map
-    redis_allowed_subnet = var.redis_infrastructure.redis_allowed_subnet
+    ansible_ssh_user = data.vault_generic_secret.iac_vars.data["vm_username"]
+
+    redis_nodes   = local.redis_nodes_map
+    haproxy_nodes = local.redis_haproxy_nodes_map
+
+    redis_ha_virtual_ip     = var.redis_cluster_config.ha_virtual_ip
+    redis_allowed_subnet    = var.redis_infrastructure.redis_allowed_subnet
+    redis_nat_subnet_prefix = local.redis_nat_network_subnet_prefix
   })
 
   vm_credentials = {

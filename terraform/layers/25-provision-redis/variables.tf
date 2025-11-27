@@ -10,7 +10,13 @@ variable "redis_cluster_config" {
         vcpu = number
         ram  = number
       }))
+      haproxy = list(object({
+        ip   = string
+        vcpu = number
+        ram  = number
+      }))
     })
+    ha_virtual_ip   = optional(string, "172.16.137.250")
     base_image_path = optional(string, "../../../packer/output/05-base-redis/ubuntu-server-24-05-base-redis.qcow2")
   })
 
