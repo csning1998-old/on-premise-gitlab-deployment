@@ -60,6 +60,7 @@ module "bootstrapper_ansible_cluster" {
 
   inventory_content = templatefile("${path.root}/../../templates/inventory-redis-cluster.yaml.tftpl", {
     ansible_ssh_user = data.vault_generic_secret.iac_vars.data["vm_username"]
+    service_name     = var.redis_cluster_config.service_name
 
     redis_nodes   = local.redis_nodes_map
     haproxy_nodes = local.redis_haproxy_nodes_map
