@@ -55,6 +55,6 @@ variable "redis_infrastructure" {
       })
     })
     redis_allowed_subnet = optional(string, "172.16.137.0/24")
-    storage_pool_name    = optional(string, "iac-redis")
+    storage_pool_name    = optional(string, "iac-redis-harbor")
   })
 }

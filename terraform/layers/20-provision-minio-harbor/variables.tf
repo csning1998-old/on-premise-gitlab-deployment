@@ -21,7 +21,7 @@ variable "minio_cluster_config" {
       }))
     })
     base_image_path = optional(string, "../../../packer/output/06-base-minio/ubuntu-server-24-06-base-minio.qcow2")
-    ha_virtual_ip   = optional(string, "172.16.138.250")
+    ha_virtual_ip   = optional(string, "172.16.139.250")
     inventory_file  = optional(string, "inventory-minio-harbor.yaml")
     service_name    = optional(string, "harbor")
   })
@@ -58,7 +58,7 @@ variable "minio_infrastructure" {
         })
       })
     })
-    minio_allowed_subnet = string
-    storage_pool_name    = string
+    minio_allowed_subnet = optional(string, "172.16.139.0/24")
+    storage_pool_name    = optional(string, "iac-harbor-minio")
   })
 }

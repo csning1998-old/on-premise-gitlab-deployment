@@ -2,9 +2,9 @@
 locals {
 
   minio_nodes_map = { for idx, config in var.minio_cluster_config.nodes.minio :
-    "${var.minio_cluster_config.service_name}-minio-node-${format("%02d", idx)}" => config
+    "${var.minio_cluster_config.service_name}-minio-db-node-${format("%02d", idx)}" => config
   }
-  # e.g. gitlab-minio-node-00, harbor-minio-node-00
+  # e.g. gitlab-minio-db-node-00, harbor-minio-db-node-00
 
   haproxy_nodes_map = { for idx, config in var.minio_cluster_config.nodes.haproxy :
     "${var.minio_cluster_config.service_name}-minio-haproxy-node-${format("%02d", idx)}" => config

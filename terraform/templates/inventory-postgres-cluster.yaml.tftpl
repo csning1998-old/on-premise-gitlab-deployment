@@ -19,7 +19,7 @@ all:
           advertise_ip: ${node.ip}
 %{ endfor ~}
 
-    postgres_nodes:
+    postgres_db_nodes:
       hosts:
 %{ for key, node in postgres_nodes ~}
         ${key}:
