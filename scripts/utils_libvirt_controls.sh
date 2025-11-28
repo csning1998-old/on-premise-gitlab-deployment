@@ -8,7 +8,7 @@ declare -A DOMAIN_MAP=(
 
   ["20-provision-postgres-gitlab"]="gitlab-postgres-"
 	["20-gitlab-redis"]="gitlab-redis-"
-  ["20-provision-minio-gitlab"]="gitlab-minio-"
+	["20-gitlab-minio"]="gitlab-minio-"
   ["50-provision-kubeadm-gitlab"]="gitlab-kubeadm-"
 
   ["20-provision-postgres-harbor"]="harbor-postgres-"
@@ -20,11 +20,13 @@ declare -A DOMAIN_MAP=(
 # Storage Pool names.
 declare -A POOL_MAP=(
 	["20-gitlab-redis"]="iac-gitlab-redis"
+	["20-gitlab-minio"]="iac-gitlab-minio"
 )
 
 # Network prefixes.
 declare -A NET_MAP=(
 	["20-gitlab-redis"]="iac-gitlab-redis"
+	["20-gitlab-minio"]="iac-gitlab-minio"
 )
 
 # Function: Ensure libvirt service is running before executing a command.
