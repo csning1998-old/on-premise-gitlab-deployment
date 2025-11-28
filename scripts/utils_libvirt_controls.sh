@@ -11,9 +11,9 @@ declare -A DOMAIN_MAP=(
 	["20-gitlab-minio"]="gitlab-minio-"
   ["50-provision-kubeadm-gitlab"]="gitlab-kubeadm-"
 
-  ["20-provision-postgres-harbor"]="harbor-postgres-"
-  ["20-provision-redis-harbor"]="harbor-redis-"
-  ["20-provision-minio-harbor"]="harbor-minio-"
+	["20-harbor-postgres"]="harbor-postgres-"
+	["20-harbor-redis"]="harbor-redis-"
+	["20-harbor-minio"]="harbor-minio-"
   ["30-provision-microk8s-harbor"]="harbor-microk8s-"
 )
 
@@ -22,6 +22,10 @@ declare -A POOL_MAP=(
 	["20-gitlab-postgres"]="iac-gitlab-postgres"
 	["20-gitlab-redis"]="iac-gitlab-redis"
 	["20-gitlab-minio"]="iac-gitlab-minio"
+
+	["20-harbor-postgres"]="iac-harbor-postgres"
+	["20-harbor-redis"]="iac-harbor-redis"
+	["20-harbor-minio"]="iac-harbor-minio"
 )
 
 # Network prefixes.
@@ -29,6 +33,9 @@ declare -A NET_MAP=(
 	["20-gitlab-postgres"]="iac-gitlab-postgres"
 	["20-gitlab-redis"]="iac-gitlab-redis"
 	["20-gitlab-minio"]="iac-gitlab-minio"
+	["20-harbor-postgres"]="iac-harbor-postgres"
+	["20-harbor-redis"]="iac-harbor-redis"
+	["20-harbor-minio"]="iac-harbor-minio"
 )
 
 # Function: Ensure libvirt service is running before executing a command.
