@@ -74,6 +74,10 @@ module "ansible_runner" {
     postgres_etcd_nodes = var.topology_config.etcd_nodes
     haproxy_nodes       = var.topology_config.ha_config.haproxy_nodes
 
+    haproxy_stats_port = var.topology_config.ha_config.stats_port
+    haproxy_rw_port    = var.topology_config.ha_config.rw_proxy
+    haproxy_ro_port    = var.topology_config.ha_config.ro_proxy
+
     etcd_ips     = [for n in var.topology_config.etcd_nodes : n.ip]
     postgres_ips = [for n in var.topology_config.nodes : n.ip]
 
