@@ -68,9 +68,21 @@ resource "kubernetes_secret" "harbor_tls" {
     "ca.crt"  = tls_self_signed_cert.ca.cert_pem
   }
 }
+resource "null_resource" "tls_dir" {
+  triggers = {
+    # This will run whenever the path changes, which is effectively once.
+    dir_path = "${path.root}/tls"
+  }
+
+  provisioner "local-exec" {
+    command = "mkdir -p ${path.root}/tls"
+  }
+}
 
 # 4. Export CA for Client Trust
 resource "local_file" "ca_cert" {
+  depends_on = [null_resource.tls_dir]
+
   content  = tls_self_signed_cert.ca.cert_pem
   filename = "${path.root}/tls/harbor-ca.crt"
 }
