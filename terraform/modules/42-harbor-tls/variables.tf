@@ -1,6 +1,6 @@
 
 variable "cert_common_name" {
-  description = "The Common Name for the certificate (e.g. harbor.iac.local)"
+  description = "The Common Name for the certificate"
   type        = string
 }
 
@@ -28,7 +28,7 @@ variable "organization" {
 }
 
 variable "common_name_subject" {
-  description = "The Common Name for the certificate (e.g. harbor.iac.local)"
+  description = "The Common Name for the certificate"
   type        = string
   default     = "Harbor Root CA"
 }
