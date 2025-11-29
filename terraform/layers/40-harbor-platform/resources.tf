@@ -31,7 +31,7 @@ resource "helm_release" "harbor" {
         }
       }
 
-      externalURL = "http://${var.harbor_hostname}"
+      externalURL = "https://${var.harbor_hostname}"
 
       # External Postgres via HAProxy VIP
       database = {
@@ -64,7 +64,7 @@ resource "helm_release" "harbor" {
           s3 = {
             region         = "us-east-1"
             bucket         = "harbor-registry"
-            accesskey      = "admin" # MinIO Root User corresponding to Ansible defaults
+            accesskey      = data.vault_generic_secret.db_vars.data["minio_root_user"] # MinIO Root User corresponding to Ansible defaults
             secretkey      = data.vault_generic_secret.db_vars.data["minio_root_password"]
             regionendpoint = "http://${data.terraform_remote_state.minio.outputs.harbor_minio_virtual_ip}:9000"
             encrypt        = false
