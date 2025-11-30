@@ -42,17 +42,22 @@ resource "tls_cert_request" "vault_server" {
     organization = "On-Premise GitLab Deployment"
   }
 
-  dns_names = [
-    "vault.iac.local",
-    "vault",
-    "localhost",
-    "vault-node-00", "vault-node-01", "vault-node-02"
-  ]
+  dns_names = concat(
+    [
+      "vault.iac.local",
+      "vault",
+      "localhost"
+    ],
+    keys(var.vault_cluster.nodes)
+  )
 
-  ip_addresses = [
-    "127.0.0.1",
-    var.vault_virtual_ip_sans
-  ]
+  ip_addresses = concat(
+    [
+      "127.0.0.1",
+      var.vault_cluster.ha_config.virtual_ip
+    ],
+    [for n in var.vault_cluster.nodes : n.ip]
+  )
 }
 
 resource "tls_locally_signed_cert" "vault_server" {

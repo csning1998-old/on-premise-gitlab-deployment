@@ -1,7 +1,14 @@
 
-variable "vault_virtual_ip_sans" {
-  description = "HA Virtual IP of Vault Core service used for SANs"
-  type        = string
+variable "vault_cluster" {
+  description = "Vault Cluster (used for SANs)"
+  type = object({
+    nodes = map(object({
+      ip = string
+    }))
+    ha_config = object({
+      virtual_ip = string
+    })
+  })
 }
 
 variable "output_dir" {

@@ -9,10 +9,19 @@ module "vault_compute" {
 }
 
 module "vault_tls" {
-  source = "../../modules/12-vault-tls"
+  source     = "../../modules/12-vault-tls"
+  output_dir = local.layer_tls_dir
 
-  vault_virtual_ip_sans = var.vault_compute.ha_config.virtual_ip
-  output_dir            = local.layer_tls_dir
+  vault_cluster = {
+    nodes = {
+      for k, v in var.vault_compute.nodes : k => {
+        ip = v.ip
+      }
+    }
+    ha_config = {
+      virtual_ip = var.vault_compute.ha_config.virtual_ip
+    }
+  }
 }
 
 module "vault_pki_config" {
