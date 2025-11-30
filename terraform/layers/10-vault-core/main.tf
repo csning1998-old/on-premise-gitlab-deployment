@@ -83,8 +83,8 @@ module "ansible_runner" {
   }
 
   extra_vars = {
-    "vault_keepalived_auth_pass" = data.vault_generic_secret.db_vars.data["vault_keepalived_auth_pass"]
-    "vault_haproxy_stats_pass"   = data.vault_generic_secret.db_vars.data["vault_haproxy_stats_pass"]
+    "vault_keepalived_auth_pass" = data.vault_generic_secret.infra_vars.data["vault_keepalived_auth_pass"]
+    "vault_haproxy_stats_pass"   = data.vault_generic_secret.infra_vars.data["vault_haproxy_stats_pass"]
   }
 
   status_trigger = module.ssh_manager.ssh_access_ready_trigger

@@ -95,3 +95,9 @@ variable "vault_infra" {
     error_message = "All network CIDRs must be valid."
   }
 }
+
+variable "vault_addr" {
+  description = "The address of the Vault server"
+  type        = string
+  default     = "https://127.0.0.1:8200" # Host Podman Vault for Development Environment
+}
