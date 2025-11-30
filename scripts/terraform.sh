@@ -54,6 +54,10 @@ terraform_layer_executor() {
     return 1
   fi
 
+	if [[ "${layer_name}" == "10-vault-core" ]]; then
+		mkdir -p terraform/layers/10-vault-core/tls && touch terraform/layers/10-vault-core/tls/vault-ca.crt
+	fi
+
   echo ">>> STEP: Applying Terraform configuration for layer [${layer_name}]..."
   local cmd="terraform init -upgrade && terraform destroy -auto-approve -var-file=./terraform.tfvars && terraform init -upgrade && terraform apply -auto-approve -var-file=./terraform.tfvars"
   if [ -n "$target_resource" ]; then

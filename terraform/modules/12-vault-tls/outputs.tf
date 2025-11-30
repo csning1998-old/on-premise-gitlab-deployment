@@ -1,10 +1,10 @@
 
 output "tls_source_dir" {
-  value       = abspath("${path.module}/tls")
-  description = "The absolute path of the directory containing generated certificates."
+  description = "The directory where certificates were saved."
+  value       = var.output_dir
 }
 
 output "ca_cert_file" {
-  value       = abspath(local_file.vault_ca.filename)
-  description = "Absolute path to the CA certificate file."
+  description = "Absolute path to the generated CA certificate file."
+  value       = "${var.output_dir}/vault-ca.crt"
 }

@@ -25,7 +25,7 @@ resource "tls_self_signed_cert" "vault_ca" {
 # On-premise CA Cert for Terraform Provider & Ansible
 resource "local_file" "vault_ca" {
   content  = tls_self_signed_cert.vault_ca.cert_pem
-  filename = "${path.module}/tls/vault-ca.crt"
+  filename = "${var.output_dir}/vault-ca.crt"
 }
 
 # Vault Server Certificate for HA Nodes & VIP
@@ -73,11 +73,11 @@ resource "tls_locally_signed_cert" "vault_server" {
 # Vault Server Cert & Key
 resource "local_file" "vault_server_crt" {
   content  = tls_locally_signed_cert.vault_server.cert_pem
-  filename = "${path.module}/tls/vault.crt"
+  filename = "${var.output_dir}/vault.crt"
 }
 
 resource "local_file" "vault_server_key" {
   content         = tls_private_key.vault_server.private_key_pem
-  filename        = "${path.module}/tls/vault.key"
+  filename        = "${var.output_dir}/vault.key"
   file_permission = "0600"
 }

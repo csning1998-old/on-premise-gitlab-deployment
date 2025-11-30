@@ -12,6 +12,7 @@ module "vault_tls" {
   source = "../../modules/12-vault-tls"
 
   vault_virtual_ip_sans = var.vault_compute.ha_config.virtual_ip
+  output_dir            = local.layer_tls_dir
 }
 
 module "vault_pki_config" {
@@ -19,6 +20,9 @@ module "vault_pki_config" {
 
   depends_on = [module.vault_compute]
 
-  vault_addr   = "https://${var.vault_compute.ha_config.virtual_ip}:8200"
-  ca_cert_file = module.vault_tls.ca_cert_file
+  providers = {
+    vault = vault.target_cluster
+  }
+
+  vault_addr = "https://${var.vault_compute.ha_config.virtual_ip}:8200"
 }

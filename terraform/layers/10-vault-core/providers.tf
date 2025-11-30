@@ -12,7 +12,16 @@ terraform {
   }
 }
 
+# Provider A: Default for Bootstrap, connect to Local Podman Vault
 provider "vault" {
-  address      = var.vault_addr
-  ca_cert_file = module.vault_tls.ca_cert_file
+  address      = var.vault_dev_addr
+  ca_cert_file = abspath("${path.root}/../../../vault/tls/ca.pem")
+}
+
+# Provider B: Aliased for Target, connect to new Production Vault
+provider "vault" {
+  alias = "target_cluster"
+
+  address      = "https://${var.vault_compute.ha_config.virtual_ip}:8200"
+  ca_cert_file = "${path.root}/tls/vault-ca.crt"
 }
