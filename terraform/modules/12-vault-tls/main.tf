@@ -51,7 +51,7 @@ resource "tls_cert_request" "vault_server" {
 
   ip_addresses = [
     "127.0.0.1",
-    var.vault_compute.ha_config.virtual_ip
+    var.vault_virtual_ip_sans
   ]
 }
 

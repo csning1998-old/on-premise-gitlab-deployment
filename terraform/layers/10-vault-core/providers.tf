@@ -13,5 +13,6 @@ terraform {
 }
 
 provider "vault" {
-  address = var.vault_addr
+  address      = var.vault_addr
+  ca_cert_file = module.vault_tls.ca_cert_file
 }
