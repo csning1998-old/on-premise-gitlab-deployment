@@ -101,6 +101,12 @@ terraform_layer_selector() {
 
           mkdir -p "$tls_dir" && touch "$tls_dir/vault-ca.crt"  # 1. Dummy CA
           rm -rf "${ANSIBLE_DIR}/fetched/vault"                 # 2. Dummy Token
+
+					# 3. Since refrash is set to false (below), the state files should be removed manually.
+					rm -rf "${TERRAFORM_DIR}"/layers/10-vault-core/terraform.tfstate
+					rm -rf "${TERRAFORM_DIR}"/layers/10-vault-core/terraform.tfstate.backup
+
+					# 4. Create the token file with a placeholder value.
           mkdir -p "$(dirname "$token_file")"
           echo '{"root_token": "placeholder-for-bootstrap"}' > "$token_file"
 
