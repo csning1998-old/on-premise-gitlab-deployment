@@ -116,6 +116,7 @@ terraform_layer_selector() {
 					echo ">>> [Vault Core] Stage 2: Service Configuration (PKI)..."
           # Since Stage 1 just done and to prevent drift bug from Provider, Terraform does not need to scan KVM.
 					terraform_layer_executor "${layer}" "-target=module.vault_pki_config -refresh=false"
+					terraform refresh
       else
           terraform_layer_executor "${layer}"
       fi
