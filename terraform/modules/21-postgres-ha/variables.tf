@@ -114,3 +114,8 @@ variable "harbor_postgres_tls" {
     server_key_pem  = string
   })
 }
+
+variable "vault_ca_cert_b64" {
+  description = "Base64 encoded CA certificate for Vault Agent"
+  type        = string
+}
