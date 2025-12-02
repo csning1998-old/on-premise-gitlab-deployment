@@ -8,25 +8,3 @@
         state: present
         update_cache: true
       no_log: true
-
-- name: "Block B: Install Vault Binary"
-  become: true
-  block:
-    - name: "Step B1. Download and Unarchive Vault (v{{ vault_target_version }})"
-      ansible.builtin.unarchive:
-        src: "https://releases.hashicorp.com/vault/{{ vault_target_version }}/vault_{{ vault_target_version }}_{{ vault_target_os }}_{{ vault_target_arch }}.zip"
-        dest: "/usr/local/bin"
-        remote_src: true
-        mode: "0755"
-        owner: root
-        group: root
-        creates: "/usr/local/bin/vault"
-
-    - name: "Step B2. Verify Vault installation"
-      ansible.builtin.command: vault --version
-      register: vault_version_output
-      changed_when: false
-
-    - name: "Step B3. Print Vault version"
-      ansible.builtin.debug:
-        msg: "Vault installed: {{ vault_version_output.stdout }}"
