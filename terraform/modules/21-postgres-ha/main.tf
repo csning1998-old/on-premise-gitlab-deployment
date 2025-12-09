@@ -96,11 +96,6 @@ module "ansible_runner" {
     "pg_replication_password" = data.vault_generic_secret.db_vars.data["pg_replication_password"]
     "pg_vrrp_secret"          = data.vault_generic_secret.db_vars.data["pg_vrrp_secret"]
 
-    # To prevent truncated by shell, use base64 encoding
-    "pg_tls_ca_cert"     = base64encode(var.harbor_postgres_tls.ca_cert_pem)
-    "pg_tls_server_cert" = base64encode(var.harbor_postgres_tls.server_cert_pem)
-    "pg_tls_server_key"  = base64encode(var.harbor_postgres_tls.server_key_pem)
-
     # Vault Agent AppRole Credentials
     "vault_agent_role_id"   = vault_approle_auth_backend_role.postgres.role_id
     "vault_agent_secret_id" = vault_approle_auth_backend_role_secret_id.postgres.secret_id

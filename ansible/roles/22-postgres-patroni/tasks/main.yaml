@@ -27,6 +27,12 @@
 - name: "Section C: Configure TLS Certificates"
   become: true
   block:
+    - name: "Step C0. Ensure Vault Binary is installed"
+      ansible.builtin.include_role:
+        name: 07-base-vault
+      vars:
+        vault_install_only: true
+
     - name: "Step C1. Create Vault Agent Config Directory"
       ansible.builtin.file:
         path: "/etc/vault.d/approle"

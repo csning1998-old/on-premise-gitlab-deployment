@@ -33,18 +33,3 @@ output "gitlab_postgres_haproxy_ro_port" {
   description = "Postgres HAProxy Read-Only Port for GitLab"
   value       = var.gitlab_postgres_compute.ha_config.ro_proxy
 }
-
-output "gitlab_postgres_client_cert_pem" {
-  value     = module.postgres_tls.client_cert_pem
-  sensitive = true
-}
-
-output "gitlab_postgres_client_key_pem" {
-  value     = module.postgres_tls.client_key_pem
-  sensitive = true
-}
-
-output "gitlab_postgres_ca_cert_pem" {
-  value     = module.postgres_tls.ca_cert_pem
-  sensitive = true
-}

@@ -17,7 +17,7 @@ EOT
 # Create AppRole that define the role of Postgres
 resource "vault_approle_auth_backend_role" "postgres" {
   backend        = "approle"
-  role_name      = "gitlab-postgres"
+  role_name      = var.vault_role_name
   token_policies = ["default", vault_policy.postgres_pki.name]
 
   token_ttl     = 3600
