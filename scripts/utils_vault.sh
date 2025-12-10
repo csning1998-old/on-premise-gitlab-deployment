@@ -52,20 +52,17 @@ vault_status_reporter() {
 
   # Check Production Vault on Production Guest VM
   if [[ ! -f "$PROD_CA_CERT" ]]; then
-      echo -e "Production Vault (Layer10): ${yellow}Unknown (CA Cert missing - Layer 10 not ready)${reset}"
-  else
-		local prod_code
-		prod_code=$(curl -k -s -o /dev/null -w "%{http_code}" --connect-timeout 0.5 "${PROD_VAULT_ADDR}/v1/sys/health" || echo "000")
-
-		case "$prod_code" in
-			200) echo -e "Production Vault (Layer10): ${green}Active (Leader)${reset}" ;;
-			429) echo -e "Production Vault (Layer10): ${green}Standby (Follower)${reset}" ;;
-			503) echo -e "Production Vault (Layer10): ${yellow}Sealed${reset}" ;;
-			501) echo -e "Production Vault (Layer10): ${red}Not Initialized${reset}" ;;
-			*)   echo -e "Production Vault (Layer10): ${red}Unreachable (VIP Not Responding)${reset}" ;;
-		esac
-  fi
-
+    echo -e "Production Vault (Layer10): ${yellow}Unknown (CA Cert missing)${reset}"
+  elif curl -s --connect-timeout 1 --cacert "${PROD_CA_CERT}" "${PROD_VAULT_ADDR}/v1/sys/health" > /dev/null 2>&1; then
+		local prod_status_json
+    prod_status_json=$(vault status -address="${PROD_VAULT_ADDR}" -ca-cert="${PROD_CA_CERT}" -format=json 2>/dev/null || true)
+	
+		if [[ -n "$prod_status_json" ]]; then
+				echo -e "Production Vault (Layer10): ${green}Running (Unsealed)${reset}"
+		fi
+	else	# including connection refused, SSL error, Unsealed, EOF, timeout...
+		echo -e "Production Vault (Layer10): ${red}Stopped or Unsealed or Unreachable${reset}"
+	fi
   echo "--------------------------------------------------"
 }
 
@@ -215,4 +212,6 @@ vault_prod_unseal_trigger() {
   
   ansible-playbook -i "$inventory_file" "${ANSIBLE_DIR}/playbooks/90-operation-vault-unseal.yaml"
   echo ">>> [Prod Vault] Unseal Playbook execution completed."
+
+	sleep 2
 }
