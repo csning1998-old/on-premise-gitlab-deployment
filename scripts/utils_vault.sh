@@ -110,14 +110,17 @@ vault_dev_tls_generator() {
 vault_dev_engine_enforcer() {
   echo ">>> [Development Vault] Ensuring KV secrets engine is enabled at 'secret/'..."
   
+  if [ ! -f "$DEV_ROOT_TOKEN_FILE" ]; then
+      echo "#### ERROR: Root token not found. Cannot configure engine."
+      return 1
+  fi
+  
   local token
   token=$(cat "$DEV_ROOT_TOKEN_FILE")
   
-  VAULT_ADDR="$DEV_VAULT_ADDR" DEV_VAULT_TOKEN="$token" vault secrets list -format=json | jq -e '."secret/"' > /dev/null
-  
-  if [ $? -ne 0 ]; then
+  if ! VAULT_ADDR="$DEV_VAULT_ADDR" VAULT_TOKEN="$token" vault secrets list -ca-cert="${DEV_CA}" -format=json | jq -e '."secret/"' > /dev/null; then
     echo "#### 'secret/' path not found, enabling kv-v2..."
-    VAULT_ADDR="$DEV_VAULT_ADDR" DEV_VAULT_TOKEN="$token" vault secrets enable -path=secret kv-v2
+    VAULT_ADDR="$DEV_VAULT_ADDR" VAULT_TOKEN="$token" vault secrets enable -ca-cert="${DEV_CA}" -path=secret kv-v2
   else
     echo "#### kv-v2 secrets engine is already enabled."
   fi
@@ -135,9 +138,9 @@ vault_dev_init_handler() {
   mkdir -p "$DEV_KEYS_DIR"
 
   echo "#### Initializing..."
-  if ! vault operator init -address="${DEV_VAULT_ADDR}" -format=json > "$DEV_INIT_FILE"; then
-		echo "#### ERROR: Initialization failed. Is Dev Vault running?"
-		return 1
+	if ! vault operator init -address="${DEV_VAULT_ADDR}" -ca-cert="${DEV_CA}" -format=json > "$DEV_INIT_FILE"; then
+    echo "#### ERROR: Initialization failed. Is Dev Vault running?"
+    return 1
   fi
 
   # Extract Keys
@@ -173,8 +176,7 @@ vault_dev_seal_handler() {
   fi
 
   local status_json
-  status_json=$(vault status -address="${DEV_VAULT_ADDR}" -format=json 2>/dev/null || true)
-  
+	status_json=$(vault status -address="${DEV_VAULT_ADDR}" -ca-cert="${DEV_CA}" -format=json 2>/dev/null || true)  
   if [[ $(echo "$status_json" | jq .sealed 2>/dev/null) == "false" ]]; then
     echo "#### Development Vault is already unsealed."
     return 0
@@ -182,7 +184,7 @@ vault_dev_seal_handler() {
 
   while IFS= read -r key; do
     [[ -z "$key" ]] && continue
-    vault operator unseal -address="${DEV_VAULT_ADDR}" "$key" > /dev/null
+    vault operator unseal -address="${DEV_VAULT_ADDR}" -ca-cert="${DEV_CA}" "$key" > /dev/null
   done < "$DEV_UNSEAL_KEY_FILE"
 
   echo "#### Dev Vault Unsealed."
@@ -191,6 +193,7 @@ vault_dev_seal_handler() {
   if [ -f "$DEV_ROOT_TOKEN_FILE" ]; then
 		export DEV_VAULT_TOKEN=$(cat "$DEV_ROOT_TOKEN_FILE")
 		export VAULT_ADDR="${DEV_VAULT_ADDR}"
+		export VAULT_CACERT="${DEV_CA}"
 		echo "#### INFO: Exported DEV_VAULT_TOKEN and set VAULT_ADDR to Dev Vault for this session."
   fi
 }
