@@ -1,5 +1,13 @@
 
 # MicroK8s Cluster State
+
+data "terraform_remote_state" "microk8s_provision" {
+  backend = "local"
+  config = {
+    path = "../30-harbor-microk8s/terraform.tfstate"
+  }
+}
+
 data "terraform_remote_state" "harbor_platform" {
   backend = "local"
   config = {
@@ -8,7 +16,7 @@ data "terraform_remote_state" "harbor_platform" {
 }
 
 # HashiCorp Vault State
-data "terraform_remote_state" "vault" {
+data "terraform_remote_state" "vault_core" {
   backend = "local"
   config = {
     path = "../10-vault-core/terraform.tfstate"

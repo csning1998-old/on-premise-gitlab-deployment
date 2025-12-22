@@ -25,7 +25,9 @@ terraform {
 }
 
 provider "vault" {
-  # Vault Address is read from VAULT_ADDR env var
+  address      = "https://${data.terraform_remote_state.vault_core.outputs.vault_ha_virtual_ip}:443"
+  ca_cert_file = abspath("${path.root}/../10-vault-core/tls/vault-ca.crt")
+  token        = jsondecode(file(abspath("${path.root}/../../../ansible/fetched/vault/vault_init_output.json"))).root_token
 }
 
 locals {
@@ -56,9 +58,4 @@ provider "harbor" {
   url      = "https://${var.harbor_hostname}"
   username = "admin"
   password = data.vault_generic_secret.harbor_vars.data["harbor_admin_password"]
-}
-
-provider "vault" {
-  address         = "https://${data.terraform_remote_state.vault.outputs.vault_ha_virtual_ip}:8200"
-  skip_tls_verify = true
 }
