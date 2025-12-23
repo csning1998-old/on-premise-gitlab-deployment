@@ -82,7 +82,7 @@ module "ansible_runner" {
     postgres_ips = [for n in var.topology_config.nodes : n.ip]
 
     postgres_ha_virtual_ip     = var.topology_config.ha_config.virtual_ip
-    postgres_allowed_subnet    = var.infra_config.allowed_subnet
+    postgres_mtls_node_subnet  = var.infra_config.allowed_subnet
     postgres_nat_subnet_prefix = local.nat_network_subnet_prefix
   })
 

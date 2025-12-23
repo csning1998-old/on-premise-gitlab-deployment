@@ -24,6 +24,20 @@ resource "vault_approle_auth_backend_role" "postgres" {
   token_max_ttl = 86400
 }
 
+resource "vault_pki_secret_backend_role" "postgres_client" {
+  backend          = var.vault_pki_mount_path
+  name             = "postgres-client-role"
+  ttl              = 86400
+  allow_ip_sans    = true
+  key_type         = "rsa"
+  key_bits         = 2048
+  allowed_domains  = ["harbor", "gitlab", "client.iac.local"]
+  allow_subdomains = true
+  allow_any_name   = false
+  client_flag      = true
+  server_flag      = false
+}
+
 # Generate Secret ID for login credentials
 resource "vault_approle_auth_backend_role_secret_id" "postgres" {
   backend   = vault_approle_auth_backend_role.postgres.backend
