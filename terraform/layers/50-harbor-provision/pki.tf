@@ -9,7 +9,7 @@ resource "kubernetes_manifest" "harbor_certificate" {
       namespace = "harbor"
     }
     spec = {
-      secretName = "harbor-ingress-tls" # Generated Secret Name
+      secretName = "harbor-ingress-cert" # Generated Secret Name
       issuerRef = {
         name = "vault-issuer"
         kind = "ClusterIssuer"

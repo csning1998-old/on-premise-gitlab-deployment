@@ -29,7 +29,7 @@ resource "helm_release" "harbor" {
           # Specify Secret, otherwise Harbor will issue an invalid certificate
           certSource = "secret"
           secret = {
-            secretName = "harbor-ingress-tls"
+            secretName = "harbor-ingress-cert"
           }
         }
         ingress = {

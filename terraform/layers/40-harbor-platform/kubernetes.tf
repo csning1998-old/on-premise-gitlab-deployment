@@ -1,15 +1,15 @@
 
-# Establish Service Account (Vault uses this identity to verify K8s)
+# 6. Establish Issuer SA since Cert-Manager uses this identity to login Vault
 resource "kubernetes_service_account" "vault_issuer" {
   depends_on = [helm_release.cert_manager]
 
   metadata {
     name      = "vault-issuer"
-    namespace = "cert-manager" # Ensure this matches where Cert-Manager is installed
+    namespace = "cert-manager"
   }
 }
 
-# Create Long-Lived Token Secret
+# 7. Create Long-Lived Token Secret
 resource "kubernetes_secret" "vault_issuer_token" {
   metadata {
     name      = "vault-issuer-token"
@@ -18,14 +18,15 @@ resource "kubernetes_secret" "vault_issuer_token" {
       "kubernetes.io/service-account.name" = kubernetes_service_account.vault_issuer.metadata[0].name
     }
   }
-  type = "kubernetes.io/service-account-token" # JWT Token will be automatically filled in by K8s Controller
+  type = "kubernetes.io/service-account-token"
 }
 
-# Define ClusterIssuer
+# 8. Define ClusterIssuer (use kubectl provider to avoid CRD issue)
 resource "kubectl_manifest" "vault_issuer" {
   depends_on = [
     helm_release.cert_manager,
-    kubernetes_secret.vault_issuer_token
+    kubernetes_secret.vault_issuer_token,
+    vault_kubernetes_auth_backend_role.issuer
   ]
 
   yaml_body = yamlencode({
@@ -42,7 +43,7 @@ resource "kubectl_manifest" "vault_issuer" {
 
         auth = {
           kubernetes = {
-            mountPath = "kubernetes"
+            mountPath = "/v1/auth/kubernetes"
             role      = "harbor-issuer"
             secretRef = {
               name = kubernetes_secret.vault_issuer_token.metadata[0].name
@@ -54,13 +55,3 @@ resource "kubectl_manifest" "vault_issuer" {
     }
   })
 }
-
-# Allow Cert-Manager's ServiceAccount to login Vault
-resource "vault_kubernetes_auth_backend_role" "issuer" {
-  backend                          = "kubernetes"
-  role_name                        = "harbor-issuer"
-  bound_service_account_names      = [kubernetes_service_account.vault_issuer.metadata[0].name]
-  bound_service_account_namespaces = ["cert-manager"]      # Limit Namespace
-  token_policies                   = ["harbor-pki-policy"] # Layer 10 created policy
-}
-
