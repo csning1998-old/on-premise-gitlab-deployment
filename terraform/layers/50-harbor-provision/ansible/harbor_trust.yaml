@@ -67,3 +67,67 @@
         - curl_check.stdout == "200" or curl_check.stdout == "401"
       retries: 20
       delay: 5
+
+    - name: Ensure .kube directory exists
+      file:
+        path: "/home/{{ ansible_user }}/.kube"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0755"
+
+    - name: Generate kubeconfig from MicroK8s
+      shell: microk8s config > /home/{{ ansible_user }}/.kube/config
+      args:
+        creates: "/home/{{ ansible_user }}/.kube/config"
+
+    - name: Set permissions on kubeconfig
+      file:
+        path: "/home/{{ ansible_user }}/.kube/config"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0600"
+
+    - name: Get current Harbor Registry ConfigMap
+      kubernetes.core.k8s_info:
+        kubeconfig: "/home/{{ ansible_user }}/.kube/config"
+        kind: ConfigMap
+        name: harbor-registry
+        namespace: harbor
+      register: harbor_cm
+
+    - name: Inject forcepathstyle into config.yml content
+      set_fact:
+        patched_config_content: >-
+          {{ 
+            harbor_cm.resources[0].data['config.yml'] 
+            | regex_replace(
+                '(regionendpoint: .*)', 
+                '\1\n    forcepathstyle: true'
+              ) 
+          }}
+      when: "'forcepathstyle: true' not in harbor_cm.resources[0].data['config.yml']"
+
+    - name: Apply Patched ConfigMap
+      kubernetes.core.k8s:
+        kubeconfig: "/home/{{ ansible_user }}/.kube/config"
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: harbor-registry
+            namespace: harbor
+          data:
+            config.yml: "{{ patched_config_content | default(harbor_cm.resources[0].data['config.yml']) }}"
+      when: "'forcepathstyle: true' not in harbor_cm.resources[0].data['config.yml']"
+
+    - name: Restart Harbor Registry Pods to pick up changes
+      kubernetes.core.k8s:
+        kubeconfig: "/home/{{ ansible_user }}/.kube/config"
+        state: absent
+        kind: Pod
+        namespace: harbor
+        label_selectors:
+          - component=registry
+      when: "'forcepathstyle: true' not in harbor_cm.resources[0].data['config.yml']"
