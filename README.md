@@ -96,9 +96,10 @@ Among options `9`, `10`, and `11`, there are submenus. These menus are dynamical
     # Entering Terraform layer management menu...
     #### Checking status of libvirt service...
     --> libvirt service is already running.
-    1) 10-vault-core          4) 20-gitlab-redis       7) 20-harbor-redis      10) 50-gitlab-kubeadm    13) Back to Main Menu
+    1) 10-vault-core          4) 20-gitlab-redis       7) 20-harbor-redis      10) 50-gitlab-kubeadm
     2) 20-gitlab-minio        5) 20-harbor-minio       8) 30-harbor-microk8s   11) 50-harbor-provision
     3) 20-gitlab-postgres     6) 20-harbor-postgres    9) 40-harbor-platform   12) 60-gitlab-platform
+    13) Back to Main Menu
 
     >>> Select a Terraform layer to REBUILD:
     ```
