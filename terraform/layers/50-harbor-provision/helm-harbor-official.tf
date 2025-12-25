@@ -61,7 +61,7 @@ resource "helm_release" "harbor" {
             secretkey = data.vault_generic_secret.s3_credentials.data["secret_key"]
             # MinIO supports TLS (not support mTLS), thus use https and port must correspond.
             regionendpoint = "https://minio.iac.local:9000"
-            forcepathstyle = true
+            forcePathStyle = true
             secure         = true
             v4auth         = true
             encrypt        = false
