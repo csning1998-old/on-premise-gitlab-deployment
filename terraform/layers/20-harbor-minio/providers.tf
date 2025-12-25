@@ -30,5 +30,5 @@ provider "minio" {
   minio_user     = data.vault_generic_secret.db_vars.data["minio_root_user"]
   minio_password = data.vault_generic_secret.db_vars.data["minio_root_password"]
   minio_ssl      = true
-  minio_insecure = true
+  minio_insecure = false
 }

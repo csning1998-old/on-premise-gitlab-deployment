@@ -486,38 +486,66 @@ Libvirt's settings directly impact Terraform's execution permissions, thus some 
 
 #### **Step B.3. Export Certs of Services:**
 
-To access `harbor.iac.local` from the host, perform the following steps
+1. To configure Terraform Runner for MinIO (Layer 20):
 
-1. Get the IP address of the Harbor node
+    1. The deployment of Layer 10 Vault should be completed first to generate `vault-root-ca.crt`, located at `terraform/layers/10-vault-core/tls/`
 
-    ```shell
-    kubectl get svc -n ingress-system -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
-    ```
+    2. Ensure Terraform Runner has Vault CA
 
-    Add the stdout as `<harbor-node-ip> harbor.iac.local` to `etc/hosts`
+        - If you are using RHEL / CentOS, perform the following steps
 
-2. Export the Ingress TLS certificate from Kubernetes. Since the CA Chain is configured in the Vault, meaning that it can be directly fetched from the Kubernetes Secret.
+            ```shell
+            sudo cp terraform/layers/10-vault-core/tls/vault-ca.crt /etc/pki/ca-trust/source/anchors/
+            sudo update-ca-trust
+            ```
 
-    ```shell
-    ssh harbor-microk8s-node-00 "kubectl get secret -n harbor harbor-ingress-tls -o jsonpath='{.data.ca\.crt}' | base64 -d" > vault-root-ca.crt
-    ```
+        - If you are using Ubuntu / Debian, perform the following steps
 
-    This is the same as the Layer 10 certificate.
+            ```shell
+            sudo cp terraform/layers/10-vault-core/tls/vault-ca.crt /usr/local/share/ca-certificates/
+            sudo update-ca-certificates
+            ```
 
-3. Import the Trust Store. For example, on RHEL, use the following command
+    3. Verify Trust Store
 
-    ```shell
-    sudo cp vault-root-ca.crt /etc/pki/ca-trust/source/anchors/
-    sudo update-ca-trust extract
-    ```
+        ```shell
+        curl -I https://minio.iac.local:9000/minio/health/live
+        ```
 
-    and then verify by `curl -vI` as follow
+        If the output is `HTTP/1.1 200 OK`, then the Trust Store is configured correctly.
 
-    ```shell
-    curl -vI https://harbor.iac.local
-    ```
+2. To access `harbor.iac.local` from the host, perform the following steps
 
-    If it shows `SSL certificate verify ok` and `HTTP/2 200`, meaning that the entire PKI Chain has been successfully established from the Vault certificate issuance, through Cert-Manager signing, to Ingress deployment, and finally to host trust.
+    1. Get the IP address of the Harbor node
+
+        ```shell
+        kubectl get svc -n ingress-system -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
+        ```
+
+        Add the stdout as `<harbor-node-ip> harbor.iac.local` to `etc/hosts`
+
+    2. Export the Ingress TLS certificate from Kubernetes. Since the CA Chain is configured in the Vault, meaning that it can be directly fetched from the Kubernetes Secret.
+
+        ```shell
+        ssh harbor-microk8s-node-00 "kubectl get secret -n harbor harbor-ingress-tls -o jsonpath='{.data.ca\.crt}' | base64 -d" > vault-root-ca.crt
+        ```
+
+        This is the same as the Layer 10 certificate.
+
+    3. Import the Trust Store. For example, on RHEL, use the following command
+
+        ```shell
+        sudo cp vault-root-ca.crt /etc/pki/ca-trust/source/anchors/
+        sudo update-ca-trust extract
+        ```
+
+        and then verify by `curl -vI` as follow
+
+        ```shell
+        curl -vI https://harbor.iac.local
+        ```
+
+        If it shows `SSL certificate verify ok` and `HTTP/2 200`, meaning that the entire PKI Chain has been successfully established from the Vault certificate issuance, through Cert-Manager signing, to Ingress deployment, and finally to host trust.
 
 ## Section 3. System Architecture
 
