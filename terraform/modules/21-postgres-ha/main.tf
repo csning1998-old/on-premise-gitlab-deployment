@@ -92,9 +92,13 @@ module "ansible_runner" {
   }
 
   extra_vars = {
+    # Patroni Database Credentials
     "pg_superuser_password"   = data.vault_generic_secret.db_vars.data["pg_superuser_password"]
     "pg_replication_password" = data.vault_generic_secret.db_vars.data["pg_replication_password"]
     "pg_vrrp_secret"          = data.vault_generic_secret.db_vars.data["pg_vrrp_secret"]
+
+    # Terraform Runner Subnet
+    terraform_runner_subnet = var.infra_config.network.hostonly.cidrv4
 
     # Vault Agent AppRole Credentials
     "vault_agent_role_id"   = vault_approle_auth_backend_role.postgres.role_id

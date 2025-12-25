@@ -47,7 +47,7 @@ bootstrap:
 {% endfor %}
 
     # Terraform Runner (No mTLS, Password Only)
-    - hostssl all all 172.16.137.0/24 md5
+    - hostssl all all {{ terraform_runner_subnet | default('172.16.137.0/24') }} md5
 
     # Rule 1: K8s Node Network (Enforce mTLS) from Terraform
     - hostssl all all {{ postgres_mtls_node_subnet }} md5 clientcert=verify-ca
