@@ -34,14 +34,6 @@ provider "vault" {
   token        = jsondecode(file(abspath("${path.root}/../../../ansible/fetched/vault/vault_init_output.json"))).root_token
 }
 
-locals {
-  kubeconfig_raw = data.terraform_remote_state.microk8s_provision.outputs.kubeconfig_content
-  kubeconfig     = yamldecode(local.kubeconfig_raw)
-
-  cluster_info = local.kubeconfig.clusters[0].cluster
-  user_info    = local.kubeconfig.users[0].user
-}
-
 provider "kubernetes" {
   host                   = local.cluster_info.server
   cluster_ca_certificate = base64decode(local.cluster_info["certificate-authority-data"])
