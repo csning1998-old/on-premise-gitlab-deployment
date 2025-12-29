@@ -16,7 +16,7 @@ resource "github_repository_ruleset" "main_protection" {
   # Emergency Bypass
   bypass_actors {
     actor_type  = "RepositoryRole"
-    actor_id    = 5
+    actor_id    = 5 # Corresponds to the "admin" repository role.
     bypass_mode = "always"
   }
 

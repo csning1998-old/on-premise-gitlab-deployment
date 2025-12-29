@@ -33,6 +33,7 @@ Before you begin, ensure you have the following:
 -   `sudo` access for Libvirt.
 -   `podman` and `podman compose` installed (for containerized mode).
 -   `whois` package installed (for the `mkpasswd` command).
+-   `jq` package for JSON parsing.
 
 ### C. Note
 

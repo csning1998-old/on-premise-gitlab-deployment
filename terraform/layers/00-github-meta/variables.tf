@@ -17,7 +17,12 @@ variable "repository_description" {
 }
 
 variable "visibility" {
-  description = "Either public or private"
+  description = "Visibility of the repository. Can be either 'public' or 'private'. (Non-enterprise GitHub)"
   type        = string
   default     = "public"
+
+  validation {
+    condition     = contains(["public", "private"], var.visibility)
+    error_message = "The visibility must be one of: public or private. (Non-enterprise GitHub)"
+  }
 }
