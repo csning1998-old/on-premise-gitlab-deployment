@@ -273,5 +273,4 @@ iac_tools_installation_handler() {
   iac_tools_verifier
 
   log_print "OK" "Core IaC tools setup and verification completed."
-  log_divider
 }
