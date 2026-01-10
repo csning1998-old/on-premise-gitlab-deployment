@@ -37,10 +37,14 @@ resource "vault_pki_secret_backend_role" "redis" {
   name     = "${each.key}-redis-role"
 
   allowed_domains = [
-    "redis.${each.key}.${local.root_domain}"
+    "redis.${each.key}.${local.root_domain}",
+    "${each.key}.${local.root_domain}"
   ]
-  allow_subdomains = true
-  allow_ip_sans    = true
+
+  allow_subdomains   = true
+  allow_ip_sans      = true
+  allow_bare_domains = true
+  allow_glob_domains = false
 
   key_usage   = ["DigitalSignature", "KeyEncipherment", "KeyAgreement"]
   client_flag = true
