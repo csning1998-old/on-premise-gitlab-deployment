@@ -23,7 +23,7 @@ listen redis_cluster
     option tcp-check
     
     # Redis Health Check with Auth
-    tcp-check connect
+    tcp-check connect ssl
     tcp-check send AUTH\ {{ redis_requirepass }}\r\n
     tcp-check expect string +OK
     tcp-check send info\ replication\r\n
@@ -31,5 +31,5 @@ listen redis_cluster
 
     # Point to Redis cluster nodes injected from Terraform
 {% for ip in redis_cluster_ips %}
-    server redis-{{ loop.index }} {{ ip }}:6379 check inter 3s fall 3 rise 2
+    server redis-{{ loop.index }} {{ ip }}:6379 check ssl verify none inter 3s fall 3 rise 2
 {% endfor %}

@@ -39,7 +39,7 @@ masteruser default
 masterauth {{ redis_masterauth }}
 
 # Replication
-{% if inventory_hostname in (groups['redis_replicas'] | default([])) %}
+{% if inventory_hostname in (groups['redis_db_replicas'] | default([])) %}
 # Note: redis_initial_master_ip must be defined in inventory or group_vars
 replicaof {{ redis_initial_master_ip }} 6379
 {% endif %}
