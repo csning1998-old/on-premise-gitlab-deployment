@@ -22,7 +22,7 @@ listen redis_cluster
     balance first
     option tcp-check
     
-    # Redis Health Check with Auth
+    # Redis Health Check with Auth for HAProxy handshake.
     tcp-check connect ssl
     tcp-check send AUTH\ {{ redis_requirepass }}\r\n
     tcp-check expect string +OK
@@ -30,6 +30,7 @@ listen redis_cluster
     tcp-check expect string role:master
 
     # Point to Redis cluster nodes injected from Terraform
+    # Remove 'ssl' for passthrough yet add 'verify none' to supress tcp-check error due to self-signed certificate.
 {% for ip in redis_cluster_ips %}
-    server redis-{{ loop.index }} {{ ip }}:6379 check ssl verify none inter 3s fall 3 rise 2
+    server redis-{{ loop.index }} {{ ip }}:6379 check verify none inter 3s fall 3 rise 2
 {% endfor %}
