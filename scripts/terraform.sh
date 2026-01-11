@@ -75,7 +75,7 @@ terraform_layer_executor() {
 
   # 3. Construct Execution Chain based on Layer Type
   # [Special Logic] Github Meta Layer: Import + Apply ONLY (Skip Destroy)
-  if [[ "$layer_name" == "00-github-meta" ]]; then
+  if [[ "$layer_name" == "90-github-meta" ]]; then
     log_print "WARN" "Github Meta Layer detected: SKIPPING DESTROY phase to preserve repository."
     log_print "TASK" "Checking and Importing existing repository if needed..."
     
