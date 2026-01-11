@@ -21,7 +21,6 @@ harbor_redis_compute = {
   }
 
   base_image_path = "../../../packer/output/05-base-redis/ubuntu-server-24-05-base-redis.qcow2"
-  inventory_file  = "inventory-redis-harbor.yaml"
 }
 
 harbor_redis_infra = {

@@ -24,7 +24,6 @@ variable "topology_config" {
       }))
     })
     base_image_path = string
-    inventory_file  = string
   })
 
   # Redis Sentinel Quorum

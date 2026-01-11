@@ -47,7 +47,6 @@ gitlab_minio_compute = {
   }
 
   base_image_path = "../../../packer/output/06-base-minio/ubuntu-server-24-06-base-minio.qcow2"
-  inventory_file  = "inventory-minio-gitlab.yaml"
 }
 
 gitlab_minio_infra = {

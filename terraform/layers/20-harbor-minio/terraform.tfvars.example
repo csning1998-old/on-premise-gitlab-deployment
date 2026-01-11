@@ -46,7 +46,6 @@ harbor_minio_compute = {
   }
 
   base_image_path = "../../../packer/output/06-base-minio/ubuntu-server-24-06-base-minio.qcow2"
-  inventory_file  = "inventory-minio-harbor.yaml"
 }
 
 harbor_minio_infra = {

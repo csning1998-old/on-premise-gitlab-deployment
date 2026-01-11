@@ -34,7 +34,6 @@ gitlab_postgres_compute = {
   }
 
   base_image_path = "../../../packer/output/04-base-postgres/ubuntu-server-24-04-base-postgres.qcow2"
-  inventory_file  = "inventory-postgres-gitlab.yaml"
 }
 
 gitlab_postgres_infra = {

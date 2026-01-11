@@ -28,7 +28,6 @@ variable "topology_config" {
       }))
     })
     base_image_path = string
-    inventory_file  = string
   })
 
   # MinIO Erasure Coding node count requires single node (Dev) or 4, 8, 12... (Prod)

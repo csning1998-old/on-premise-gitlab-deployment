@@ -5,7 +5,7 @@
 
 tls_mode = "generated"
 
-vault_compute = {
+topology_config = {
   cluster_identity = {
     service_name = "vault"
     component    = "core"
@@ -30,10 +30,10 @@ vault_compute = {
   }
 
   base_image_path = "../../../packer/output/07-base-vault/ubuntu-server-24-07-base-vault.qcow2"
-  inventory_file  = "inventory-vault-cluster.yaml"
+  
 }
 
-vault_infra = {
+infra_config = {
   network = {
     nat = {
       gateway = "172.16.88.1"

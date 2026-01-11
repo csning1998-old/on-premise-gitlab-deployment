@@ -36,7 +36,6 @@ variable "topology_config" {
       }))
     })
     base_image_path = string
-    inventory_file  = string
   })
 
   # Etcd Raft Quorum

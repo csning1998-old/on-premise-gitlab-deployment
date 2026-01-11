@@ -22,7 +22,6 @@ gitlab_redis_compute = {
   }
 
   base_image_path = "../../../packer/output/05-base-redis/ubuntu-server-24-05-base-redis.qcow2"
-  inventory_file  = "inventory-redis-gitlab.yaml"
 }
 
 gitlab_redis_infra = {
