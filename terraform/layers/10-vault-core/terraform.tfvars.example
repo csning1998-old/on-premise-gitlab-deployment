@@ -5,7 +5,7 @@
 
 tls_mode = "generated"
 
-topology_config = {
+vault_compute = {
   cluster_identity = {
     service_name = "vault"
     component    = "core"
@@ -33,7 +33,7 @@ topology_config = {
   
 }
 
-infra_config = {
+vault_infra = {
   network = {
     nat = {
       gateway = "172.16.88.1"
