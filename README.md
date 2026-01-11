@@ -113,10 +113,11 @@ Among options `9`, `10`, and `11`, there are submenus. These menus are dynamical
     [INPUT] Please select an action: 11
     [INFO] Checking status of libvirt service...
     [OK] libvirt service is already running.
-    1) inventory-kubeadm-gitlab.yaml     5) inventory-postgres-gitlab.yaml   9) inventory-vault-cluster.yaml
-    2) inventory-microk8s-harbor.yaml    6) inventory-postgres-harbor.yaml  10) Back to Main Menu
-    3) inventory-minio-gitlab.yaml       7) inventory-redis-gitlab.yaml
-    4) inventory-minio-harbor.yaml       8) inventory-redis-harbor.yaml
+    1) inventory-10-vault-core.yaml         6) inventory-20-harbor-postgres.yaml
+    2) inventory-20-gitlab-minio.yaml       7) inventory-20-harbor-redis.yaml
+    3) inventory-20-gitlab-postgres.yaml    8) inventory-30-gitlab-kubeadm.yaml
+    4) inventory-20-gitlab-redis.yaml       9) inventory-30-harbor-microk8s.yaml
+    5) inventory-20-harbor-minio.yaml      10) Back to Main Menu
 
     [INPUT] Select a Cluster Inventory to run its Playbook:
     ```
@@ -562,7 +563,7 @@ Libvirt's settings directly impact Terraform's execution permissions, thus some 
 
     - **First Step**: Enter the main menu `9) Build Packer Base Image`, then select `02-base-kubeadm` to build the base image required by Kubeadm.
 
-    - **Second Step**: After the previous step is complete, return to the main menu and enter `10) Provision Terraform Layer`, then select `50-gitlab-kubeadm` to deploy the entire GitLab cluster (Now only kubeadm is implemented).
+    - **Second Step**: After the previous step is complete, return to the main menu and enter `10) Provision Terraform Layer`, then select `30-gitlab-kubeadm` to deploy the entire GitLab cluster (Now only kubeadm is implemented).
 
         Based on testing, this complete process (from building the Packer image to completing the Terraform deployment) takes approximately 7 minutes.
 
