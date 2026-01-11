@@ -7,7 +7,7 @@ locals {
     # Infrastructure VIPs (External Services)
     "${data.terraform_remote_state.postgres.outputs.harbor_postgres_virtual_ip}" = "postgres.iac.local"
     "${data.terraform_remote_state.redis.outputs.harbor_redis_virtual_ip}"       = "redis.iac.local"
-    "${data.terraform_remote_state.minio.outputs.harbor_minio_virtual_ip}"       = "minio.iac.local"
+    "${data.terraform_remote_state.minio.outputs.harbor_minio_virtual_ip}"       = "s3.iac.local"
     "${data.terraform_remote_state.vault_core.outputs.vault_ha_virtual_ip}"      = "vault.iac.local"
   }
 }
