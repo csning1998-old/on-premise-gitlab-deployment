@@ -62,7 +62,7 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
 > [!WARNING]
 > **Compatibility Warning**
 >
-> 此 repo 目前僅支援具有 CPU virtualization 功能的 Linux 裝置。如果使用的裝置 CPU 不支援 virtualization（例如無 VT-x/AMD-V），請切換至 `legacy-workstation-on-ubuntu` branch
+> 此 repo 目前僅支援具有 CPU virtualization 功能的 Linux 裝置。如果使用的裝置 CPU 不支援 virtualization（例如無 VT-x/AMD-V），請切換至 `legacy-workstation-on-ubuntu` branch，可以支援架設 HA Kubeadm cluster
 >
 > 此外，目前此 repo 為個人獨立開發，可能存在邊際問題，一經發現將立即修正
 
@@ -212,7 +212,10 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
     [OK] Core IaC tools setup and verification completed.
     ```
 
-2. 要確認 Podman / Docker 已經正確安裝，需根據開發裝置的作業系統，參考以下網址選擇對應安裝方式。
+2. 要確認 Podman / Docker 已經正確安裝，需根據開發裝置的作業系統，參考以下網址選擇對應安裝方式
+
+    > _Reference: [Podman Installation](https://podman.io/getting-started/installation)_  
+    > _Reference: [Docker Installation](https://docs.docker.com/get-docker/)_
 
 3. 以 Podman 為例，在 Podman 安裝完成後，切換至專案根目錄：
     1. 通常預設的 memlock limit (`ulimit -l`) 較低，會導致 HashiCorp Vault 的 mlock system call 失敗，且一般情況下的 Rootless Podman 只是經過 `uid` mapping 到 Host 上的普通使用者，會直接繼承權限限制。為解決此問題，請執行以下指令修改：
@@ -537,29 +540,29 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
     - **Note 0. Security Notice**：在執行完 `vault kv put` 指令之後，強烈建議清除 shell history，以避免敏感資訊外洩
 
     - **Note 1. How to retrieve secrets**
-
         1. 使用以下指令從 Vault 取出機密資訊。例如要取出 PostgreSQL superuser 密碼：
-        
-             ```shell
-             export VAULT_ADDR="https://172.16.136.250:443"
-             export VAULT_CACERT="${PWD}/terraform/layers/10-vault-core/tls/vault-ca.crt"
-             export VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json)
-             vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases
-             ```
-        
-         2. 如果要避免機密外洩，可使用：
-        
-             ```shell
-             export PG_SUPERUSER_PASSWORD=$(vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases)
-             ```
-        
-         3. 若需保持 shell 環境乾淨，可使用單行指令：
-        
-             ```shell
-             export PG_SUPERUSER_PASSWORD=$(VAULT_ADDR="https://172.16.136.250:443" VAULT_CACERT="${PWD}/terraform/layers/10-vault-core/tls/vault-ca.crt" VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json) vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases)
-             ```
-        
-         在 Development Vault 及其他機密操作方式相同
+
+            ```shell
+            export VAULT_ADDR="https://172.16.136.250:443"
+            export VAULT_CACERT="${PWD}/terraform/layers/10-vault-core/tls/vault-ca.crt"
+            export VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json)
+            vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases
+            ```
+
+        2. 如果要避免機密外洩，可使用：
+
+            ```shell
+            export PG_SUPERUSER_PASSWORD=$(vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases)
+            ```
+
+        3. 若需保持 shell 環境乾淨，可使用單行指令：
+
+            ```shell
+            export PG_SUPERUSER_PASSWORD=$(VAULT_ADDR="https://172.16.136.250:443" VAULT_CACERT="${PWD}/terraform/layers/10-vault-core/tls/vault-ca.crt" VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json) vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases)
+            ```
+
+        在 Development Vault 及其他機密操作方式相同
+
     - **Note 2:**
 
         `ssh_username` 與 `ssh_password` 是用來登入虛擬機器的帳號與密碼；`ssh_password_hash` 是 cloud-init 自動安裝所需的 hashed 密碼，需使用 `ssh_password` 的原始字串產生。例如密碼為 `HelloWorld@k8s`，則使用以下指令產生對應 hash：
@@ -576,7 +579,7 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
 
         目前的 SSH identity 變數（`ssh_`）主要會用在 Packer 的單次使用情境；而 VM identity 變數（`vm_`）則由 Terraform 在 clone VM 時使用。原則上兩者可設為相同值。若因不同 VM 需要不同名稱，可直接修改 HCL 中的物件與相關程式碼。通常會修改 `ansible_runner.vm_credentials` 變數及相關傳遞方式，然後使用 `for_each` 迴圈迭代。但這此方式會增加複雜度，因此如果沒有其他需求，建議可以維持 SSH 與 VM identity 變數相同
 
-6.  在此 repo 中，Vault 在每一次啟動之後，都會需要進行 unseal 操作。可以使用以下方式：
+5.  在此 repo 中，Vault 在每一次啟動之後，都會需要進行 unseal 操作。可以使用以下方式：
     - `entry.sh` 選項 `3` 做 Unseal Development mode Vault，會使用 Shell Script 的 `vault_dev_unseal_handler()` 執行
     - `entry.sh` 選項 `4` 做 Unseal Production mode Vault，會使用 Ansible Playbook `90-operation-vault-unseal.yaml` 操作
 
@@ -627,7 +630,8 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
 
 #### **Step B.4. Provision the GitHub Repository with Terraform:**
 
-**注意：** 若本 repository 是 clone 來個人使用，此步驟（B.4）可透過 `10) Provision Terraform Layer` 選擇 `90-github-meta` 執行。以下內容僅提供 imperative 手動程序參考
+> [!NOTE]
+> 若本 repository 是 clone 來個人使用，此步驟（B.4）可透過 `10) Provision Terraform Layer` 選擇 `90-github-meta` 執行。以下內容僅提供 imperative 手動程序參考
 
 1. 使用 Shell Bridge Pattern 從 Vault 注入 Token。在專案根目錄執行以確保 `${PWD}` 指向正確的 Vault 憑證路徑
 
@@ -824,7 +828,6 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
 > 2. Aditi Sangave (2025). _How to Setup HashiCorp Vault HA Cluster with Integrated Storage (Raft)._ Velotio Tech Blog. <https://www.velotio.com/engineering-blog/how-to-setup-hashicorp-vault-ha-cluster-with-integrated-storage-raft>
 > 3. Dickson Gathima (2025). _Building a Highly Available PostgreSQL Cluster with Patroni, etcd, and HAProxy._ Medium. <https://medium.com/@dickson.gathima/building-a-highly-available-postgresql-cluster-with-patroni-etcd-and-haproxy-1fd465e2c17f>
 > 4. Deniz TÜRKMEN (2025). _Redis Cluster Provisioning — Fully Automated with Ansible._ Medium. <https://deniz-turkmen.medium.com/redis-cluster-provisioning-fully-automated-with-ansible-dc719bb48f75>
->
 
 > [!TIP]
 > 完全參考官方文件操作的叢集步驟未列入上述清單
