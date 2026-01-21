@@ -256,10 +256,10 @@ Section 1 與 Section 2 的內容為正式執行前的前置作業。詳見以�
         aa8d17213095  localhost/on-premise-iac-controller:qemu-latest  /bin/bash             15 minutes ago  Up 15 minutes                        iac-controller-ansible
         ```
 
-    > [!CAUTION]
-    > **Data Loss Warning**
-    >
-    > 當在 Podman 容器與 Native 環境之間切換時，所有由 Terraform 建立的 Libvirt 資源都會被 **自動刪除**，以避免 Libvirt UNIX socket 的權限與上下文衝突
+> [!CAUTION]
+> **Data Loss Warning**
+>
+> 當在 Podman 容器與 Native 環境之間切換時，所有由 Terraform 建立的 Libvirt 資源都會被 **自動刪除**，以避免 Libvirt UNIX socket 的權限與上下文衝突
 
 ### C. Miscellaneous
 
@@ -286,7 +286,8 @@ Section 1 與 Section 2 的內容為正式執行前的前置作業。詳見以�
 
 ### Step A. Project Overview
 
-為確保此 repo 可以順利執行，請務必依以下順序完成初始化設定
+> [!IMPORTANT]
+> 為確保此 repo 可以順利執行，請務必依以下順序完成初始化設定
 
 0. **環境變數檔案：** `entry.sh` 會自動產生 `.env` 環境變數檔案，主要是給其他 shell script 使用，可以忽略不管
 
@@ -302,7 +303,8 @@ Section 1 與 Section 2 的內容為正式執行前的前置作業。詳見以�
 
 #### **Step B.0. Examine the Permissions of Libvirt**
 
-Libvirt 的檔案權限設定問題，這也會直接影響 [Terraform Libvirt Provider](https://registry.terraform.io/providers/dmacvicar/libvirt/latest) 的執行權限，因此需要先進行一些權限檢查
+> [!NOTE]
+> Libvirt 的檔案權限設定問題，這也會直接影響 [Terraform Libvirt Provider](https://registry.terraform.io/providers/dmacvicar/libvirt/latest) 的執行權限，因此需要先進行一些權限檢查
 
 1. 確保使用者帳號已加入 `libvirt` 群組
 
@@ -310,8 +312,7 @@ Libvirt 的檔案權限設定問題，這也會直接影響 [Terraform Libvirt P
     sudo usermod -aG libvirt $(whoami)
     ```
 
-    > [!IMPORTANT]
-    > 完成後需完整登出再登入，或重新開機。這樣 group 變更才會在 shell session 中生效
+    完成後需完整登出再登入，或重新開機。這樣 group 變更才會在 shell session 中生效
 
 2. 修改 `libvirtd` 設定檔，要明確指定 `libvirt` 群組管理 socket
 
@@ -429,8 +430,7 @@ Libvirt 的檔案權限設定問題，這也會直接影響 [Terraform Libvirt P
 
     啟動 server 後，Dev Vault 就會在 `vault/data/` 路徑中產生 `vault.db` 以及 Raft 相關檔案。如果有需要重新建立 Dev Vault，就必須手動清除 `vault/data/` 內所有檔案
 
-    > [!TIP]
-    > 請開新終端機視窗或分頁進行後續操作，以避免 shell session 的環境變數污染
+    請開新終端機視窗或分頁進行後續操作，以避免 shell session 的環境變數污染
 
 3.  完成前述步驟後，執行 `entry.sh` 選擇選項 2 初始化 Dev Vault。此過程也會自動執行 Unseal
 
@@ -533,36 +533,32 @@ Libvirt 的檔案權限設定問題，這也會直接影響 [Terraform Libvirt P
             harbor_pg_db_password="some-password-for-harbor-pg-db-password-for-production-mode"
         ```
 
-    > [!WARNING]
-    > **Security Notice**
-    >
-    > 在執行完 `vault kv put` 指令之後，強烈建議清除 shell history，以避免敏感資訊外洩
+    - **Note 0. Security Notice**：在執行完 `vault kv put` 指令之後，強烈建議清除 shell history，以避免敏感資訊外洩
 
-    > [!TIP]
-    > **How to retrieve secrets**
-    >
-    > 1. 使用以下指令從 Vault 取出機密資訊。例如要取出 PostgreSQL superuser 密碼：
-    >
-    >     ```shell
-    >     export VAULT_ADDR="https://172.16.136.250:443"
-    >     export VAULT_CACERT="${PWD}/terraform/layers/10-vault-core/tls/vault-ca.crt"
-    >     export VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json)
-    >     vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases
-    >     ```
-    >
-    > 2. 如果要避免機密外洩，可使用：
-    >
-    >     ```shell
-    >     export PG_SUPERUSER_PASSWORD=$(vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases)
-    >     ```
-    >
-    > 3. 若需保持 shell 環境乾淨，可使用單行指令：
-    >
-    >     ```shell
-    >     export PG_SUPERUSER_PASSWORD=$(VAULT_ADDR="https://172.16.136.250:443" VAULT_CACERT="${PWD}/terraform/layers/10-vault-core/tls/vault-ca.crt" VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json) vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases)
-    >     ```
-    >
-    > 在 Development Vault 及其他機密操作方式相同
+    - **Note 1. How to retrieve secrets**
+
+        1. 使用以下指令從 Vault 取出機密資訊。例如要取出 PostgreSQL superuser 密碼：
+        
+             ```shell
+             export VAULT_ADDR="https://172.16.136.250:443"
+             export VAULT_CACERT="${PWD}/terraform/layers/10-vault-core/tls/vault-ca.crt"
+             export VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json)
+             vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases
+             ```
+        
+         2. 如果要避免機密外洩，可使用：
+        
+             ```shell
+             export PG_SUPERUSER_PASSWORD=$(vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases)
+             ```
+        
+         3. 若需保持 shell 環境乾淨，可使用單行指令：
+        
+             ```shell
+             export PG_SUPERUSER_PASSWORD=$(VAULT_ADDR="https://172.16.136.250:443" VAULT_CACERT="${PWD}/terraform/layers/10-vault-core/tls/vault-ca.crt" VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json) vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases)
+             ```
+        
+         在 Development Vault 及其他機密操作方式相同
     - **Note 2:**
 
         `ssh_username` 與 `ssh_password` 是用來登入虛擬機器的帳號與密碼；`ssh_password_hash` 是 cloud-init 自動安裝所需的 hashed 密碼，需使用 `ssh_password` 的原始字串產生。例如密碼為 `HelloWorld@k8s`，則使用以下指令產生對應 hash：
@@ -579,13 +575,16 @@ Libvirt 的檔案權限設定問題，這也會直接影響 [Terraform Libvirt P
 
         目前的 SSH identity 變數（`ssh_`）主要會用在 Packer 的單次使用情境；而 VM identity 變數（`vm_`）則由 Terraform 在 clone VM 時使用。原則上兩者可設為相同值。若因不同 VM 需要不同名稱，可直接修改 HCL 中的物件與相關程式碼。通常會修改 `ansible_runner.vm_credentials` 變數及相關傳遞方式，然後使用 `for_each` 迴圈迭代。但這此方式會增加複雜度，因此如果沒有其他需求，建議可以維持 SSH 與 VM identity 變數相同
 
-5.  在此 repo 中，Vault 在每一次啟動之後，都會需要進行 unseal 操作。可以使用以下方式：
+6.  在此 repo 中，Vault 在每一次啟動之後，都會需要進行 unseal 操作。可以使用以下方式：
     - `entry.sh` 選項 `3` 做 Unseal Development mode Vault，會使用 Shell Script 的 `vault_dev_unseal_handler()` 執行
     - `entry.sh` 選項 `4` 做 Unseal Production mode Vault，會使用 Ansible Playbook `90-operation-vault-unseal.yaml` 操作
 
     或者如 B.1-2 所述使用容器，較為簡便
 
 #### **Step B.3. Create Variable File for Terraform:**
+
+> [!NOTE]
+> 這些是建立 Clusters 的變數檔案
 
 1. 將 `terraform/layers/*/terraform.tfvars.example` 重新命名為 `terraform/layers/*/terraform.tfvars`，使用以下指令：
 
@@ -818,13 +817,15 @@ Libvirt 的檔案權限設定問題，這也會直接影響 [Terraform Libvirt P
 
 ### B. Toolchain Roles and Responsibilities
 
-> 叢集建立參考以下文章。Work Cited：
+> 本專案的 Clusters 建立有參考下文章：
 >
 > 1. Bibin Wilson, B. (2025). _How To Setup Kubernetes Cluster Using Kubeadm._ devopscube. <https://devopscube.com/setup-kubernetes-cluster-kubeadm/#vagrantfile-kubeadm-scripts-manifests>
 > 2. Aditi Sangave (2025). _How to Setup HashiCorp Vault HA Cluster with Integrated Storage (Raft)._ Velotio Tech Blog. <https://www.velotio.com/engineering-blog/how-to-setup-hashicorp-vault-ha-cluster-with-integrated-storage-raft>
 > 3. Dickson Gathima (2025). _Building a Highly Available PostgreSQL Cluster with Patroni, etcd, and HAProxy._ Medium. <https://medium.com/@dickson.gathima/building-a-highly-available-postgresql-cluster-with-patroni-etcd-and-haproxy-1fd465e2c17f>
 > 4. Deniz TÜRKMEN (2025). _Redis Cluster Provisioning — Fully Automated with Ansible._ Medium. <https://deniz-turkmen.medium.com/redis-cluster-provisioning-fully-automated-with-ansible-dc719bb48f75>
 >
-> **注意：** 完全參考官方文件操作的叢集步驟未列入上述清單
+
+> [!TIP]
+> 完全參考官方文件操作的叢集步驟未列入上述清單
 
 _**(待續...)**_
