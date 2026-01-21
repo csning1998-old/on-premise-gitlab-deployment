@@ -79,7 +79,7 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
 
 ### C. Progress
 
-目前此專案可以建立以下 Services，單獨 Service 接配有 HAProxy 搭配 Keepalived：
+目前此專案可以建立以下 1 到 5 的 Services，其中單獨 Service 接配有 HAProxy 搭配 Keepalived
 
 1. HA HashiCorp Vault with Raft Storage
 2. Postgres / Patroni 包含 etcd
@@ -92,7 +92,8 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
 
 ### D. The Entrypoint: `entry.sh`
 
-Section 1 與 Section 2 的內容為正式執行前的前置作業。詳見以下說明：
+> [!NOTE]
+> Section 1 與 Section 2 的內容為正式執行前的前置作業。詳見以下說明：
 
 此 Repo 的服務前置作業、與生命週期管理等，都會透過根目錄下的 `entry.sh` 腳本處理。在終端機切換到此 repo 的根目錄後，執行 `./entry.sh` 會顯示以下內容：
 
