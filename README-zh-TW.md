@@ -4,16 +4,17 @@ Refer to [README.md](README.md) for English (US) version.
 
 ## Section 0. Introduction
 
-這個 repository （以下簡稱「此 repo」）是一套 Infrastructure as Code 的 PoC，主要是透過 QEMU-KVM 在純地端環境中進行 HA 的 Kubernetes Cluster (Kubeadm / microk8s) 的自動佈署。此 repo 是根據在國泰綜合醫院實習期間的個人練習所開發，目標是建立出 on-premise GitLab 建立自動佈署基礎設施，目標是針對 legacy 系統做出可以重複利用的 IaC pipeline
+這個 repository （以下簡稱「此 repo」）是一套 Infrastructure as Code 的 PoC（概念驗證），主要是透過 QEMU-KVM 在純地端環境中進行 HA 的 Kubernetes Cluster (Kubeadm / microk8s) 的自動佈署。此 repo 是根據在國泰綜合醫院實習期間的個人練習所開發，目標是建立出 on-premise GitLab 建立自動佈署基礎設施，目標是針對 legacy 系統做出可以重複利用的 IaC pipeline
 
-（本 repository 經公司部門同意公開作為技術作品集）
+> [!NOTE]
+> 本 repository 經公司部門同意公開作為技術作品集
 
 開發使用的機器規格如下，僅供參考：
 
-- **Chipset:** Intel® HM770
-- **CPU:** Intel® Core™ i7 processor 14700HX
-- **RAM:** Micron Crucial Pro 64GB Kit (32GBx2) DDR5-5600 UDIMM
-- **SSD:** WD PC SN560 SDDPNQE-1T00-1032
+- **Chipset：** Intel® HM770
+- **CPU：** Intel® Core™ i7 processor 14700HX
+- **RAM：** Micron Crucial Pro 64GB Kit (32GBx2) DDR5-5600 UDIMM
+- **SSD：** WD PC SN560 SDDPNQE-1T00-1032
 
 可透過以下指令 clone 這個專案：
 
@@ -61,7 +62,6 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
 
 > [!WARNING]
 > **Compatibility Warning**
->
 > 此 repo 目前僅支援具有 CPU virtualization 功能的 Linux 裝置。如果使用的裝置 CPU 不支援 virtualization（例如無 VT-x/AMD-V），請切換至 `legacy-workstation-on-ubuntu` branch，可以支援架設 HA Kubeadm cluster
 >
 > 此外，目前此 repo 為個人獨立開發，可能存在邊際問題，一經發現將立即修正
@@ -88,7 +88,7 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
 5. Harbor 作為映像檔 Registry
 6. **[WIP]** GitLab / Runner / Gitaly 等
 7. Private Key Encryption
-8. [OpenTofu](https://github.com/opentofu/opentofu.git) Migration 對於 `*.tfstates` 檔案
+8. [OpenTofu](https://github.com/opentofu/opentofu.git) Migration 對於 `*.tfstates` 檔案的加密
 
 ### D. The Entrypoint: `entry.sh`
 
@@ -571,9 +571,8 @@ git clone https://github.com/csning1998/on-premise-gitlab-deployment.git
         mkpasswd -m sha-512 HelloWorld@k8s
         ```
 
-        若出現 `mkpasswd` command not found，可能是缺少 `whois` 套件
-
-        `ssh_public_key_path` 需改為先前產生的 **公鑰** 名稱，公鑰檔名為 `*.pub` 格式
+        - 若出現 `mkpasswd` command not found，可能是缺少 `whois` 套件
+        - `ssh_public_key_path` 需改為先前產生的 **公鑰** 名稱，公鑰檔名為 `*.pub` 格式
 
     - **Note 3:**
 
