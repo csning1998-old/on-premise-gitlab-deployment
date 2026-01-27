@@ -53,6 +53,12 @@
   roles:
     - 07-base-vault
 
+- name: "Play: Provision HAProxy (Base) Image"
+  hosts: "08-base-haproxy"
+  become: true
+  roles:
+    - 08-base-haproxy
+
 - name: "Play: Provision Etcd (Base) Image"
   hosts: "09-base-etcd"
   become: true
