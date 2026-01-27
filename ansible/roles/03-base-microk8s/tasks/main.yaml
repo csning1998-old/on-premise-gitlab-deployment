@@ -1,4 +1,11 @@
 ---
+- name: "Block Pre: Install Snapd (Required for MicroK8s)"
+  become: true
+  ansible.builtin.apt:
+    name: snapd
+    state: present
+    update_cache: true
+
 - name: "Block A: Ensure Snapd service is ready"
   become: true
   block:

@@ -9,15 +9,15 @@ common:
       - lsb-release
       - gpg
       - gnupg-agent
-      - snapd
+      # - snapd
 
       # Downloading & Transfer Utilities
       - curl
       - wget
 
-      # Development & Build Tools
-      - build-essential
-      - python3-pip
+      # # Development & Build Tools
+      # - build-essential
+      # - python3-pip
 
       # File, Text, & Data Utilities
       - vim
