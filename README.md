@@ -20,7 +20,7 @@ The machine specifications used for development are listed below for reference o
 The project can be cloned using the following command:
 
 ```shell
-git clone https://github.com/csning1998-old/on-premise-gitlab-deployment.git
+git clone -b v1.5.0 --depth 1 https://github.com/csning1998-old/on-premise-gitlab-deployment.git
 ```
 
 The following resource allocation is configured based on RAM constraints:
