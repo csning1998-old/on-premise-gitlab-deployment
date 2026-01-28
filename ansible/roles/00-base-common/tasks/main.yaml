@@ -25,5 +25,6 @@
       - gnupg-agent
       - bash-completion
       - python3-pip
+      - jq
     state: present
     update_cache: true
