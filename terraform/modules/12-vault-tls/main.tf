@@ -16,7 +16,7 @@ resource "tls_self_signed_cert" "vault_ca" {
     organization = "On-Premise GitLab Deployment"
   }
 
-  validity_period_hours = 8760 # 1 Year
+  validity_period_hours = 365 * 24 # 1 Year
   is_ca_certificate     = true
 
   allowed_uses = [
