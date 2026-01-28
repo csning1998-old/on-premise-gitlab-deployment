@@ -74,7 +74,7 @@ git clone -b v1.5.0 --depth 1 https://github.com/csning1998-old/on-premise-gitla
 - CPU 必須有支援 virtualization，即具有 VT-x 或 AMD-V
 - 具備 `sudo` 權限以操作 Libvirt
 - 已安裝 `podman` 與 `podman compose`，用於 containerized 模式
-- 已安裝 `openssl` 套件，主要需要 `mkpasswd` 指令
+- 已安裝 `openssl` 套件，主要需要 `openssl passwd` 指令
 - 已安裝 `jq` 套件，用於解析 JSON
 
 ### C. Progress
@@ -833,7 +833,7 @@ git clone -b v1.5.0 --depth 1 https://github.com/csning1998-old/on-premise-gitla
 本專案的 Clusters 建立有參考下文章：
 
 > [!TIP]
-> 完全參考官方文件操作的叢集步驟未列入下列清單>
+> 完全參考官方文件操作的叢集步驟未列入下列清單
 >
 > 1. Bibin Wilson, B. (2025). [_How To Setup Kubernetes Cluster Using Kubeadm._](https://devopscube.com/setup-kubernetes-cluster-kubeadm/#vagrantfile-kubeadm-scripts-manifests) devopscube.
 > 2. Aditi Sangave (2025). [_How to Setup HashiCorp Vault HA Cluster with Integrated Storage (Raft)._](https://www.velotio.com/engineering-blog/how-to-setup-hashicorp-vault-ha-cluster-with-integrated-storage-raft) Velotio Tech Blog.

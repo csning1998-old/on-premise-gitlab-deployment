@@ -75,7 +75,7 @@ Before proceeding, ensure the host system meets the following requirements:
 - CPU virtualization support (VT-x or AMD-V).
 - `sudo` privileges for Libvirt management.
 - `podman` and `podman compose` installed for containerized operations.
-- `whois` package (provides the `mkpasswd` command).
+- `openssl` package (provides the `openssl passwd` command).
 - `jq` package (for JSON parsing).
 
 ### C. Progress
@@ -125,7 +125,7 @@ The `entry.sh` script located in the root directory handles all service initiali
 Options `9`, `10`, and `11` dynamically populate submenus by scanning the `packer/output` and `terraform/layers` directories. The submenus for a complete configuration are shown below:
 
 > [!NOTE]
-> Option `11` is currently mulfunctioned.
+> Option `11` is currently mulfunctioning.
 
 1. When selecting `9) Build Packer Base Image`.
 
