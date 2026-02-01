@@ -8,14 +8,14 @@ gitlab_kubeadm_compute = {
 
   kubeadm_config = {
     master_nodes = {
-      "gitlab-kubeadm-master-00" = { ip = "172.16.134.200", vcpu = 4, ram = 4096 }
-      "gitlab-kubeadm-master-01" = { ip = "172.16.134.201", vcpu = 4, ram = 4096 }
-      "gitlab-kubeadm-master-02" = { ip = "172.16.134.202", vcpu = 4, ram = 4096 }
+      "gitlab-kubeadm-master-00" = { ip = "172.16.134.200", vcpu = 2, ram = 6144 }
+      "gitlab-kubeadm-master-01" = { ip = "172.16.134.201", vcpu = 2, ram = 6144 }
+      "gitlab-kubeadm-master-02" = { ip = "172.16.134.202", vcpu = 2, ram = 6144 }
     }
     worker_nodes = {
-      "gitlab-kubeadm-worker-00" = { ip = "172.16.134.210", vcpu = 4, ram = 4096 }
-      "gitlab-kubeadm-worker-01" = { ip = "172.16.134.211", vcpu = 4, ram = 4096 }
-      "gitlab-kubeadm-worker-02" = { ip = "172.16.134.212", vcpu = 4, ram = 4096 }
+      "gitlab-kubeadm-worker-00" = { ip = "172.16.134.210", vcpu = 4, ram = 8192 }
+      "gitlab-kubeadm-worker-01" = { ip = "172.16.134.211", vcpu = 4, ram = 8192 }
+      "gitlab-kubeadm-worker-02" = { ip = "172.16.134.212", vcpu = 4, ram = 8192 }
     }
     base_image_path = "../../../packer/output/02-base-kubeadm/ubuntu-server-24-02-base-kubeadm.qcow2"
   }
