@@ -4,7 +4,7 @@ Refer to [README-zh-TW.md](README-zh-TW.md) for Traditional Chinese (Taiwan) ver
 
 ## Section 0. Introduction
 
-This repository (hereinafter referred to as "this repo") is a Proof of Concept (PoC) for Infrastructure as Code. It primarily achieves automated deployment of a High Availability (HA) Kubernetes cluster (Kubeadm / microk8s) in a purely on-premise environment using QEMU-KVM.This repo was developed based on personal exercises conducted during an internship at Cathay General Hospital. The objective is to establish an on-premise GitLab instance capable of automated infrastructure deployment, with the aim of creating a reusable IaC pipeline for legacy systems.
+This repository (hereinafter referred to as "this repo") is a Proof of Concept (PoC) for Infrastructure as Code. It primarily achieves automated deployment of a High Availability (HA) Kubernetes cluster (Kubeadm / microk8s) in a purely on-premise environment using QEMU-KVM. This repo was developed based on personal exercises conducted during an internship at Cathay General Hospital. The objective is to establish an on-premise GitLab instance capable of automated infrastructure deployment, with the aim of creating a reusable IaC pipeline for legacy systems.
 
 > [!NOTE]
 > This repo has been approved for public release by the relevant company department as part of a technical portfolio.
