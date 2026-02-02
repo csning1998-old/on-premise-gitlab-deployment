@@ -47,7 +47,7 @@ output "harbor_ingress_domains" {
   value       = vault_pki_secret_backend_role.harbor_ingress.allowed_domains
 }
 
-# output "gitlab_ingress_domains" {
-#   description = "List of allowed domains for GitLab Ingress role"
-#   value       = vault_pki_secret_backend_role.gitlab_ingress.allowed_domains
-# }
+output "gitlab_ingress_domains" {
+  description = "List of allowed domains for GitLab Ingress role"
+  value       = vault_pki_secret_backend_role.gitlab_ingress.allowed_domains
+}
