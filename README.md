@@ -692,14 +692,14 @@ Complete the following configuration steps in sequence:
         ```
 
     2. Import CA to system trust chain:
-        - RHEL / CentOS：
+        - RHEL / CentOS:
 
             ```shell
             sudo cp terraform/layers/10-vault-core/tls/vault-ca.crt /etc/pki/ca-trust/source/anchors/
             sudo update-ca-trust
             ```
 
-        - Ubuntu / Debian：
+        - Ubuntu / Debian:
 
             ```shell
             sudo cp terraform/layers/10-vault-core/tls/vault-ca.crt /usr/local/share/ca-certificates/
@@ -713,7 +713,7 @@ Complete the following configuration steps in sequence:
     - `vault-pki-ca.crt`: The **Service CA** (downloaded from Vault API).
 
     Execute the import commands based on your OS:
-    - **RHEL / CentOS / AlmaLinux:**
+    - **RHEL / CentOS / Fedora:**
 
         ```shell
         # 1. Copy both CAs to the anchors directory

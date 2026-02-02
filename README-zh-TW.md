@@ -713,7 +713,7 @@ git clone -b v1.5.0 --depth 1 https://github.com/csning1998-old/on-premise-gitla
     - `vault-pki-ca.crt`：**Service CA** （透過 Vault API 下載）
 
     執行以下指令將兩份 CA 匯入作業系統：
-    - **RHEL / CentOS / AlmaLinux:**
+    - **RHEL / CentOS / Fedora:**
 
         ```shell
         # 1. Copy both CAs to the anchors directory
