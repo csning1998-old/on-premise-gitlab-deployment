@@ -77,8 +77,8 @@ resource "helm_release" "gitlab" {
             secret = "gitlab-redis-password"
             key    = "password"
           }
-          host = "172.16.141.200" # TODO: Use variables to drive IP & Port
-          # host   = data.terraform_remote_state.gitlab_redis.outputs.gitlab_redis_virtual_ip
+          # host = "172.16.141.200" # TODO: Use variables to drive IP & Port
+          host   = data.terraform_remote_state.gitlab_redis.outputs.gitlab_redis_virtual_ip
           port   = data.terraform_remote_state.gitlab_redis.outputs.gitlab_redis_haproxy_stats_port
           scheme = "rediss"
         }
