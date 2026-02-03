@@ -6,7 +6,7 @@ resource "vault_generic_secret" "gitlab_redis_keys" {
   data_json = jsonencode({
     # Use variables to drive IP & Port
     host     = data.terraform_remote_state.gitlab_redis.outputs.gitlab_redis_virtual_ip
-    port     = 6379 # This should be set as variable fetches from *.tfstates.
+    port     = data.terraform_remote_state.gitlab_redis.outputs.gitlab_redis_haproxy_stats_port
     password = data.vault_generic_secret.db_vars.data["redis_requirepass"]
     scheme   = "redis"
   })
