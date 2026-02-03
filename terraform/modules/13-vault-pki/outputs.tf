@@ -56,3 +56,8 @@ output "vault_pki_path" {
   description = "The path of the PKI backend"
   value       = var.vault_pki_path
 }
+
+output "pki_root_ca_certificate" {
+  description = "The Public Certificate of the PKI Root CA"
+  value       = vault_pki_secret_backend_root_cert.prod_root_ca.certificate
+}

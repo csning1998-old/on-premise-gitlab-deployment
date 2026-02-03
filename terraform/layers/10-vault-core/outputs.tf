@@ -10,6 +10,11 @@ output "vault_ca_cert" {
   sensitive   = false
 }
 
+output "internal_pki_ca_cert" {
+  description = "The CA Certificate used for Internal Services (Redis/Postgres)"
+  value       = module.vault_pki_config.pki_root_ca_certificate
+}
+
 output "pki_configuration" {
   description = "Centralized PKI configuration containing Role Names and Allowed Domains"
   value = {
