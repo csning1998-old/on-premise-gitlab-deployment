@@ -92,52 +92,34 @@ resource "helm_release" "gitlab" {
             connection     = {}
           }
           artifacts = {
-            bucket = "gitlab-artifacts"
-            connection = {
-              # secret = "gitlab-s3-artifacts"
-              # key    = "connection"
-            }
+            bucket     = "gitlab-artifacts"
+            connection = {}
           }
 
           lfs = {
-            bucket = "gitlab-lfs"
-            connection = {
-              # secret = "gitlab-s3-lfs"
-              # key    = "connection"
-            }
+            bucket     = "gitlab-lfs"
+            connection = {}
           }
 
           packages = {
-            bucket = "gitlab-packages"
-            connection = {
-              # secret = "gitlab-s3-packages"
-              # key    = "connection"
-            }
+            bucket     = "gitlab-packages"
+            connection = {}
           }
 
           uploads = {
-            bucket = "gitlab-uploads"
-            connection = {
-              # secret = "gitlab-s3-uploads"
-              # key    = "connection"
-            }
+            bucket     = "gitlab-uploads"
+            connection = {}
           }
 
           backups = {
-            bucket    = "gitlab-backups"
-            tmpBucket = "gitlab-backups-tmp"
-            connection = {
-              # secret = "gitlab-s3-backups"
-              # key    = "connection"
-            }
+            bucket     = "gitlab-backups"
+            tmpBucket  = "gitlab-backups-tmp"
+            connection = {}
           }
 
           terraformState = {
-            bucket = "gitlab-terraform-state"
-            connection = {
-              # secret = "gitlab-s3-terraform-state"
-              # key    = "connection"
-            }
+            bucket     = "gitlab-terraform-state"
+            connection = {}
           }
         }
 
