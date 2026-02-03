@@ -1,0 +1,26 @@
+
+# Write Redis connection info to Vault App Path for record-keeping and application reference
+resource "vault_generic_secret" "gitlab_redis_keys" {
+  path = "secret/on-premise-gitlab-deployment/gitlab/app/redis"
+
+  data_json = jsonencode({
+    # Use variables to drive IP & Port
+    host     = data.terraform_remote_state.gitlab_redis.outputs.gitlab_redis_virtual_ip
+    port     = 6379 # This should be set as variable fetches from *.tfstates.
+    password = data.vault_generic_secret.db_vars.data["redis_requirepass"]
+    scheme   = "redis"
+  })
+}
+
+# Kubernetes Secret for Helm Chart
+resource "kubernetes_secret" "gitlab_redis_password" {
+  metadata {
+    name      = "gitlab-redis-password"
+    namespace = kubernetes_namespace.gitlab.metadata[0].name
+  }
+
+  data = {
+    # GitLab Helm Chart supports Secret Name & Key by default
+    password = data.vault_generic_secret.db_vars.data["redis_requirepass"]
+  }
+}
