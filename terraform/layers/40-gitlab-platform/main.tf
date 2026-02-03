@@ -18,3 +18,8 @@ module "k8s_ingress_nginx" {
   source     = "../../modules/43-kubeadm-ingress-nginx"
   depends_on = [module.k8s_cert_manager]
 }
+
+module "k8s_storage_local_path" {
+  source     = "../../modules/46-storage-local-path"
+  depends_on = [module.k8s_calico]
+}
