@@ -13,6 +13,8 @@ output "vault_ca_cert" {
 output "pki_configuration" {
   description = "Centralized PKI configuration containing Role Names and Allowed Domains"
   value = {
+    vault_pki_path = module.vault_pki_config.vault_pki_path
+
     # Part A: Role Names for Vault Agent / Cert-Manager
     postgres_roles = module.vault_pki_config.postgres_role_names
     redis_roles    = module.vault_pki_config.redis_role_names
@@ -20,7 +22,7 @@ output "pki_configuration" {
 
     ingress_roles = {
       harbor = module.vault_pki_config.harbor_ingress_role_name
-      # gitlab = module.vault_pki_config.gitlab_ingress_role_name
+      gitlab = module.vault_pki_config.gitlab_ingress_role_name
     }
 
     # Part B: Allowed Domains for App Config / Ingress
@@ -30,7 +32,7 @@ output "pki_configuration" {
 
     ingress_domains = {
       harbor = module.vault_pki_config.harbor_ingress_domains
-      # gitlab = module.vault_pki_config.gitlab_ingress_domains
+      gitlab = module.vault_pki_config.gitlab_ingress_domains
     }
   }
 }
