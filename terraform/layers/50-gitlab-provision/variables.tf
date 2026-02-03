@@ -1,9 +1,4 @@
 
-variable "vault_addr" {
-  description = "The address of the Vault server"
-  type        = string
-}
-
 variable "vault_skip_verify" {
   description = "Skip Vault TLS verification"
   type        = bool

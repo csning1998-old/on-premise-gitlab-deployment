@@ -13,6 +13,10 @@ terraform {
       source  = "hashicorp/vault"
       version = "5.3.0"
     }
+    postgresql = {
+      source  = "cyrilgdn/postgresql"
+      version = "1.25.0"
+    }
     # gitlab = {
     #   source  = "gitlabhq/gitlab"
     #   version = "17.8.0"
@@ -40,4 +44,17 @@ provider "helm" {
     client_certificate     = base64decode(local.user_info["client-certificate-data"])
     client_key             = base64decode(local.user_info["client-key-data"])
   }
+}
+
+provider "postgresql" {
+  scheme = "postgres"
+  host   = data.terraform_remote_state.gitlab_postgres.outputs.gitlab_postgres_virtual_ip
+  port   = data.terraform_remote_state.gitlab_postgres.outputs.gitlab_postgres_haproxy_rw_port
+
+  username = "postgres"
+  password = data.vault_generic_secret.db_vars.data["pg_superuser_password"]
+
+  sslmode = "require"
+
+  connect_timeout = 15
 }

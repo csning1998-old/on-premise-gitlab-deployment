@@ -25,21 +25,21 @@ data "terraform_remote_state" "vault_core" {
 }
 
 # Infrastructure VIPs
-data "terraform_remote_state" "redis" {
+data "terraform_remote_state" "gitlab_redis" {
   backend = "local"
   config = {
     path = "../20-gitlab-redis/terraform.tfstate"
   }
 }
 
-data "terraform_remote_state" "postgres" {
+data "terraform_remote_state" "gitlab_postgres" {
   backend = "local"
   config = {
     path = "../20-gitlab-postgres/terraform.tfstate"
   }
 }
 
-data "terraform_remote_state" "minio" {
+data "terraform_remote_state" "gitlab_minio" {
   backend = "local"
   config = {
     path = "../20-gitlab-minio/terraform.tfstate"
