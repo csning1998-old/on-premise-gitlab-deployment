@@ -14,12 +14,12 @@ output "harbor_minio_virtual_ip" {
   value       = var.harbor_minio_compute.haproxy_config.virtual_ip
 }
 
-output "gitlab_minio_haproxy_ports" {
-  description = "HAProxy ports for GitLab MinIO"
+output "harbor_minio_haproxy_ports" {
+  description = "HAProxy ports for Harbor MinIO"
   value = {
-    frontend_port_api     = var.gitlab_minio_compute.haproxy_config.frontend_port_api
-    frontend_port_console = var.gitlab_minio_compute.haproxy_config.frontend_port_console
-    backend_port_api      = var.gitlab_minio_compute.haproxy_config.backend_port_api
-    backend_port_console  = var.gitlab_minio_compute.haproxy_config.backend_port_console
+    frontend_port_api     = var.harbor_minio_compute.haproxy_config.frontend_port_api
+    frontend_port_console = var.harbor_minio_compute.haproxy_config.frontend_port_console
+    backend_port_api      = var.harbor_minio_compute.haproxy_config.backend_port_api
+    backend_port_console  = var.harbor_minio_compute.haproxy_config.backend_port_console
   }
 }
