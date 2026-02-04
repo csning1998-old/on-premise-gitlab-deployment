@@ -5,8 +5,8 @@ resource "vault_mount" "pki_prod" {
   type        = "pki"
   description = "Production PKI Engine for internal services"
 
-  default_lease_ttl_seconds = 86400     # 1 Day
-  max_lease_ttl_seconds     = 315360000 # 10 Years
+  default_lease_ttl_seconds = 60 * 60 * 24       # 1 Day
+  max_lease_ttl_seconds     = 60 * 60 * 24 * 365 # 1 Year
 }
 
 # Root CA
@@ -15,7 +15,7 @@ resource "vault_pki_secret_backend_root_cert" "prod_root_ca" {
 
   type                 = "internal"
   common_name          = "on-premise-gitlab-deployment-root-ca"
-  ttl                  = "315360000" # 10 Years
+  ttl                  = 60 * 60 * 24 * 365 # 1 Year
   format               = "pem"
   private_key_format   = "der"
   key_type             = "rsa"
@@ -35,4 +35,10 @@ resource "vault_pki_secret_backend_config_urls" "config_urls" {
 resource "vault_auth_backend" "approle" {
   type = "approle"
   path = "approle"
+}
+
+# Kubernetes Auth Method
+resource "vault_auth_backend" "kubernetes" {
+  type = "kubernetes"
+  path = "kubernetes"
 }
