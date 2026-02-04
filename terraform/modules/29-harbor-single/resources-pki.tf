@@ -11,6 +11,10 @@ path "${var.vault_pki_mount_path}/issue/${var.vault_role_name}" {
 path "auth/token/renew-self" {
   capabilities = ["update"]
 }
+
+path "secret/data/on-premise-gitlab-deployment/dev-harbor/*" {
+  capabilities = ["read"]
+}
 EOT
 }
 
