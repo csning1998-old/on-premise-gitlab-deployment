@@ -1,15 +1,19 @@
 
+resource "kubernetes_namespace" "gitlab" {
+  metadata {
+    name = "gitlab"
+  }
+}
+
 resource "helm_release" "gitlab" {
 
   depends_on = [
     kubernetes_secret.gitlab_tls,
-    kubernetes_secret.gitlab_rails_secret,
-    kubernetes_secret.gitlab_shell_secret,
-    kubernetes_secret.gitlab_gitaly_secret,
-    kubernetes_secret.gitlab_root_password,
-    resource.kubernetes_secret.gitlab_s3_artifacts,
-    resource.kubernetes_secret.gitlab_postgres_password,
-    resource.kubernetes_secret.gitlab_redis_password
+    kubernetes_secret.gitlab_internal,
+    kubernetes_secret.gitlab_s3,
+    kubernetes_secret.gitlab_postgres_password,
+    kubernetes_secret.gitlab_redis_password,
+    kubernetes_secret.gitlab_custom_ca
   ]
 
   name       = "gitlab"
@@ -124,10 +128,10 @@ resource "helm_release" "gitlab" {
         }
 
         # Internal Secrets
-        shell               = { authToken = { secret = kubernetes_secret.gitlab_shell_secret.metadata[0].name, key = "secret" } }
-        gitaly              = { authToken = { secret = kubernetes_secret.gitlab_gitaly_secret.metadata[0].name, key = "token" } }
-        rails               = { secret = { secret = kubernetes_secret.gitlab_rails_secret.metadata[0].name, key = "secret" } }
-        initialRootPassword = { secret = kubernetes_secret.gitlab_root_password.metadata[0].name, key = "password" }
+        shell               = { authToken = { secret = kubernetes_secret.gitlab_internal["shell-secret"].metadata[0].name, key = "secret" } }
+        gitaly              = { authToken = { secret = kubernetes_secret.gitlab_internal["gitaly-secret"].metadata[0].name, key = "token" } }
+        rails               = { secret = { secret = kubernetes_secret.gitlab_internal["rails-secret"].metadata[0].name, key = "secret" } }
+        initialRootPassword = { secret = kubernetes_secret.gitlab_internal["root-password"].metadata[0].name, key = "password" }
       }
 
       # Disable all built-in components

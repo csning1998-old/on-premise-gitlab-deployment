@@ -61,26 +61,11 @@ data "vault_generic_secret" "gitlab_vars" {
 
 # path: secret/on-premise-gitlab-deployment/gitlab/s3_credentials/[bucket_name]
 
+data "vault_generic_secret" "s3_credentials" {
+  for_each = local.s3_bucket_names
+  path     = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/${each.key}"
+}
+
 data "vault_generic_secret" "s3_artifacts" {
   path = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/gitlab-artifacts"
-}
-
-data "vault_generic_secret" "s3_lfs" {
-  path = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/gitlab-lfs"
-}
-
-data "vault_generic_secret" "s3_uploads" {
-  path = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/gitlab-uploads"
-}
-
-data "vault_generic_secret" "s3_packages" {
-  path = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/gitlab-packages"
-}
-
-data "vault_generic_secret" "s3_terraform_state" {
-  path = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/gitlab-terraform-state"
-}
-
-data "vault_generic_secret" "s3_backups" {
-  path = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/gitlab-backups"
 }

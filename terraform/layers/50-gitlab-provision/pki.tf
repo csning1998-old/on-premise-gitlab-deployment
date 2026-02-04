@@ -26,3 +26,15 @@ resource "kubernetes_secret" "gitlab_tls" {
     "tls.key" = vault_pki_secret_backend_cert.gitlab_ingress_cert.private_key
   }
 }
+
+resource "kubernetes_secret" "gitlab_custom_ca" {
+  metadata {
+    name      = "gitlab-custom-ca"
+    namespace = kubernetes_namespace.gitlab.metadata[0].name
+  }
+
+  data = {
+    "vault-api-ca.crt"    = data.terraform_remote_state.vault_core.outputs.vault_ca_cert
+    "internal-pki-ca.crt" = data.terraform_remote_state.vault_core.outputs.internal_pki_ca_cert
+  }
+}
