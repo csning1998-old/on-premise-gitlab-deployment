@@ -13,3 +13,8 @@
     extra_opts:
       - "--strip-components=1"
     creates: "{{ harbor_preload.dest_dir }}/install.sh"
+
+- name: "Step 3. Ensure hvac library is installed"
+  ansible.builtin.package:
+    name: python3-hvac
+    state: present
