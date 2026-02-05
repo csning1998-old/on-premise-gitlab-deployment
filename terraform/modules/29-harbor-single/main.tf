@@ -91,6 +91,7 @@ module "ansible_runner" {
     "vault_agent_role_id"   = vault_approle_auth_backend_role.dev_harbor.role_id
     "vault_agent_secret_id" = vault_approle_auth_backend_role_secret_id.dev_harbor.secret_id
     "vault_ca_cert_b64"     = var.vault_ca_cert_b64
+    "vault_address"         = var.vault_address
   }
 
   status_trigger = module.ssh_manager.ssh_access_ready_trigger

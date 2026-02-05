@@ -65,6 +65,11 @@ variable "service_domain" {
   type        = string
 }
 
+variable "vault_address" {
+  description = "The address of the Production Vault"
+  type        = string
+}
+
 variable "vault_ca_cert_b64" {
   description = "Base64 encoded CA certificate for Vault Agent"
   type        = string

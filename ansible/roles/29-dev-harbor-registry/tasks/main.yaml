@@ -91,7 +91,7 @@
 
     - name: "Step B2. Retrieve Harbor Credentials"
       community.hashi_vault.vault_kv2_get:
-        url: "{{ vault_addr | default('https://172.16.136.250:443') }}"
+        url: "{{ vault_address }}"
         path: "on-premise-gitlab-deployment/dev-harbor/app"
         engine_mount_point: "secret"
         auth_method: approle
@@ -99,7 +99,7 @@
         secret_id: "{{ vault_agent_secret_id }}"
         ca_cert: "{{ vault_agent_config_dir }}/vault-ca.crt"
       register: harbor_vault_secrets
-      # no_log: true
+      no_log: true
 
 - name: "Section C: Configure Harbor"
   become: true
