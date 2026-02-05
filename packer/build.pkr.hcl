@@ -17,14 +17,26 @@ packer {
 build {
   sources = ["source.qemu.ubuntu"]
 
-  # --- Common Provisioners ---
-  provisioner "shell" {
+  # Common Provisioners
+provisioner "shell" {
     inline = [
+      # Waiting for cloud-init to finish
       "/usr/bin/cloud-init status --wait",
+
+      # Restoring online repositories
+      "sudo rm -f /etc/apt/sources.list.d/ubuntu.sources",
+      "echo 'deb http://archive.ubuntu.com/ubuntu noble main restricted universe multiverse' | sudo tee /etc/apt/sources.list",
+      "echo 'deb http://archive.ubuntu.com/ubuntu noble-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list",
+      "echo 'deb http://archive.ubuntu.com/ubuntu noble-backports main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list",
+      "echo 'deb http://security.ubuntu.com/ubuntu noble-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list",
+
+      # Performing full system upgrade
       "sudo apt-get update",
-      "sudo apt-get install -y openssh-sftp-server",
-      "sudo systemctl restart ssh"
+      "sudo apt-get dist-upgrade -y",
+      "sudo apt-get autoremove -y",
+      "sudo apt-get clean"
     ]
+    execute_command = "echo '${local.ssh_password}' | {{ .Vars }} sudo -S -E bash '{{ .Path }}'"
   }
 
   provisioner "ansible" {

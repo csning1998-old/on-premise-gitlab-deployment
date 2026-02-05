@@ -14,9 +14,14 @@ autoinstall:
     # To prevent Exit 100 during packer build
     update: no
 
-  updates: "security"
+  # updates: security # To prevent 'apt-get update' crash
 
-  # Network Configuration
+  apt:
+    geoip: false
+    fallback: offline-install
+    primary: []
+    disable_suites: [security, updates, backports, proposed]
+
   network:
     version: 2
     ethernets:
