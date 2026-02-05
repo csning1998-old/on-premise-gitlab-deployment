@@ -29,7 +29,6 @@ template {
   contents = <<EOH
 {{ '{{- with secret "pki/prod/issue/' ~ dev_harbor_pki_role_name ~ '" "common_name=' ~ dev_harbor_service_domain ~ '" "ip_sans=' ~ advertise_ip ~ '" "ttl=24h" -}}' }}
 {{ '{{ .Data.certificate }}' }}
-{{ '{{ .Data.issuing_ca }}' }}
 {{ '{{- end -}}' }}
 EOH
   # Logic: Check if harbor-nginx container is running. If yes, reload nginx. If not (first install), do nothing.
