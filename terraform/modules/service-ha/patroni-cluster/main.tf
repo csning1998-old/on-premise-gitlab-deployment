@@ -103,8 +103,8 @@ module "ansible_runner" {
     terraform_runner_subnet = var.infra_config.network.hostonly.cidrv4
 
     # Vault Agent AppRole Credentials
-    "vault_agent_role_id"   = vault_approle_auth_backend_role.postgres.role_id
-    "vault_agent_secret_id" = vault_approle_auth_backend_role_secret_id.postgres.secret_id
+    "vault_agent_role_id"   = var.vault_approle_role_id
+    "vault_agent_secret_id" = var.vault_approle_secret_id
     "vault_ca_cert_b64"     = var.vault_ca_cert_b64
   }
 

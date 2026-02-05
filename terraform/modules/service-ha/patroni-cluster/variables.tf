@@ -136,8 +136,13 @@ variable "vault_role_name" {
   type        = string
 }
 
-variable "vault_pki_mount_path" {
-  description = "The mount path for the PKI backend in Vault"
+variable "vault_approle_role_id" {
+  description = "The Role ID for Vault AppRole Auth"
   type        = string
-  default     = "pki/prod"
+}
+
+variable "vault_approle_secret_id" {
+  description = "The Secret ID for Vault AppRole Auth"
+  type        = string
+  sensitive   = true
 }
