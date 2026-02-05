@@ -19,24 +19,34 @@ build {
 
   # Common Provisioners
 provisioner "shell" {
+    execute_command = "echo '${local.ssh_password}' | {{ .Vars }} sudo -S -E bash '{{ .Path }}'"
+
     inline = [
       # Waiting for cloud-init to finish
       "/usr/bin/cloud-init status --wait",
 
+      # Dynamically fetch the Ubuntu codename (e.g., noble, jammy, focal)
+      "UBUNTU_CODENAME=$(lsb_release -cs)",
+      "echo \"Detected Ubuntu Codename: $UBUNTU_CODENAME\"",
+
       # Restoring online repositories
-      "sudo rm -f /etc/apt/sources.list.d/ubuntu.sources",
-      "echo 'deb http://archive.ubuntu.com/ubuntu noble main restricted universe multiverse' | sudo tee /etc/apt/sources.list",
-      "echo 'deb http://archive.ubuntu.com/ubuntu noble-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list",
-      "echo 'deb http://archive.ubuntu.com/ubuntu noble-backports main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list",
-      "echo 'deb http://security.ubuntu.com/ubuntu noble-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list",
+      "rm -f /etc/apt/sources.list.d/ubuntu.sources",
+
+      # Use Shell variable $UBUNTU_CODENAME to replace Packer variable
+      "echo \"deb http://archive.ubuntu.com/ubuntu $${UBUNTU_CODENAME} main restricted universe multiverse\" | tee /etc/apt/sources.list",
+      "echo \"deb http://archive.ubuntu.com/ubuntu $${UBUNTU_CODENAME}-updates main restricted universe multiverse\" | tee -a /etc/apt/sources.list",
+      "echo \"deb http://archive.ubuntu.com/ubuntu $${UBUNTU_CODENAME}-backports main restricted universe multiverse\" | tee -a /etc/apt/sources.list",
+      "echo \"deb http://security.ubuntu.com/ubuntu $${UBUNTU_CODENAME}-security main restricted universe multiverse\" | tee -a /etc/apt/sources.list",
 
       # Performing full system upgrade
-      "sudo apt-get update",
-      "sudo apt-get dist-upgrade -y",
-      "sudo apt-get autoremove -y",
-      "sudo apt-get clean"
+      "apt-get update",
+      "apt-get dist-upgrade -y",
+      "apt-get autoremove -y",
+      "apt-get clean",
+
+      "apt-get install -y openssh-sftp-server",
+      "systemctl restart ssh"
     ]
-    execute_command = "echo '${local.ssh_password}' | {{ .Vars }} sudo -S -E bash '{{ .Path }}'"
   }
 
   provisioner "ansible" {
