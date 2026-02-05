@@ -1,5 +1,5 @@
 
-# New: Call the Identity Module to generate AppRole & Secret ID
+# Call the Identity Module to generate AppRole & Secret ID
 module "postgres_identity" {
   source = "../../modules/configuration/vault-workload-identity"
 

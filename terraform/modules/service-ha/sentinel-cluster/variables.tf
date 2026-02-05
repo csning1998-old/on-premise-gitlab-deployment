@@ -113,6 +113,12 @@ variable "service_domain" {
   type        = string
 }
 
+variable "enable_tls" {
+  description = "Enable TLS/SSL for Redis and Sentinel. Secure by Default."
+  type        = bool
+  default     = true
+}
+
 variable "vault_ca_cert_b64" {
   description = "Base64 encoded CA certificate for Vault Agent"
   type        = string
@@ -123,14 +129,13 @@ variable "vault_role_name" {
   type        = string
 }
 
-variable "enable_tls" {
-  description = "Enable TLS/SSL for Redis and Sentinel. Secure by Default."
-  type        = bool
-  default     = true
+variable "vault_approle_role_id" {
+  description = "The Role ID for Vault AppRole Auth"
+  type        = string
 }
 
-variable "vault_pki_mount_path" {
-  description = "The mount path for the PKI backend in Vault"
+variable "vault_approle_secret_id" {
+  description = "The Secret ID for Vault AppRole Auth"
   type        = string
-  default     = "pki/prod"
+  sensitive   = true
 }
