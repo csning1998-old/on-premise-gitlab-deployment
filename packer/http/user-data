@@ -14,8 +14,6 @@ autoinstall:
     # To prevent Exit 100 during packer build
     update: no
 
-  # updates: security # To prevent 'apt-get update' crash
-
   apt:
     geoip: false
     fallback: offline-install
