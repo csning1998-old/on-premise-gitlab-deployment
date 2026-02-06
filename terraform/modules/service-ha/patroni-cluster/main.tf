@@ -84,7 +84,6 @@ module "ansible_runner" {
     postgres_ha_virtual_ip     = var.topology_config.haproxy_config.virtual_ip
     postgres_mtls_node_subnet  = var.infra_config.allowed_subnet
     postgres_service_domain    = var.service_domain
-    postgres_pki_role_name     = var.vault_role_name
     postgres_nat_subnet_prefix = local.nat_network_subnet_prefix
   })
 
@@ -106,6 +105,7 @@ module "ansible_runner" {
     "vault_agent_role_id"   = var.vault_approle_role_id
     "vault_agent_secret_id" = var.vault_approle_secret_id
     "vault_ca_cert_b64"     = var.vault_ca_cert_b64
+    "vault_role_name"       = var.vault_role_name
   }
 
   status_trigger = module.ssh_manager.ssh_access_ready_trigger
