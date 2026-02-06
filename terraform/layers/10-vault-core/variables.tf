@@ -65,29 +65,31 @@ variable "vault_dev_addr" {
   default     = "https://127.0.0.1:8200"
 }
 
-variable "service_topology" {
-  description = "High-level definition of platforms and services"
+variable "service_catalog" {
+  description = "Universal Service Definitions. Runtime = Tech Stack (docker/k8s), Stage = Lifecycle (prod/dev)."
+  type = map(object({
 
-  type = object({
-    root_domain = string
-    platforms   = list(string) # e.g. ["gitlab", "harbor"]
+    # Runtime Context (Technology Stack). e.g. "docker", "kubeadm", "microk8s", "baremetal"
+    runtime = string
 
-    # Define database services and their URL prefixes
-    database_services = object({
-      types = map(object({
-        prefixes = list(string)
-      }))
-      max_ttl = number
-      ttl     = number
-    })
+    # Lifecycle Stage. e.g. "production", "staging", "dev"
+    stage = string
 
-    # Define ingress services and their subdomains
-    ingress_services = map(object({
+    # Arbitrarily added
+    tag = optional(string)
+
+    # Internal Components / Frontends. e.g. "vault-cluster", "haproxy"
+    components = map(object({
       subdomains = list(string)
-      max_ttl    = optional(number)
-      ttl        = optional(number)
     }))
-  })
+
+    # Backing Services / Dependencies
+    dependencies = map(object({
+      service_name = string           # e.g. "postgres"
+      runtime      = string           # e.g. "baremetal"
+      tag          = optional(string) # Arbitrarily added
+    }))
+  }))
 }
 
 variable "vault_auth_backends" {

@@ -37,20 +37,20 @@ module "vault_pki_setup" {
     vault = vault.target_cluster
   }
   vault_addr          = "https://${var.vault_compute.haproxy_config.virtual_ip}:443"
-  root_domain         = var.service_topology.root_domain
+  root_domain         = local.root_domain
   root_ca_common_name = var.vault_pki_engine_config.root_ca_common_name
 
   auth_backends     = var.vault_auth_backends
   pki_engine_config = var.vault_pki_engine_config
 
-  ingress_roles  = local.ingress_roles_final
-  database_roles = local.db_roles_flat
+  component_roles  = local.component_roles
+  dependency_roles = local.dependency_roles
 }
 
-module "vault_workload_identity_ingress" {
+module "vault_workload_identity_components" {
   source = "../../modules/configuration/vault-workload-identity"
 
-  for_each           = local.ingress_roles_final
+  for_each           = local.component_roles
   name               = each.key
   vault_role_name    = each.value.name
   pki_mount_path     = module.vault_pki_setup.vault_pki_path
@@ -61,10 +61,10 @@ module "vault_workload_identity_ingress" {
   }
 }
 
-module "vault_workload_identity_databases" {
+module "vault_workload_identity_dependencies" {
   source = "../../modules/configuration/vault-workload-identity"
 
-  for_each           = local.db_roles_flat
+  for_each           = local.dependency_roles
   name               = each.key
   vault_role_name    = each.value.name
   pki_mount_path     = module.vault_pki_setup.vault_pki_path

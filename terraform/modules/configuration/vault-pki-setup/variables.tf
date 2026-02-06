@@ -14,23 +14,25 @@ variable "root_ca_common_name" {
   type        = string
 }
 
-variable "ingress_roles" {
-  description = "Map of Ingress PKI Roles configuration"
+variable "component_roles" {
+  description = "Map of Component PKI Roles (Internal/Frontend)"
   type = map(object({
     name            = string
     allowed_domains = list(string)
     max_ttl         = number
     ttl             = number
+    ou              = list(string)
   }))
 }
 
-variable "database_roles" {
-  description = "Map of Database PKI Roles configuration"
+variable "dependency_roles" {
+  description = "Map of Dependency PKI Roles (Backing Services)"
   type = map(object({
     name            = string
     allowed_domains = list(string)
     max_ttl         = number
     ttl             = number
+    ou              = list(string)
   }))
 }
 

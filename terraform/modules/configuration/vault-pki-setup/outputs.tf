@@ -1,20 +1,20 @@
 
-# Database Services Output
-output "database_roles" {
-  description = "Map of all created Database PKI roles containing name and allowed_domains"
+# Dependency Services Output
+output "dependency_roles" {
+  description = "Map of created Dependency PKI roles"
   value = {
-    for key, role in vault_pki_secret_backend_role.db_services : key => {
+    for key, role in vault_pki_secret_backend_role.dependency_roles : key => {
       name            = role.name
       allowed_domains = role.allowed_domains
     }
   }
 }
 
-# Ingress Services Output
-output "ingress_roles" {
-  description = "Map of all created Ingress PKI roles containing name and allowed_domains"
+# Component Services Output
+output "component_roles" {
+  description = "Map of created Component PKI roles"
   value = {
-    for key, role in vault_pki_secret_backend_role.ingress_services : key => {
+    for key, role in vault_pki_secret_backend_role.component_roles : key => {
       name            = role.name
       allowed_domains = role.allowed_domains
     }

@@ -1,7 +1,7 @@
 
 # Role: Internal Database Services (Postgres, Redis, MinIO)
-resource "vault_pki_secret_backend_role" "db_services" {
-  for_each = var.database_roles
+resource "vault_pki_secret_backend_role" "dependency_roles" {
+  for_each = var.dependency_roles
 
   backend         = vault_mount.pki_prod.path
   name            = each.value.name
@@ -16,6 +16,9 @@ resource "vault_pki_secret_backend_role" "db_services" {
 
   server_flag = true
   client_flag = true
+
+  # Metadata Injection same as in dependency roles
+  ou = each.value.ou
 
   max_ttl = 60 * 60 * 24 * 30 # 30 Days
   ttl     = 60 * 60 * 24      # 24 Hours
