@@ -11,7 +11,6 @@ all:
     redis_ha_virtual_ip: "${redis_ha_virtual_ip}"
     redis_tls_node_subnet: "${redis_tls_node_subnet}"
     redis_service_domain: "${redis_service_domain}"
-    redis_pki_role_name: "${redis_pki_role_name}"
     redis_initial_master_ip: "${redis_nodes[keys(redis_nodes)[0]].ip}"
     redis_nat_subnet_prefix: "${redis_nat_subnet_prefix}"
     sentinel_quorum: ${floor(length(redis_nodes)/2) + 1}

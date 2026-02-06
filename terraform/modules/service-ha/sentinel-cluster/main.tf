@@ -79,7 +79,6 @@ module "ansible_runner" {
     redis_enable_tls        = var.enable_tls
     redis_tls_node_subnet   = var.infra_config.allowed_subnet
     redis_service_domain    = var.service_domain
-    redis_pki_role_name     = var.vault_role_name
     redis_nat_subnet_prefix = local.nat_network_subnet_prefix
   })
 
@@ -95,6 +94,7 @@ module "ansible_runner" {
     "vault_agent_role_id"   = var.vault_approle_role_id
     "vault_agent_secret_id" = var.vault_approle_secret_id
     "vault_ca_cert_b64"     = var.vault_ca_cert_b64
+    "vault_role_name"       = var.vault_role_name
   }
 
   status_trigger = module.ssh_manager.ssh_access_ready_trigger
