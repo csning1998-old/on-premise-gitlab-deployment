@@ -4,22 +4,18 @@ output "vault_ha_virtual_ip" {
   value       = var.vault_compute.haproxy_config.virtual_ip
 }
 
-output "vault_ca_cert" {
-  description = "The Root CA Certificate content (Public Key) of the Vault Cluster"
-  value       = module.vault_tls_gen.ca_cert_pem
-  sensitive   = false
-}
-
-output "internal_pki_ca_cert" {
-  description = "The CA Certificate used for Internal Services (Redis/Postgres)"
-  value       = module.vault_pki_setup.pki_root_ca_certificate
+output "vault_cartificates" {
+  description = "The Certificates content of the Vault Cluster"
+  value = {
+    root_ca = module.vault_pki_setup.pki_root_ca_certificate
+    ca_cert = module.vault_tls_gen.ca_cert_pem # for PKI
+  }
 }
 
 output "pki_configuration" {
   description = "PKI Configuration Summary"
   value = {
-    root_ca = module.vault_pki_setup.pki_root_ca_certificate
-    path    = module.vault_pki_setup.vault_pki_path
+    path = module.vault_pki_setup.vault_pki_path
 
     roles = {
       postgres   = module.vault_pki_setup.postgres_role_names
