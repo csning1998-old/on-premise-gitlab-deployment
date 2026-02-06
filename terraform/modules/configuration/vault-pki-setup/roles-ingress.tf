@@ -3,9 +3,8 @@
 resource "vault_pki_secret_backend_role" "ingress_services" {
   for_each = var.ingress_roles
 
-  backend = vault_mount.pki_prod.path
-  name    = each.value.name
-
+  backend         = vault_mount.pki_prod.path
+  name            = each.value.name
   allowed_domains = each.value.allowed_domains
 
   allow_subdomains   = true
