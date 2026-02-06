@@ -75,7 +75,6 @@ module "ansible_runner" {
 
     dev_harbor_mtls_node_subnet  = var.infra_config.allowed_subnet
     dev_harbor_service_domain    = var.service_domain
-    dev_harbor_pki_role_name     = var.vault_role_name
     dev_harbor_nat_subnet_prefix = local.nat_network_subnet_prefix
   })
 
@@ -89,10 +88,11 @@ module "ansible_runner" {
     terraform_runner_subnet = var.infra_config.network.hostonly.cidrv4
 
     # Vault Agent AppRole Credentials
-    "vault_agent_role_id"   = vault_approle_auth_backend_role.dev_harbor.role_id
-    "vault_agent_secret_id" = vault_approle_auth_backend_role_secret_id.dev_harbor.secret_id
+    "vault_agent_role_id"   = var.vault_approle_role_id
+    "vault_agent_secret_id" = var.vault_approle_secret_id
     "vault_ca_cert_b64"     = var.vault_ca_cert_b64
     "vault_address"         = var.vault_address
+    "vault_role_name"       = var.vault_role_name
   }
 
   status_trigger = module.ssh_manager.ssh_access_ready_trigger
