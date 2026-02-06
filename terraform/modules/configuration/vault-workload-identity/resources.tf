@@ -21,7 +21,7 @@ EOT
 
 # 2. Create AppRole
 resource "vault_approle_auth_backend_role" "this" {
-  backend        = "approle"
+  backend        = var.approle_mount_path
   role_name      = var.name
   token_policies = ["default", vault_policy.this.name]
 

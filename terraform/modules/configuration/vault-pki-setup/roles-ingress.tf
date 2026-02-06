@@ -1,7 +1,7 @@
 
 # Role: Generic Ingress Role
 resource "vault_pki_secret_backend_role" "ingress_services" {
-  for_each = local.ingress_services
+  for_each = var.ingress_roles
 
   backend = vault_mount.pki_prod.path
   name    = each.value.name
@@ -31,7 +31,7 @@ resource "vault_pki_secret_backend_role" "ingress_services" {
 
 # Policy: Generic PKI Policy. This will be bind to Cert-Manager in ServiceAccount
 resource "vault_policy" "ingress_services_pki" {
-  for_each = local.ingress_services
+  for_each = var.ingress_roles
 
   name = "${each.value.name}-pki-policy"
 

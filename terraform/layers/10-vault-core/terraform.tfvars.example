@@ -11,7 +11,7 @@ vault_compute = {
     component    = "core"
     cluster_name = "10-vault-core"
   }
-  
+
   vault_cluster = {
     nodes = {
       # Single Mode
@@ -49,4 +49,56 @@ vault_infra = {
     }
   }
   allowed_subnet = "172.16.136.0/24"
+}
+
+service_topology = {
+  root_domain = "iac.local"
+  platforms   = ["gitlab", "harbor"]
+
+  database_services = {
+    types = {
+      postgres = { prefixes = ["pg"] }
+      redis    = { prefixes = ["redis"] }
+      minio    = { prefixes = ["s3", "console"] }
+    }
+    max_ttl = 60 * 60 * 24 * 90 # 90 Days
+    ttl     = 60 * 60 * 24      # 1 Day
+  }
+
+  ingress_services = {
+    "gitlab" = {
+      subdomains = ["gitlab", "kas", "registry", "minio"]
+      max_ttl    = 60 * 60 * 24 * 90 # 90 Days
+      ttl        = 60 * 60 * 24      # 1 Day
+    }
+    "harbor" = {
+      subdomains = ["harbor", "notary"]
+      max_ttl    = 60 * 60 * 24 * 90
+      ttl        = 60 * 60 * 24
+    }
+    "dev-harbor" = {
+      subdomains = ["dev-harbor", "notary.dev-harbor"]
+      max_ttl    = 60 * 60 * 24 * 30
+      ttl        = 60 * 60 * 24
+    }
+  }
+}
+
+vault_auth_backends = {
+  "approle" = {
+    type = "approle"
+    path = "approle"
+  }
+  "kubernetes" = {
+    type = "kubernetes"
+    path = "kubernetes"
+  }
+}
+
+vault_pki_engine_config = {
+  path                = "pki/prod"
+  root_ca_common_name = "on-premise-gitlab-deployment-root-ca"
+
+  default_lease_ttl_seconds = 60 * 60 * 24       # 1 Day
+  max_lease_ttl_seconds     = 60 * 60 * 24 * 365 # 1 Year
 }

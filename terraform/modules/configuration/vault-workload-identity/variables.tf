@@ -4,6 +4,11 @@ variable "name" {
   type        = string
 }
 
+variable "approle_mount_path" {
+  description = "The mount path of the AppRole Auth Backend (e.g., 'approle')"
+  type        = string
+}
+
 variable "vault_role_name" {
   description = "The PKI Role Name defined in vault-pki-setup (e.g., gitlab-postgres-role)"
   type        = string
@@ -12,7 +17,6 @@ variable "vault_role_name" {
 variable "pki_mount_path" {
   description = "The mount path of the PKI backend"
   type        = string
-  default     = "pki/prod"
 }
 
 variable "token_ttl" {

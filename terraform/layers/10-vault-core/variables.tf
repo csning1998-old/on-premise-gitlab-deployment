@@ -64,3 +64,47 @@ variable "vault_dev_addr" {
   type        = string
   default     = "https://127.0.0.1:8200"
 }
+
+variable "service_topology" {
+  description = "High-level definition of platforms and services"
+
+  type = object({
+    root_domain = string
+    platforms   = list(string) # e.g. ["gitlab", "harbor"]
+
+    # Define database services and their URL prefixes
+    database_services = object({
+      types = map(object({
+        prefixes = list(string)
+      }))
+      max_ttl = number
+      ttl     = number
+    })
+
+    # Define ingress services and their subdomains
+    ingress_services = map(object({
+      subdomains = list(string)
+      max_ttl    = optional(number)
+      ttl        = optional(number)
+    }))
+  })
+}
+
+variable "vault_auth_backends" {
+  description = "Map of Auth Backends to enable (e.g., approle, kubernetes)"
+  type = map(object({
+    type = string
+    path = string
+  }))
+}
+
+variable "vault_pki_engine_config" {
+  description = "Configuration for the PKI Secrets Engine"
+  type = object({
+    path                = string
+    root_ca_common_name = string
+
+    default_lease_ttl_seconds = number
+    max_lease_ttl_seconds     = number
+  })
+}
