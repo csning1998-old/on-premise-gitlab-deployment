@@ -6,7 +6,6 @@ all:
     redis_cluster_name: "${service_name}-redis-cluster"
     haproxy_stats_port: "${haproxy_stats_port}"
 
-    redis_enable_tls: "${redis_enable_tls}"
     redis_cluster_ips: ${jsonencode([for node in redis_nodes : node.ip])}
     redis_ha_virtual_ip: "${redis_ha_virtual_ip}"
     redis_tls_node_subnet: "${redis_tls_node_subnet}"
