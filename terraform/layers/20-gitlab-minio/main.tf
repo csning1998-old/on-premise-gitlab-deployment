@@ -2,7 +2,7 @@
 module "minio_identity" {
   source = "../../modules/configuration/vault-workload-identity"
 
-  name            = var.harbor_minio_compute.cluster_identity.service_name
+  name            = var.gitlab_minio_compute.cluster_identity.service_name
   vault_role_name = local.vault_role_name
 
   pki_mount_path     = data.terraform_remote_state.vault_core.outputs.pki_configuration.path
@@ -12,9 +12,19 @@ module "minio_identity" {
 module "minio_gitlab" {
   source = "../../modules/service-ha/minio-distributed-cluster"
 
-  topology_config = var.gitlab_minio_compute
-  infra_config    = var.gitlab_minio_infra
-  service_domain  = local.service_domain
+  topology_config = merge(
+    var.gitlab_minio_compute,
+    {
+      cluster_identity = merge(
+        var.gitlab_minio_compute.cluster_identity,
+        {
+          cluster_name = local.cluster_name
+        }
+      )
+    }
+  )
+  infra_config   = var.gitlab_minio_infra
+  service_domain = local.service_domain
 
   # Network Identity
   network_identity = {

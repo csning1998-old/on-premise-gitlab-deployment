@@ -13,9 +13,19 @@ module "postgres_gitlab" {
   source = "../../modules/service-ha/patroni-cluster"
 
   # Topology
-  topology_config = var.gitlab_postgres_compute
-  infra_config    = var.gitlab_postgres_infra
-  service_domain  = local.service_domain
+  topology_config = merge(
+    var.gitlab_postgres_compute,
+    {
+      cluster_identity = merge(
+        var.gitlab_postgres_compute.cluster_identity,
+        {
+          cluster_name = local.cluster_name
+        }
+      )
+    }
+  )
+  infra_config   = var.gitlab_postgres_infra
+  service_domain = local.service_domain
 
   # Network Identity
   network_identity = {

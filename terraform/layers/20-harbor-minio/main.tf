@@ -12,9 +12,19 @@ module "minio_identity" {
 module "minio_harbor" {
   source = "../../modules/service-ha/minio-distributed-cluster"
 
-  topology_config = var.harbor_minio_compute
-  infra_config    = var.harbor_minio_infra
-  service_domain  = local.service_domain
+  topology_config = merge(
+    var.harbor_minio_compute,
+    {
+      cluster_identity = merge(
+        var.harbor_minio_compute.cluster_identity,
+        {
+          cluster_name = local.cluster_name
+        }
+      )
+    }
+  )
+  infra_config   = var.harbor_minio_infra
+  service_domain = local.service_domain
 
   # Network Identity
   network_identity = {

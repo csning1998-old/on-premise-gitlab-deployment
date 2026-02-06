@@ -14,9 +14,19 @@ module "redis_harbor" {
   source = "../../modules/service-ha/sentinel-cluster"
 
   # Topology
-  topology_config = var.harbor_redis_compute
-  infra_config    = var.harbor_redis_infra
-  service_domain  = local.service_domain
+  topology_config = merge(
+    var.harbor_redis_compute,
+    {
+      cluster_identity = merge(
+        var.harbor_redis_compute.cluster_identity,
+        {
+          cluster_name = local.cluster_name
+        }
+      )
+    }
+  )
+  infra_config   = var.harbor_redis_infra
+  service_domain = local.service_domain
 
   # Network Identity
   network_identity = {

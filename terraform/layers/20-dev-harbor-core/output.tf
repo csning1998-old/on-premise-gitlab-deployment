@@ -1,6 +1,6 @@
 
 output "dev_harbor_cluster_name" {
-  description = "Title of the output."
+  description = "Dev Harbor cluster name."
   value       = local.cluster_name
 }
 
