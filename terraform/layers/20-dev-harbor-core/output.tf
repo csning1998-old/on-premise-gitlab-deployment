@@ -1,7 +1,7 @@
 
-output "string" {
+output "dev_harbor_cluster_name" {
   description = "Title of the output."
-  value       = "The output of the layer: ${local.cluster_name}."
+  value       = local.cluster_name
 }
 
 output "dev_harbor_ip" {
