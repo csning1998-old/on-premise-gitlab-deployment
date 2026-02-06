@@ -43,3 +43,8 @@ output "workload_identities_databases" {
     }
   }
 }
+
+output "auth_backend_paths" {
+  description = "Map of enabled Auth Backend paths"
+  value       = module.vault_pki_setup.auth_backend_paths
+}
