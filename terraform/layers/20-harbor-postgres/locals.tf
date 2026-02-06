@@ -18,6 +18,6 @@ locals {
   # PKI & Domain Logic
   platform_id     = local.svc_name
   service_domain  = local.domain_list[0]
-  vault_role_name = data.terraform_remote_state.vault_core.outputs.pki_configuration.database_roles["${local.platform_id}-postgres"].name
-  domain_list     = data.terraform_remote_state.vault_core.outputs.pki_configuration.database_roles["${local.platform_id}-postgres"].allowed_domains
+  vault_role_name = data.terraform_remote_state.vault_core.outputs.pki_configuration.database_roles["${local.platform_id}-${local.comp_name}"].name
+  domain_list     = data.terraform_remote_state.vault_core.outputs.pki_configuration.database_roles["${local.platform_id}-${local.comp_name}"].allowed_domains
 }
