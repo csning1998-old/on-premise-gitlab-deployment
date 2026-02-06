@@ -1,3 +1,4 @@
+
 variable "topology_config" {
   description = "Standardized compute topology configuration for Redis HA Cluster."
   type = object({
@@ -113,29 +114,47 @@ variable "service_domain" {
   type        = string
 }
 
-variable "enable_tls" {
-  description = "Enable TLS/SSL for Redis and Sentinel. Secure by Default."
-  type        = bool
-  default     = true
+# Network Identity for Naming Policy
+variable "network_identity" {
+  description = "Pre-calculated network and bridge names passed from Layer"
+  type = object({
+    nat_net_name         = string
+    nat_bridge_name      = string
+    hostonly_net_name    = string
+    hostonly_bridge_name = string
+    storage_pool_name    = string
+  })
 }
 
-variable "vault_ca_cert_b64" {
-  description = "Base64 encoded CA certificate for Vault Agent"
-  type        = string
-}
-
-variable "vault_role_name" {
-  description = "The AppRole name to create in Vault (e.g. gitlab-postgres, harbor-postgres)"
-  type        = string
-}
-
-variable "vault_approle_role_id" {
-  description = "The Role ID for Vault AppRole Auth"
-  type        = string
-}
-
-variable "vault_approle_secret_id" {
-  description = "The Secret ID for Vault AppRole Auth"
-  type        = string
+# Credentials Injection
+variable "vm_credentials" {
+  description = "System level credentials (ssh user, password, keys)"
   sensitive   = true
+  type = object({
+    username             = string
+    password             = string
+    ssh_public_key_path  = string
+    ssh_private_key_path = string
+  })
+}
+
+variable "db_credentials" {
+  description = "Database level credentials (patroni, replication)"
+  sensitive   = true
+  type = object({
+    redis_requirepass = string
+    redis_masterauth  = string
+    redis_vrrp_secret = string
+  })
+}
+
+variable "vault_agent_config" {
+  description = "Vault Agent Configuration"
+  sensitive   = true
+  type = object({
+    role_id     = string
+    secret_id   = string
+    ca_cert_b64 = string
+    role_name   = string # PKI Role Name
+  })
 }
