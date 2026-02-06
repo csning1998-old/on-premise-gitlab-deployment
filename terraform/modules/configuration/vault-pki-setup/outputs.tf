@@ -1,5 +1,6 @@
 
-# VM Services Roles (Map: Platform -> Role Name)
+# Database Services
+
 output "postgres_role_names" {
   description = "Map of Postgres PKI Role Names by platform"
   value       = { for p in local.platforms : p => vault_pki_secret_backend_role.db_services["${p}-postgres"].name }
@@ -14,23 +15,6 @@ output "minio_role_names" {
   description = "Map of MinIO (S3) PKI Role Names by platform"
   value       = { for p in local.platforms : p => vault_pki_secret_backend_role.db_services["${p}-minio"].name }
 }
-
-output "dev_harbor_ingress_role_name" {
-  description = "Dev Harbor Ingress PKI Role Name"
-  value       = vault_pki_secret_backend_role.dev_harbor_ingress.name
-}
-
-output "harbor_ingress_role_name" {
-  description = "Harbor Ingress PKI Role Name"
-  value       = vault_pki_secret_backend_role.ingress["harbor"].name
-}
-
-output "gitlab_ingress_role_name" {
-  description = "GitLab Ingress PKI Role Name"
-  value       = vault_pki_secret_backend_role.ingress["gitlab"].name
-}
-
-# VM Services Domains (Map: Platform -> Domain List)
 
 output "postgres_role_domains" {
   description = "Map of allowed domains for Postgres PKI roles by platform"
@@ -47,21 +31,19 @@ output "minio_role_domains" {
   value       = { for p in local.platforms : p => vault_pki_secret_backend_role.db_services["${p}-minio"].allowed_domains }
 }
 
-output "dev_harbor_ingress_domains" {
-  description = "List of allowed domains for Dev Harbor Ingress role"
-  value       = vault_pki_secret_backend_role.dev_harbor_ingress.allowed_domains
+# Ingress Services
+
+output "ingress_role_names" {
+  description = "Map of Ingress PKI Role Names (key: service identifier, e.g., 'harbor-ingress', 'dev-harbor-ingress')"
+  value       = { for k, v in vault_pki_secret_backend_role.ingress_services : k => v.name }
 }
 
-output "harbor_ingress_domains" {
-  description = "List of allowed domains for Harbor Ingress role"
-  value       = vault_pki_secret_backend_role.ingress["harbor"].allowed_domains
+output "ingress_role_domains" {
+  description = "Map of allowed domains for Ingress PKI roles"
+  value       = { for k, v in vault_pki_secret_backend_role.ingress_services : k => v.allowed_domains }
 }
 
-output "gitlab_ingress_domains" {
-  description = "List of allowed domains for GitLab Ingress role"
-  value       = vault_pki_secret_backend_role.ingress["gitlab"].allowed_domains
-}
-
+# General PKI Info
 output "vault_pki_path" {
   description = "The path of the PKI backend"
   value       = var.vault_pki_path

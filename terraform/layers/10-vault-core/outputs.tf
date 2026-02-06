@@ -16,30 +16,27 @@ output "internal_pki_ca_cert" {
 }
 
 output "pki_configuration" {
-  description = "Centralized PKI configuration containing Role Names and Allowed Domains"
+  description = "PKI Configuration Summary"
   value = {
-    vault_pki_path = module.vault_pki_setup.vault_pki_path
+    root_ca = module.vault_pki_setup.pki_root_ca_certificate
+    path    = module.vault_pki_setup.vault_pki_path
 
-    # Part A: Role Names for Vault Agent / Cert-Manager
-    postgres_roles = module.vault_pki_setup.postgres_role_names
-    redis_roles    = module.vault_pki_setup.redis_role_names
-    minio_roles    = module.vault_pki_setup.minio_role_names
-
-    ingress_roles = {
-      dev_harbor = module.vault_pki_setup.dev_harbor_ingress_role_name
-      harbor     = module.vault_pki_setup.harbor_ingress_role_name
-      gitlab     = module.vault_pki_setup.gitlab_ingress_role_name
+    roles = {
+      postgres   = module.vault_pki_setup.postgres_role_names
+      redis      = module.vault_pki_setup.redis_role_names
+      minio      = module.vault_pki_setup.minio_role_names
+      dev_harbor = module.vault_pki_setup.ingress_role_names["dev-harbor-ingress"]
+      harbor     = module.vault_pki_setup.ingress_role_names["harbor-ingress"]
+      gitlab     = module.vault_pki_setup.ingress_role_names["gitlab-ingress"]
     }
 
-    # Part B: Allowed Domains for App Config / Ingress
-    postgres_domains = module.vault_pki_setup.postgres_role_domains
-    redis_domains    = module.vault_pki_setup.redis_role_domains
-    minio_domains    = module.vault_pki_setup.minio_role_domains
-
-    ingress_domains = {
-      dev_harbor = module.vault_pki_setup.dev_harbor_ingress_domains
-      harbor     = module.vault_pki_setup.harbor_ingress_domains
-      gitlab     = module.vault_pki_setup.gitlab_ingress_domains
+    domains = {
+      postgres   = module.vault_pki_setup.postgres_role_domains
+      redis      = module.vault_pki_setup.redis_role_domains
+      minio      = module.vault_pki_setup.minio_role_domains
+      dev_harbor = module.vault_pki_setup.ingress_role_domains["dev-harbor-ingress"]
+      harbor     = module.vault_pki_setup.ingress_role_domains["harbor-ingress"]
+      gitlab     = module.vault_pki_setup.ingress_role_domains["gitlab-ingress"]
     }
   }
 }

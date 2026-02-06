@@ -22,11 +22,23 @@ locals {
   ]
 
   ingress_services = {
-    "gitlab" = {
-      domains = local.gitlab_ingress_domains
+    "gitlab-ingress" = {
+      name            = "gitlab-ingress-role"
+      allowed_domains = local.gitlab_ingress_domains
+      max_ttl         = 60 * 60 * 24 * 90 # 90 Days
+      ttl             = 60 * 60 * 24      # 24 Hours
     }
-    "harbor" = {
-      domains = local.harbor_ingress_domains
+    "harbor-ingress" = {
+      name            = "harbor-ingress-role"
+      allowed_domains = local.harbor_ingress_domains
+      max_ttl         = 60 * 60 * 24 * 90 # 90 Days
+      ttl             = 60 * 60 * 24      # 24 Hours
+    },
+    "dev-harbor-ingress" = {
+      name            = "dev-harbor-ingress-role"
+      allowed_domains = local.dev_harbor_ingress_domains
+      max_ttl         = 60 * 60 * 24 * 30 # 30 Days
+      ttl             = 60 * 60 * 24      # 24 Hours
     }
   }
 }

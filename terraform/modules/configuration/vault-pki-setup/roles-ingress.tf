@@ -1,12 +1,12 @@
 
 # Role: Generic Ingress Role
-resource "vault_pki_secret_backend_role" "ingress" {
+resource "vault_pki_secret_backend_role" "ingress_services" {
   for_each = local.ingress_services
 
   backend = vault_mount.pki_prod.path
-  name    = "${each.key}-ingress-role"
+  name    = each.value.name
 
-  allowed_domains = each.value.domains
+  allowed_domains = each.value.allowed_domains
 
   allow_subdomains   = true
   allow_glob_domains = false
@@ -22,29 +22,29 @@ resource "vault_pki_secret_backend_role" "ingress" {
   server_flag = true # Server Flag for Ingress HTTPS
   client_flag = true # Client Flag (e.g. for GitLab Rails to connect Postgres/Redis mTLS)
 
-  max_ttl = 60 * 60 * 24 * 30 # 30 Days
-  ttl     = 60 * 60 * 24      # 24 Hours
+  max_ttl = each.value.max_ttl
+  ttl     = each.value.ttl
 
   allow_any_name    = false
   enforce_hostnames = true
 }
 
 # Policy: Generic PKI Policy. This will be bind to Cert-Manager in ServiceAccount
-resource "vault_policy" "ingress_pki" {
+resource "vault_policy" "ingress_services_pki" {
   for_each = local.ingress_services
 
-  name = "${each.key}-pki-policy"
+  name = "${each.value.name}-pki-policy"
 
   # 1. Allow the path pki/prod/sign/<service>-ingress-role to sign certificate
   # 2. Allow to sign and issue certificate for Ingress
   # 3. Allow to read CRL
 
   policy = <<EOT
-path "${vault_mount.pki_prod.path}/sign/${each.key}-ingress-role" {
+path "${vault_mount.pki_prod.path}/sign/${each.value.name}" {
   capabilities = ["create", "update"]
 }
 
-path "${vault_mount.pki_prod.path}/issue/${each.key}-ingress-role" {
+path "${vault_mount.pki_prod.path}/issue/${each.value.name}" {
   capabilities = ["create", "update"]
 }
 
