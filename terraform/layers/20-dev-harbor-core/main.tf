@@ -18,9 +18,20 @@ EOT
 module "dev_harbor" {
   source = "../../modules/services-docker/harbor"
 
-  topology_config = var.dev_harbor_compute
-  infra_config    = var.dev_harbor_infra
-  service_domain  = local.service_domain
+  topology_config = merge(
+    var.dev_harbor_compute,
+    {
+      cluster_identity = merge(
+        var.dev_harbor_compute.cluster_identity,
+        {
+          cluster_name = local.cluster_name
+        }
+      )
+    }
+  )
+
+  infra_config   = var.dev_harbor_infra
+  service_domain = local.service_domain
 
   network_identity = {
     nat_net_name         = local.nat_net_name
