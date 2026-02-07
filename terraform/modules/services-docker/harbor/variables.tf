@@ -102,10 +102,10 @@ variable "vault_agent_config" {
   description = "Vault Agent Configuration"
   sensitive   = true
   type = object({
-    role_id     = string
-    secret_id   = string
-    ca_cert_b64 = string
-    role_name   = string # PKI Role Name
-    address     = string # Vault Agent Address
+    role_id              = string
+    secret_id            = string
+    ca_cert_b64          = string
+    role_name            = string # PKI Role Name
+    vault_server_address = string # Vault Server Address
   })
 }

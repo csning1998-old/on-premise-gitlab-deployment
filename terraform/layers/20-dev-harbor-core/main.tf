@@ -55,10 +55,10 @@ module "dev_harbor" {
   }
 
   vault_agent_config = {
-    role_id     = module.dev_harbor_identity.approle_role_id
-    secret_id   = module.dev_harbor_identity.approle_secret_id
-    ca_cert_b64 = filebase64("${path.root}/../10-vault-core/tls/vault-ca.crt")
-    role_name   = local.vault_role_name
-    address     = "https://${data.terraform_remote_state.vault_core.outputs.vault_ha_virtual_ip}:443"
+    role_id              = module.dev_harbor_identity.approle_role_id
+    secret_id            = module.dev_harbor_identity.approle_secret_id
+    ca_cert_b64          = filebase64("${path.root}/../10-vault-core/tls/vault-ca.crt")
+    role_name            = local.vault_role_name
+    vault_server_address = "https://${data.terraform_remote_state.vault_core.outputs.vault_ha_virtual_ip}:443"
   }
 }
