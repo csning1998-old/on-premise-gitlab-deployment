@@ -1,14 +1,9 @@
 
-output "vault_ha_virtual_ip" {
-  description = "The VIP of the Vault HA Cluster"
-  value       = var.vault_compute.haproxy_config.virtual_ip
-}
-
 output "vault_certificates" {
   description = "The Certificates content of the Vault Cluster"
   value = {
     root_ca = module.vault_pki_setup.pki_root_ca_certificate
-    ca_cert = module.vault_tls_gen.ca_cert_pem # for PKI
+    ca_cert = data.terraform_remote_state.vault_raft_config.outputs.vault_ca_cert # for PKI
   }
 }
 
