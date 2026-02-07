@@ -31,7 +31,7 @@ terraform_artifact_cleaner() {
 		if [[ 
 			"$layer_name" == "10-vault-raft" || 
 			"$layer_name" == "30-gitlab-minio" || 
-			"$layer_name" == "40-harbor-minio" || 
+			"$layer_name" == "30-harbor-minio" || 
 			"$layer_name" == "60-harbor-service"
 		]]; then
 			log_print "STEP" "Cleaning Terraform artifacts for layer [${layer_name}]..."
