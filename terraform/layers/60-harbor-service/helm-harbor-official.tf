@@ -20,7 +20,7 @@ resource "helm_release" "harbor" {
 
   values = [
     yamlencode({
-      harborAdminPassword = data.vault_generic_secret.harbor_vars.data["harbor_admin_password"]
+      harborAdminPassword = local.harbor_admin_password
 
       expose = {
         type = "ingress"
@@ -39,7 +39,6 @@ resource "helm_release" "harbor" {
           }
           className = "nginx"
           annotations = {
-            "cert-manager.io/cluster-issuer"              = "vault-issuer"
             "nginx.ingress.kubernetes.io/proxy-body-size" = "0"
           }
         }
@@ -57,10 +56,10 @@ resource "helm_release" "harbor" {
           s3 = {
             region    = "us-east-1"
             bucket    = "harbor-registry"
-            accesskey = data.vault_generic_secret.s3_credentials.data["access_key"]
-            secretkey = data.vault_generic_secret.s3_credentials.data["secret_key"]
+            accesskey = local.minio_access_key
+            secretkey = local.minio_secret_key
             # MinIO supports TLS (not support mTLS), thus use https and port must correspond.
-            regionendpoint = "https://${data.terraform_remote_state.vault_pki.outputs.pki_configuration.minio_domains["harbor"][0]}:9000"
+            regionendpoint = local.minio_address
             forcePathStyle = true
             secure         = true
             v4auth         = true
@@ -72,10 +71,10 @@ resource "helm_release" "harbor" {
       database = {
         type = "external"
         external = {
-          host     = data.terraform_remote_state.vault_pki.outputs.pki_configuration.postgres_domains["harbor"][0]
+          host     = local.postgres_address
           port     = "5000"
           username = "harbor"
-          password = data.vault_generic_secret.harbor_vars.data["harbor_pg_db_password"]
+          password = local.harbor_pg_password
           sslmode  = "verify-ca"
         }
       }
@@ -84,8 +83,8 @@ resource "helm_release" "harbor" {
       redis = {
         type = "external"
         external = {
-          addr     = "${data.terraform_remote_state.vault_pki.outputs.pki_configuration.redis_domains["harbor"][0]}:6379"
-          password = data.vault_generic_secret.db_vars.data["redis_requirepass"]
+          addr     = local.redis_address
+          password = local.redis_password
 
           tlsOptions = {
             enable = true

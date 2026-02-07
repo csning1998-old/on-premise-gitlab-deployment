@@ -11,8 +11,8 @@ resource "kubernetes_manifest" "harbor_certificate" {
     spec = {
       secretName = "harbor-ingress-cert" # Generated Secret Name
       issuerRef = {
-        name = "vault-issuer"
-        kind = "ClusterIssuer"
+        name = local.issuer_name
+        kind = local.issuer_kind
       }
       commonName  = var.harbor_hostname
       dnsNames    = [var.harbor_hostname]

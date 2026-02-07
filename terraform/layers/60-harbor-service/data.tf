@@ -4,14 +4,14 @@
 data "terraform_remote_state" "microk8s_provision" {
   backend = "local"
   config = {
-    path = "../30-harbor-microk8s/terraform.tfstate"
+    path = "../40-harbor-microk8s/terraform.tfstate"
   }
 }
 
 data "terraform_remote_state" "harbor_platform" {
   backend = "local"
   config = {
-    path = "../40-harbor-platform/terraform.tfstate"
+    path = "../50-harbor-platform/terraform.tfstate"
   }
 }
 
@@ -27,21 +27,21 @@ data "terraform_remote_state" "vault_pki" {
 data "terraform_remote_state" "redis" {
   backend = "local"
   config = {
-    path = "../20-harbor-redis/terraform.tfstate"
+    path = "../30-harbor-redis/terraform.tfstate"
   }
 }
 
 data "terraform_remote_state" "postgres" {
   backend = "local"
   config = {
-    path = "../20-harbor-postgres/terraform.tfstate"
+    path = "../30-harbor-postgres/terraform.tfstate"
   }
 }
 
 data "terraform_remote_state" "minio" {
   backend = "local"
   config = {
-    path = "../20-harbor-minio/terraform.tfstate"
+    path = "../30-harbor-minio/terraform.tfstate"
   }
 }
 
