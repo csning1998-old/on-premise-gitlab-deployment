@@ -84,7 +84,7 @@ service_catalog = {
 
   "dev-harbor" = {
     runtime = "docker"
-    stage   = "dev"
+    stage   = "development"
 
     components = {
       "frontend" = { subdomains = ["dev-harbor", "notary.dev-harbor"] }

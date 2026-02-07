@@ -8,10 +8,10 @@ locals {
 
   # TTL Policy for different environments
   ttl_policy = {
-    "production" = { max = 60 * 60 * 24 * 365, default = 60 * 60 * 24 * 30 } # Max 1 Year, Default 30 Days
-    "staging"    = { max = 60 * 60 * 24 * 30, default = 60 * 60 * 24 * 7 }   # Max 30 Days, Default 7 Days
-    "dev"        = { max = 60 * 60 * 24 * 7, default = 60 * 60 * 24 }        # Max 1 Day,   Default 1 Hour
-    "default"    = { max = 60 * 60 * 24, default = 60 * 60 }                 # Fallback
+    "production"  = { max = 60 * 60 * 24 * 365, default = 60 * 60 * 24 * 30 } # Max 1 Year, Default 30 Days
+    "staging"     = { max = 60 * 60 * 24 * 30, default = 60 * 60 * 24 * 7 }   # Max 30 Days, Default 7 Days
+    "development" = { max = 60 * 60 * 24 * 7, default = 60 * 60 * 24 }        # Max 1 Day,   Default 1 Hour
+    "default"     = { max = 60 * 60 * 24, default = 60 * 60 }                 # Fallback
   }
 
   # Dependency Roles corresponding to Service Catalog dependencies
