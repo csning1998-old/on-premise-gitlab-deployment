@@ -20,8 +20,8 @@ resource "vault_pki_secret_backend_role" "dependency_roles" {
   # Metadata Injection same as in dependency roles
   ou = each.value.ou
 
-  max_ttl = 60 * 60 * 24 * 30 # 30 Days
-  ttl     = 60 * 60 * 24      # 24 Hours
+  max_ttl = each.value.max_ttl
+  ttl     = each.value.ttl
 
   allow_any_name    = false
   enforce_hostnames = true
