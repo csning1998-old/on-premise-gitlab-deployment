@@ -34,10 +34,6 @@ variable "certificate_config" {
     duration     = string
     renew_before = string
   })
-  default = {
-    duration     = "2160h"
-    renew_before = "360h"
-  }
 }
 
 variable "external_services" {
@@ -69,5 +65,4 @@ variable "ca_bundle" {
     content     = string
     secret_name = string
   })
-
 }

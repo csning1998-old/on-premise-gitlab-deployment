@@ -26,6 +26,6 @@ variable "certificate_config" {
   })
   default = {
     duration     = "2160h"
-    renew_before = "360h"
+    renew_before = "12h" # Must be less than Vault's 24h declared duration.
   }
 }
