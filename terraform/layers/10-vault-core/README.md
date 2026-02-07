@@ -1,25 +1,27 @@
 # Service Catalog Definition
 
+Refer to [README-zh-TW.md](README-zh-TW.md) for Traditional Chinese (Taiwan) version.
+
 ## Overview
 
-The **Service Catalog** serves as the Single Source of Truth (SSoT) for the entire infrastructure's security and identity architecture. It defines the identity, runtime environment, lifecycle stage, and dependency chain for every service in the ecosystem.
+The **Service Catalog** serves as the **Single Source of Truth (SSoT)** for the entire infrastructure's security and identity architecture. It primarily defines the **identity**, **runtime environment**, **lifecycle stage**, and **dependency chain** for every service within the ecosystem.
 
-This catalog drives the automated generation of:
+The catalog automates the provisioning of the following resources:
 
-1. **Vault PKI Roles**: For both internal components and external dependencies.
-2. **Security Policies**: TTL (Time-To-Live) strategies based on lifecycle stages.
-3. **Identity Metadata**: Organizational Unit (OU) injection into certificates for auditability.
+1. **Vault PKI Roles**: Tailored for both internal components and external backing services.
+2. **Certificate TTL Policies**: Time-To-Live strategies enforced based on the service's lifecycle stage.
+3. **Metadata Injection**: Automated injection of **Organizational Unit (OU)** data into certificates for future auditing purposes.
 
 ## Schema Reference
 
-The catalog is structured as a map of service objects. The following fields define the "DNA" of each service:
+The catalog is structured as a map of service objects. The following fields define the **Core Attributes** of each service:
 
-| Field              | Description                                                                                    | Purpose (Architectural Dimension)                                                                       |
-| ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **`runtime`**      | The technology stack hosting the service (e.g., `kubeadm`, `microk8s`, `docker`, `baremetal`). | **Service Polymorphism**: Allows the same service identity to run across different infrastructures.     |
-| **`stage`**        | The lifecycle environment (e.g., `production`, `dev`, `staging`).                              | **Policy-as-Code**: Determines certificate TTL (e.g., Prod = 1 Year, Dev = 1 Day).                      |
-| **`components`**   | Internal parts of the service requiring frontend/ingress certificates.                         | **Ingress/Access Control**: Generates roles like `gitlab-frontend-role`.                                |
-| **`dependencies`** | External backing services required for operation (e.g., Postgres, Redis).                      | **Dependency Composition**: Defines the vertical stack and generates roles like `gitlab-postgres-role`. |
+| Field              | Description                                                                                             | Purpose (Architectural Dimension)                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **`runtime`**      | The technology infrastructure hosting the service (e.g., `kubeadm`, `microk8s`, `docker`, `baremetal`). | **Service Polymorphism**: Enables the same service identity to remain consistent across different infrastructure types. |
+| **`stage`**        | The lifecycle environment (e.g., `production`, `development`, `staging`).                               | **Policy-as-Code**: Governs certificate TTL (e.g., `production` = 1 Year, `development` = 1 Day).                       |
+| **`components`**   | Internal service parts requiring frontend or Ingress certificates.                                      | **Ingress/Access Control**: Facilitates the generation of specific roles, such as `gitlab-frontend-role`.               |
+| **`dependencies`** | External backing services required for operation (e.g., Postgres, Redis).                               | **Dependency Composition**: Defines the vertical technology stack and generates roles like `gitlab-postgres-role`.      |
 
 ---
 
@@ -35,7 +37,7 @@ The following services are currently defined in the catalog:
     - Subdomains: `gitlab`, `kas`, `minio`
 
 - **Dependencies**:
-    - Relies on baremetal infrastructure for persistence.
+    - Utilizes **Baremetal** infrastructure for persistent storage.
     - **Postgres** (Runtime: `baremetal`)
     - **Redis** (Runtime: `baremetal`)
     - **MinIO** (Runtime: `baremetal`)
@@ -48,7 +50,7 @@ The following services are currently defined in the catalog:
     - Subdomains: `harbor`, `notary.harbor`
 
 - **Dependencies**:
-    - Relies on baremetal infrastructure for persistence.
+    - Utilizes **Baremetal** infrastructure for persistent storage.
     - **Postgres** (Runtime: `baremetal`)
     - **Redis** (Runtime: `baremetal`)
     - **MinIO** (Runtime: `baremetal`)
@@ -65,18 +67,18 @@ The following services are currently defined in the catalog:
 
 ## Automated Vault Behavior
 
-Based on the configurations above, Layer 10 automatically provisions the following resources:
+Based on the configurations defined above, Layer 10 automatically provisions the following resources:
 
 ### Role Naming Convention
 
-Vault Roles are generated using a strict naming pattern to ensure identity persistence across infrastructure migrations:
+Vault Roles are generated using a strict naming pattern to ensure identity persistence during infrastructure migrations:
 
-- **Format**: `${service}-${component}-role`
-- **Example**: `gitlab-postgres-role` (Note: `kubeadm` or `baremetal` is excluded from the name).
+- **Naming Format**: `${service}-${component}-role`
+- **Example**: `gitlab-postgres-role` (Note: Infrastructure-specific identifiers like `kubeadm` or `baremetal` are excluded from the role name).
 
 ### Certificate Metadata (OU Injection)
 
-All certificates issued via these roles will include specific metadata in the **Organizational Unit (OU)** field for auditing:
+All certificates issued via these roles will include specific metadata in the **Organizational Unit (OU)** field to meet auditing requirements:
 
 - **GitLab Certs**: `OU=production`, `OU=kubeadm`
 - **Dev-Harbor Certs**: `OU=development`, `OU=docker`
