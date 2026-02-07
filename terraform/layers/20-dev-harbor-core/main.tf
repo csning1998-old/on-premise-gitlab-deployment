@@ -1,18 +1,8 @@
 
 # Call the Identity Module to generate AppRole & Secret ID
-module "dev_harbor_identity" {
-  source = "../../modules/configuration/vault-workload-identity"
-
-  name            = var.dev_harbor_compute.cluster_identity.service_name
-  vault_role_name = local.vault_role_name
-
-  pki_mount_path     = data.terraform_remote_state.vault_core.outputs.pki_configuration.path
-  approle_mount_path = data.terraform_remote_state.vault_core.outputs.auth_backend_paths["approle"]
-  extra_policy_hcl   = <<EOT
-path "secret/data/on-premise-gitlab-deployment/dev-harbor/*" {
-  capabilities = ["read"]
-}
-EOT
+resource "vault_approle_auth_backend_role_secret_id" "this" {
+  backend   = data.terraform_remote_state.vault_core.outputs.auth_backend_paths["approle"]
+  role_name = data.terraform_remote_state.vault_core.outputs.workload_identities_components[local.lookup_key].role_name
 }
 
 module "dev_harbor" {
@@ -55,8 +45,8 @@ module "dev_harbor" {
   }
 
   vault_agent_config = {
-    role_id              = module.dev_harbor_identity.approle_role_id
-    secret_id            = module.dev_harbor_identity.approle_secret_id
+    role_id              = data.terraform_remote_state.vault_core.outputs.workload_identities_components[local.lookup_key].role_id
+    secret_id            = vault_approle_auth_backend_role_secret_id.this.secret_id
     ca_cert_b64          = filebase64("${path.root}/../10-vault-core/tls/vault-ca.crt")
     role_name            = local.vault_role_name
     vault_server_address = "https://${data.terraform_remote_state.vault_core.outputs.vault_ha_virtual_ip}:443"

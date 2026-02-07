@@ -1,13 +1,8 @@
 
 # Call the Identity Module to generate AppRole & Secret ID
-module "redis_identity" {
-  source = "../../modules/configuration/vault-workload-identity"
-
-  name            = var.gitlab_redis_compute.cluster_identity.service_name
-  vault_role_name = local.vault_role_name
-
-  pki_mount_path     = data.terraform_remote_state.vault_core.outputs.pki_configuration.path
-  approle_mount_path = data.terraform_remote_state.vault_core.outputs.auth_backend_paths["approle"]
+resource "vault_approle_auth_backend_role_secret_id" "this" {
+  backend   = data.terraform_remote_state.vault_core.outputs.auth_backend_paths["approle"]
+  role_name = data.terraform_remote_state.vault_core.outputs.workload_identities_dependencies[local.lookup_key].role_name
 }
 
 module "redis_gitlab" {
@@ -52,8 +47,8 @@ module "redis_gitlab" {
   }
 
   vault_agent_config = {
-    role_id     = module.redis_identity.approle_role_id
-    secret_id   = module.redis_identity.approle_secret_id
+    role_id     = data.terraform_remote_state.vault_core.outputs.workload_identities_dependencies[local.lookup_key].role_id
+    secret_id   = vault_approle_auth_backend_role_secret_id.this.secret_id
     ca_cert_b64 = filebase64("${path.root}/../10-vault-core/tls/vault-ca.crt")
     role_name   = local.vault_role_name
   }
