@@ -4,7 +4,7 @@ output "vault_ha_virtual_ip" {
   value       = var.vault_compute.haproxy_config.virtual_ip
 }
 
-output "vault_cartificates" {
+output "vault_certificates" {
   description = "The Certificates content of the Vault Cluster"
   value = {
     root_ca = module.vault_pki_setup.pki_root_ca_certificate
