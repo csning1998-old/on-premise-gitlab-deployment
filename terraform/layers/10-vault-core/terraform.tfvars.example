@@ -51,36 +51,46 @@ vault_infra = {
   allowed_subnet = "172.16.136.0/24"
 }
 
-service_topology = {
-  root_domain = "iac.local"
-  platforms   = ["gitlab", "harbor"]
+service_catalog = {
+  "gitlab" = {
+    runtime = "kubeadm"
+    stage   = "production"
 
-  database_services = {
-    types = {
-      postgres = { prefixes = ["pg"] }
-      redis    = { prefixes = ["redis"] }
-      minio    = { prefixes = ["s3", "console"] }
+    components = {
+      "frontend" = { subdomains = ["gitlab", "kas", "minio"] }
     }
-    max_ttl = 60 * 60 * 24 * 90 # 90 Days
-    ttl     = 60 * 60 * 24      # 1 Day
+
+    dependencies = {
+      "postgres" = { service_name = "postgres", runtime = "baremetal" }
+      "redis"    = { service_name = "redis", runtime = "baremetal" }
+      "minio"    = { service_name = "minio", runtime = "baremetal" }
+    }
   }
 
-  ingress_services = {
-    "gitlab" = {
-      subdomains = ["gitlab", "kas", "registry", "minio"]
-      max_ttl    = 60 * 60 * 24 * 90 # 90 Days
-      ttl        = 60 * 60 * 24      # 1 Day
+  "harbor" = {
+    runtime = "microk8s"
+    stage   = "production"
+
+    components = {
+      "frontend" = { subdomains = ["harbor", "notary.harbor"] }
     }
-    "harbor" = {
-      subdomains = ["harbor", "notary"]
-      max_ttl    = 60 * 60 * 24 * 90
-      ttl        = 60 * 60 * 24
+
+    dependencies = {
+      "postgres" = { service_name = "postgres", runtime = "baremetal" }
+      "redis"    = { service_name = "redis", runtime = "baremetal" }
+      "minio"    = { service_name = "minio", runtime = "baremetal" }
     }
-    "dev-harbor" = {
-      subdomains = ["dev-harbor", "notary.dev-harbor"]
-      max_ttl    = 60 * 60 * 24 * 30
-      ttl        = 60 * 60 * 24
+  }
+
+  "dev-harbor" = {
+    runtime = "docker"
+    stage   = "dev"
+
+    components = {
+      "frontend" = { subdomains = ["dev-harbor", "notary.dev-harbor"] }
     }
+
+    dependencies = {}
   }
 }
 
