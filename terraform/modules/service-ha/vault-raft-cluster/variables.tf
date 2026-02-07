@@ -9,7 +9,7 @@ variable "topology_config" {
     })
 
     # Vault Server Nodes (Map)
-    vault_cluster = object({
+    vault_config = object({
       nodes = map(object({
         ip   = string
         vcpu = number
@@ -33,7 +33,7 @@ variable "topology_config" {
 
   # Vault Raft Quorum
   validation {
-    condition     = length(var.topology_config.vault_cluster.nodes) % 2 != 0
+    condition     = length(var.topology_config.vault_config.nodes) % 2 != 0
     error_message = "Vault node count must be an odd number (1, 3, 5, etc.) to ensure a stable Raft quorum."
   }
 
@@ -52,7 +52,7 @@ variable "topology_config" {
   # Vault node hardware specification (vCPU >= 1, RAM >= 1024)
   validation {
     condition = alltrue([
-      for k, node in var.topology_config.vault_cluster.nodes :
+      for k, node in var.topology_config.vault_config.nodes :
       node.vcpu >= 1 && node.ram >= 1024
     ])
     error_message = "Vault nodes require at least 1 vCPU and 1024MB RAM."

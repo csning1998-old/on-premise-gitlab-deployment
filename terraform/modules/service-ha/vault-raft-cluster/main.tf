@@ -69,7 +69,7 @@ module "ansible_runner" {
     ansible_ssh_user = var.vm_credentials.username
     service_name     = var.topology_config.cluster_identity.service_name
 
-    vault_nodes  = var.topology_config.vault_cluster.nodes
+    vault_nodes  = var.topology_config.vault_config.nodes
     haproxy_node = var.topology_config.haproxy_config.nodes
 
     vault_ha_virtual_ip     = var.topology_config.haproxy_config.virtual_ip

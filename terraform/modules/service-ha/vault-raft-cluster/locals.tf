@@ -8,8 +8,8 @@ locals {
 
   # 1. Inject Vault Base Image Path
   vault_nodes_with_img = {
-    for k, v in var.topology_config.vault_cluster.nodes : k => merge(v, {
-      base_image_path = var.topology_config.vault_cluster.base_image_path
+    for k, v in var.topology_config.vault_config.nodes : k => merge(v, {
+      base_image_path = var.topology_config.vault_config.base_image_path
     })
   }
 
