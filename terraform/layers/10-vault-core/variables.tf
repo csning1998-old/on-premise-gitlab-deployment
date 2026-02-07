@@ -7,11 +7,10 @@ variable "tls_mode" {
 variable "vault_compute" {
   description = "Compute topology for Vault Core service"
   type = object({
-
     cluster_identity = object({
+      layer_number = number
       service_name = string
       component    = string
-      cluster_name = string
     })
 
     # Vault Server Nodes (Map)

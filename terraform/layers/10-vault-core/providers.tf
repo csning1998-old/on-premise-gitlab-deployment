@@ -26,3 +26,11 @@ provider "vault" {
   ca_cert_file = "${path.root}/tls/vault-ca.crt"
   token        = jsondecode(file(abspath("${path.root}/../../../ansible/fetched/vault/vault_init_output.json"))).root_token
 }
+
+data "vault_generic_secret" "iac_vars" {
+  path = "secret/on-premise-gitlab-deployment/variables"
+}
+
+data "vault_generic_secret" "infra_vars" {
+  path = "secret/on-premise-gitlab-deployment/infrastructure"
+}

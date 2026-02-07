@@ -7,9 +7,9 @@ tls_mode = "generated"
 
 vault_compute = {
   cluster_identity = {
+    layer_number = 10
     service_name = "vault"
     component    = "core"
-    cluster_name = "10-vault-core"
   }
 
   vault_cluster = {

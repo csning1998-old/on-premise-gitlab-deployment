@@ -104,3 +104,36 @@ variable "tls_source_dir" {
   type        = string
   default     = "../../../terraform/layers/10-vault-core/tls"
 }
+
+# Network Identity for Naming Policy
+variable "network_identity" {
+  description = "Pre-calculated network and bridge names passed from Layer"
+  type = object({
+    nat_net_name         = string
+    nat_bridge_name      = string
+    hostonly_net_name    = string
+    hostonly_bridge_name = string
+    storage_pool_name    = string
+  })
+}
+
+# Credentials Injection
+variable "vm_credentials" {
+  description = "System level credentials (ssh user, password, keys)"
+  sensitive   = true
+  type = object({
+    username             = string
+    password             = string
+    ssh_public_key_path  = string
+    ssh_private_key_path = string
+  })
+}
+
+variable "vault_credentials" {
+  description = "Database level credentials (patroni, replication)"
+  sensitive   = true
+  type = object({
+    vault_keepalived_auth_pass = string
+    vault_haproxy_stats_pass   = string
+  })
+}
