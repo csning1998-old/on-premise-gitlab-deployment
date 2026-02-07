@@ -21,9 +21,9 @@ module "platform_trust_engine" {
 
   issuer_config = {
     name             = "vault-issuer"                                # The ClusterIssuer name in Microk8s
+    issue_path       = "sign"                                        # or "issue", depends on Vault PKI setup
     vault_role_name  = local.vault_role_name                         # The Role name in Vault
     pki_mount_path   = local.vault_pki_path                          # Adjust based on Vault PKI mount
-    issue_path       = "issue"                                       # or "sign", depends on Vault PKI setup
     bound_namespaces = var.trust_engine_config.authorized_namespaces # Whitelist namespaces
     token_policies   = [local.vault_policy_name]                     # The policy created in Layer 20
   }

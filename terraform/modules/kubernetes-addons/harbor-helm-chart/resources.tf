@@ -10,11 +10,18 @@ resource "kubernetes_manifest" "harbor_certificate" {
     }
     spec = {
       secretName = var.ingress_config.tls_secret_name
+
       issuerRef = {
         name = var.ingress_config.issuer_name
         kind = var.ingress_config.issuer_kind
       }
-      commonName  = var.harbor_config.hostname
+
+      privateKey = {
+        algorithm = "RSA"
+        encoding  = "PKCS1"
+        size      = 2048
+      }
+
       dnsNames    = [var.harbor_config.hostname]
       duration    = var.certificate_config.duration
       renewBefore = var.certificate_config.renew_before
