@@ -45,6 +45,11 @@ locals {
 # DNS Configuration
 locals {
   dns_hosts = {
+    # For Harbor and Vault ingress VIP, respectively.
+    "${data.terraform_remote_state.microk8s_provision.outputs.harbor_microk8s_virtual_ip}" = "harbor.iac.local notary.harbor.iac.local"
+    "${data.terraform_remote_state.vault_pki.outputs.vault_ha_virtual_ip}"                 = "vault.iac.local"
+
+    # For dependency roles.
     "${data.terraform_remote_state.redis.outputs.harbor_redis_virtual_ip}"       = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles["harbor-redis"].allowed_domains[0]
     "${data.terraform_remote_state.postgres.outputs.harbor_postgres_virtual_ip}" = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles["harbor-postgres"].allowed_domains[0]
     "${data.terraform_remote_state.minio.outputs.harbor_minio_virtual_ip}"       = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles["harbor-minio"].allowed_domains[0]
