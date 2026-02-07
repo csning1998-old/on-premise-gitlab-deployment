@@ -2,10 +2,10 @@
 
 # Ingress Certificate
 resource "vault_pki_secret_backend_cert" "gitlab_ingress_cert" {
-  backend = data.terraform_remote_state.vault_core.outputs.pki_configuration.vault_pki_path
-  name    = data.terraform_remote_state.vault_core.outputs.pki_configuration.ingress_roles.gitlab
+  backend = data.terraform_remote_state.vault_pki.outputs.pki_configuration.vault_pki_path
+  name    = data.terraform_remote_state.vault_pki.outputs.pki_configuration.ingress_roles.gitlab
 
-  common_name = data.terraform_remote_state.vault_core.outputs.pki_configuration.ingress_domains.gitlab[0]
+  common_name = data.terraform_remote_state.vault_pki.outputs.pki_configuration.ingress_domains.gitlab[0]
   ttl         = "2160h"
 }
 
@@ -34,7 +34,7 @@ resource "kubernetes_secret" "gitlab_custom_ca" {
   }
 
   data = {
-    "vault-api-ca.crt"    = data.terraform_remote_state.vault_core.outputs.vault_ca_cert
-    "internal-pki-ca.crt" = data.terraform_remote_state.vault_core.outputs.internal_pki_ca_cert
+    "vault-api-ca.crt"    = data.terraform_remote_state.vault_pki.outputs.vault_ca_cert
+    "internal-pki-ca.crt" = data.terraform_remote_state.vault_pki.outputs.internal_pki_ca_cert
   }
 }

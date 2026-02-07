@@ -21,6 +21,6 @@ locals {
   # PKI & Domain Logic
   lookup_key      = "${local.svc_name}-${local.comp_name}"
   service_domain  = local.domain_list[0]
-  vault_role_name = data.terraform_remote_state.vault_core.outputs.pki_configuration.dependency_roles[local.lookup_key].name
-  domain_list     = data.terraform_remote_state.vault_core.outputs.pki_configuration.dependency_roles[local.lookup_key].allowed_domains
+  vault_role_name = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles[local.lookup_key].name
+  domain_list     = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles[local.lookup_key].allowed_domains
 }

@@ -37,8 +37,8 @@ resource "kubectl_manifest" "vault_issuer" {
     }
     spec = {
       vault = {
-        server   = "https://${data.terraform_remote_state.vault_core.outputs.vault_ha_virtual_ip}:443"
-        caBundle = base64encode(data.terraform_remote_state.vault_core.outputs.vault_ca_cert)
+        server   = "https://${data.terraform_remote_state.vault_pki.outputs.vault_ha_virtual_ip}:443"
+        caBundle = base64encode(data.terraform_remote_state.vault_pki.outputs.vault_ca_cert)
         path     = "pki/prod/sign/harbor-ingress-role"
 
         auth = {

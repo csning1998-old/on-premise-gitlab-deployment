@@ -1,4 +1,9 @@
 
+output "vault_ha_virtual_ip" {
+  description = "The Virtual IP of the Vault Raft Cluster"
+  value       = data.terraform_remote_state.vault_raft_config.outputs.vault_ha_virtual_ip
+}
+
 output "vault_certificates" {
   description = "The Certificates content of the Vault Cluster"
   value = {

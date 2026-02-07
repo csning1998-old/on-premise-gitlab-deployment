@@ -8,10 +8,10 @@ data "terraform_remote_state" "microk8s_provision" {
 }
 
 # HashiCorp Vault State
-data "terraform_remote_state" "vault_core" {
+data "terraform_remote_state" "vault_pki" {
   backend = "local"
   config = {
-    path = "../10-vault-core/terraform.tfstate"
+    path = "../20-vault-pki/terraform.tfstate"
   }
 }
 

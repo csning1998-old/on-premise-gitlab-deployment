@@ -540,7 +540,7 @@ git clone -b v1.6.0 --depth 1 https://github.com/csning1998-old/on-premise-gitla
 
             ```shell
             export VAULT_ADDR="https://172.16.136.250:443"
-            export VAULT_CACERT="${PWD}/terraform/layers/10-vault-core/tls/vault-ca.crt"
+            export VAULT_CACERT="${PWD}/terraform/layers/10-vault-raft/tls/vault-ca.crt"
             export VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json)
             vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases
             ```
@@ -554,7 +554,7 @@ git clone -b v1.6.0 --depth 1 https://github.com/csning1998-old/on-premise-gitla
         3. 若需保持 shell 環境乾淨，可使用單行指令：
 
             ```shell
-            export PG_SUPERUSER_PASSWORD=$(VAULT_ADDR="https://172.16.136.250:443" VAULT_CACERT="${PWD}/terraform/layers/10-vault-core/tls/vault-ca.crt" VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json) vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases)
+            export PG_SUPERUSER_PASSWORD=$(VAULT_ADDR="https://172.16.136.250:443" VAULT_CACERT="${PWD}/terraform/layers/10-vault-raft/tls/vault-ca.crt" VAULT_TOKEN=$(jq -r .root_token ansible/fetched/vault/vault_init_output.json) vault kv get -field=pg_superuser_password secret/on-premise-gitlab-deployment/databases)
             ```
 
         在 Development Vault 及其他機密操作方式相同
