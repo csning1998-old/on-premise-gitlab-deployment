@@ -31,6 +31,8 @@ locals {
   vault_role_name = data.terraform_remote_state.vault_pki.outputs.pki_configuration.component_roles["harbor-frontend"].name
   vault_auth_path = data.terraform_remote_state.vault_pki.outputs.auth_backend_paths["kubernetes"]
   # where `vault_auth_path` automatically fetch Auth Path (default is kubernetes, can be retrieved from map if changed).
+
+  vault_policy_name = "${local.vault_role_name}-pki-policy"
 }
 
 # Vault Generic Secrets

@@ -2,7 +2,6 @@
 trust_engine_config = {
   issuer_name           = "vault-issuer"
   issuer_kind           = "ClusterIssuer"
-  token_policies        = ["harbor-pki-policy"]
   authorized_namespaces = ["cert-manager", "harbor"]
 }
 

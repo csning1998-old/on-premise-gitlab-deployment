@@ -25,7 +25,7 @@ module "platform_trust_engine" {
     pki_mount_path   = local.vault_pki_path                          # Adjust based on Vault PKI mount
     issue_path       = "issue"                                       # or "sign", depends on Vault PKI setup
     bound_namespaces = var.trust_engine_config.authorized_namespaces # Whitelist namespaces
-    token_policies   = var.trust_engine_config.token_policies        # The policy created in Layer 20
+    token_policies   = [local.vault_policy_name]                     # The policy created in Layer 20
   }
 
   reviewer_service_account = {

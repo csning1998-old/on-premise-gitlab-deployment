@@ -10,6 +10,8 @@ module "harbor_core" {
     timeout   = 600
   }
 
+  certificate_config = var.certificate_config
+
   harbor_config = {
     hostname       = local.harbor_hostname
     admin_password = local.harbor_admin_password

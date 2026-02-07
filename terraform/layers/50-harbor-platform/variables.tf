@@ -4,7 +4,6 @@ variable "trust_engine_config" {
   type = object({
     issuer_name           = string       # e.g., "vault-issuer"
     issuer_kind           = string       # e.g., "ClusterIssuer"
-    token_policies        = list(string) # e.g., ["harbor-pki-policy"]
     authorized_namespaces = list(string) # e.g., ["cert-manager", "harbor"]
   })
 }
