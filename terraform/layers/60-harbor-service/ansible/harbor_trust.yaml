@@ -3,7 +3,6 @@
   hosts: harbor_nodes
   become: true
   vars:
-    harbor_domain: "{{ local.harbor_hostname }}"
     certs_dir: "/var/snap/microk8s/current/args/certs.d/{{ harbor_domain }}"
 
   tasks:
