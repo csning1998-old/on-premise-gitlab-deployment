@@ -49,6 +49,13 @@ module "ingress_controller" {
   ingress_class_name = "nginx"
 }
 
+# CoreDNS Configuration
+module "coredns_config" {
+  source = "../../modules/kubernetes-addons/coredns-config"
+
+  hosts = local.dns_hosts
+}
+
 # Harbor DB Initialization
 module "harbor_db_init" {
   source = "../../modules/configuration/patroni-init"
