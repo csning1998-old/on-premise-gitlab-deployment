@@ -1,5 +1,5 @@
 
-# Declare Harbor certificate (K8s resource)
+# Declare Harbor certificate for PKI rotation
 resource "kubernetes_manifest" "harbor_certificate" {
   manifest = {
     apiVersion = "cert-manager.io/v1"
@@ -20,4 +20,11 @@ resource "kubernetes_manifest" "harbor_certificate" {
       renewBefore = var.certificate_config.renew_before
     }
   }
+}
+
+# For Harbor core secret key
+resource "random_password" "harbor_core_secret_key" {
+  length  = 32
+  special = true
+  upper   = true
 }

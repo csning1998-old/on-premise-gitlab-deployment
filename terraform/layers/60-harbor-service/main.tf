@@ -16,7 +16,7 @@ module "harbor_core" {
     hostname       = local.harbor_hostname
     admin_password = local.harbor_admin_password
     notary_prefix  = var.harbor_helm_config.notary_prefix
-    secret_key     = "not-used-but-required-structure"
+    secret_key     = random_password.harbor_core_secret_key.result
   }
 
   ingress_config = {
