@@ -5,19 +5,19 @@ resource "kubernetes_manifest" "harbor_certificate" {
     apiVersion = "cert-manager.io/v1"
     kind       = "Certificate"
     metadata = {
-      name      = "harbor-ingress-cert"
-      namespace = "harbor"
+      name      = var.harbor_helm_config.tls_secret_name
+      namespace = var.harbor_helm_config.namespace
     }
     spec = {
-      secretName = "harbor-ingress-cert" # Generated Secret Name
+      secretName = var.harbor_helm_config.tls_secret_name
       issuerRef = {
         name = local.issuer_name
         kind = local.issuer_kind
       }
-      commonName  = var.harbor_hostname
-      dnsNames    = [var.harbor_hostname]
-      duration    = "2160h" # 90 Days
-      renewBefore = "360h"  # 15 Days
+      commonName  = local.harbor_hostname
+      dnsNames    = [local.harbor_hostname]
+      duration    = var.certificate_config.duration
+      renewBefore = var.certificate_config.renew_before
     }
   }
 }
