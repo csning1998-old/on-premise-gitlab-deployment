@@ -1,6 +1,6 @@
 
 output "harbor_hostname" {
-  value = var.harbor_hostname
+  value = local.harbor_hostname
 }
 
 output "platform_issuer_name" {

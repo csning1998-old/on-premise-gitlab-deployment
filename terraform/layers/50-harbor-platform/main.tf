@@ -16,16 +16,16 @@ module "platform_trust_engine" {
   vault_config = {
     address   = local.vault_address
     ca_cert   = local.vault_ca_cert
-    auth_path = "kubernetes"
+    auth_path = local.vault_auth_path
   }
 
   issuer_config = {
-    name             = "vault-issuer"             # The ClusterIssuer name in Microk8s
-    vault_role_name  = "harbor-frontend"          # The Role name in Vault
-    pki_mount_path   = local.vault_pki_path       # Adjust based on Vault PKI mount
-    issue_path       = "issue"                    # or "sign", depends on Vault PKI setup
-    bound_namespaces = ["cert-manager", "harbor"] # Whitelist namespaces
-    token_policies   = ["harbor-pki-policy"]      # The policy created in Layer 20
+    name             = "vault-issuer"                                # The ClusterIssuer name in Microk8s
+    vault_role_name  = local.vault_role_name                         # The Role name in Vault
+    pki_mount_path   = local.vault_pki_path                          # Adjust based on Vault PKI mount
+    issue_path       = "issue"                                       # or "sign", depends on Vault PKI setup
+    bound_namespaces = var.trust_engine_config.authorized_namespaces # Whitelist namespaces
+    token_policies   = var.trust_engine_config.token_policies        # The policy created in Layer 20
   }
 
   reviewer_service_account = {
@@ -35,8 +35,8 @@ module "platform_trust_engine" {
 
   helm_config = {
     install          = true
-    version          = "v1.14.0"
-    namespace        = "cert-manager"
+    version          = var.cert_manager_config.version
+    namespace        = var.cert_manager_config.namespace
     create_namespace = true
   }
 }
@@ -64,17 +64,17 @@ module "harbor_db_init" {
   pg_port = data.terraform_remote_state.postgres.outputs.harbor_postgres_haproxy_rw_port
 
   pg_superuser          = "postgres"
-  pg_superuser_password = data.vault_generic_secret.db_vars.data["pg_superuser_password"]
+  pg_superuser_password = local.pg_superuser_password
 
   databases = {
-    "registry" = {
-      owner = "harbor"
+    (var.db_init_config.db_name) = {
+      owner = var.db_init_config.db_user
     }
   }
 
   users = {
-    "harbor" = {
-      password = data.vault_generic_secret.harbor_vars.data["harbor_pg_db_password"]
+    (var.db_init_config.db_user) = {
+      password = local.harbor_pg_db_password
       roles    = []
     }
   }

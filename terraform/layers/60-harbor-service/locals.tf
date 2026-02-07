@@ -1,4 +1,5 @@
 
+# Microk8s Configuration
 locals {
   kubeconfig_raw = data.terraform_remote_state.microk8s_provision.outputs.kubeconfig_content
   kubeconfig     = yamldecode(local.kubeconfig_raw)
@@ -9,6 +10,7 @@ locals {
   issuer_kind  = data.terraform_remote_state.harbor_platform.outputs.platform_issuer_kind
 }
 
+# Vault Generic Secrets
 locals {
   vm_username      = data.vault_generic_secret.variables.data["vm_username"]
   private_key_path = data.vault_generic_secret.variables.data["ssh_private_key_path"]
