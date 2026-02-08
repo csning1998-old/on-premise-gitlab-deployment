@@ -25,19 +25,13 @@ locals {
   k8s_cluster_ca = data.kubernetes_config_map.kube_root_ca.data["ca.crt"]
 
   # Vault Address
-  vault_address   = "https://${data.terraform_remote_state.vault_pki.outputs.vault_ha_virtual_ip}:443"
-  vault_ca_cert   = data.terraform_remote_state.vault_pki.outputs.vault_certificates.ca_cert.ca_cert
-  vault_pki_path  = data.terraform_remote_state.vault_pki.outputs.pki_configuration.path
-  vault_role_name = data.terraform_remote_state.vault_pki.outputs.pki_configuration.component_roles["gitlab-frontend"].name
-  vault_auth_path = data.terraform_remote_state.vault_pki.outputs.auth_backend_paths["kubernetes"]
-  # where `vault_auth_path` automatically fetch Auth Path (default is kubernetes, can be retrieved from map if changed).
-
+  vault_address     = "https://${data.terraform_remote_state.vault_pki.outputs.vault_ha_virtual_ip}:443"
   vault_policy_name = "${local.vault_role_name}-pki-policy"
-}
-
-# Vault Generic Secrets
-locals {
-  initial_root_password = data.vault_generic_secret.app_vars.data["initial_root_password"]
+  vault_ca_cert     = data.terraform_remote_state.vault_pki.outputs.vault_certificates.ca_cert.ca_cert
+  vault_pki_path    = data.terraform_remote_state.vault_pki.outputs.pki_configuration.path
+  vault_role_name   = data.terraform_remote_state.vault_pki.outputs.pki_configuration.component_roles["gitlab-frontend"].name
+  vault_auth_path   = data.terraform_remote_state.vault_pki.outputs.auth_backend_paths["kubernetes"]
+  # where `vault_auth_path` automatically fetch Auth Path (default is kubernetes, can be retrieved from map if changed).
 }
 
 # DNS Configuration
