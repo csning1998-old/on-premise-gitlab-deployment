@@ -178,12 +178,36 @@ resource "helm_release" "gitlab" {
         webservice = {
           minReplicas = 1
           maxReplicas = 2
+          deployment = {
+            hostAliases = var.external_services.minio.ip != null ? [
+              {
+                ip        = var.external_services.minio.ip
+                hostnames = [var.external_services.minio.hostname]
+              }
+            ] : []
+          }
         }
         sidekiq = {
           minReplicas = 1
           maxReplicas = 2
+          deployment = {
+            hostAliases = var.external_services.minio.ip != null ? [
+              {
+                ip        = var.external_services.minio.ip
+                hostnames = [var.external_services.minio.hostname]
+              }
+            ] : []
+          }
         }
         toolbox = {
+          deployment = {
+            hostAliases = var.external_services.minio.ip != null ? [
+              {
+                ip        = var.external_services.minio.ip
+                hostnames = [var.external_services.minio.hostname]
+              }
+            ] : []
+          }
           backups = {
             objectStorage = {
               config = {

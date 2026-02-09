@@ -9,7 +9,7 @@ resource "kubernetes_manifest" "coredns_custom_config" {
     apiVersion = "v1"
     kind       = "ConfigMap"
     metadata = {
-      name      = "coredns"
+      name      = "coredns-custom"
       namespace = "kube-system"
       labels = {
         "addonmanager.kubernetes.io/mode" = "EnsureExists"
