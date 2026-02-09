@@ -42,10 +42,6 @@ data "vault_generic_secret" "db_vars" {
   path = "secret/on-premise-gitlab-deployment/gitlab/databases"
 }
 
-data "vault_generic_secret" "app_vars" {
-  path = "secret/on-premise-gitlab-deployment/gitlab/app"
-}
-
 # Fetch the Cluster CA
 data "kubernetes_config_map" "kube_root_ca" {
   metadata {

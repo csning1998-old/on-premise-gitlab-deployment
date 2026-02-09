@@ -16,7 +16,6 @@ module "gitlab_core" {
     hostname = local.gitlab_hostname
     edition  = "ce"
     # Root Password
-    root_password = local.initial_root_password
   }
 
   # Trust Engine Integration

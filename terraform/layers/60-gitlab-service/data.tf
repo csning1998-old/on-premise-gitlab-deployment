@@ -55,10 +55,6 @@ data "vault_generic_secret" "db_vars" {
   path = "secret/on-premise-gitlab-deployment/gitlab/databases"
 }
 
-data "vault_generic_secret" "app_vars" {
-  path = "secret/on-premise-gitlab-deployment/gitlab/app"
-}
-
 # path: secret/on-premise-gitlab-deployment/gitlab/s3_credentials/[bucket_name]
 
 data "vault_generic_secret" "s3_credentials" {
