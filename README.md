@@ -614,7 +614,7 @@ Successful execution and the display of virtual machines—regardless of whether
     To test Ansible playbooks on existing hosts without reprovisioning virtual machines, use option `11) Rebuild Layer via Ansible`.
 
 4. **Resource Cleanup**:
-    - **`14) Purge Specific Terraform Layer`**: Used to clear virtualization resources while maintaining the project state. This executes `libvirt_resource_purger "all"`, which deletes all guest VMs, networks, and storage pools created by this project, while preserving Packer images and Terraform local state files.
+    - **`14) Purge Specific Terraform Layer`**: Destroys a specific layer's virtual machines, associated libvirt resources (networks, storage pools), and its Terraform state file. This allows for a clean reprovisioning of that specific layer.
     - **`15) Purge All Libvirt Resources`**: Used to clear virtualization resources while maintaining the project state. This executes `libvirt_resource_purger "all"`, which deletes all guest VMs, networks, and storage pools created by this project, while preserving Packer images and Terraform local state files.
     - **`16) Purge All Packer and Terraform Resources`**: Used for a complete cleanup of all artifacts. This deletes all Packer output images and all Terraform local state files, resetting the project environment to a pristine state.
 
