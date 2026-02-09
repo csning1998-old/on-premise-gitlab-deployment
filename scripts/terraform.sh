@@ -91,8 +91,8 @@ terraform_layer_executor() {
     cmd="${cmd_init} && ${cmd_import} && ${cmd_apply}"
 
   else
-    # Chain: Init -> Destroy -> Init -> Apply
-    cmd="${cmd_init} && ${cmd_destroy} && ${cmd_init} && ${cmd_apply}"
+    # Chain: Init -> Apply
+    cmd="${cmd_init} && ${cmd_apply}"
   fi
 
   # 4. Execute the constructed command chain
@@ -108,7 +108,7 @@ terraform_layer_selector() {
 
   # Use log_print for the prompt before 'select' if desired, 
   # but 'select' uses PS3. We can keep PS3 simple or colorized.
-  PS3=$'\n\033[1;34m[INPUT] Select a Terraform layer to REBUILD: \033[0m'
+  PS3=$'\n\033[1;34m[INPUT] Select a Terraform layer to UPDATE / PROVISION: \033[0m'
   
   select layer in "${layer_options[@]}"; do
     if [[ "$layer" == "Back to Main Menu" ]]; then
@@ -116,11 +116,11 @@ terraform_layer_selector() {
       break
 
     elif [[ " ${ALL_TERRAFORM_LAYERS[*]} " == *"${layer}"* ]]; then
-      log_print "STEP" "Executing Full Rebuild for [${layer}]..."
+      log_print "STEP" "Executing Terraform Apply for [${layer}]..."
       if ! ssh_key_verifier; then break; fi
-      libvirt_resource_purger "${layer}"
+      # libvirt_resource_purger "${layer}"
       libvirt_service_manager
-      terraform_artifact_cleaner "${layer}"
+      # terraform_artifact_cleaner "${layer}"
       terraform_layer_executor "${layer}"
       execution_time_reporter
       break
