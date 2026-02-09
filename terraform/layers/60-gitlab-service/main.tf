@@ -51,10 +51,16 @@ module "gitlab_core" {
     }
     minio = {
       endpoint   = local.minio_address
-      access_key = local.minio_access_key
-      secret_key = local.minio_secret_key
+      access_key = ""
+      secret_key = ""
       region     = local.s3_region
-      buckets    = local.s3_bucket_names
+      buckets = {
+        for func_key, bucket_name in local.minio_function_map : func_key => {
+          name       = bucket_name
+          access_key = data.vault_generic_secret.s3_credentials[func_key].data["access_key"]
+          secret_key = data.vault_generic_secret.s3_credentials[func_key].data["secret_key"]
+        }
+      }
     }
   }
 
@@ -72,11 +78,7 @@ module "gitlab_core" {
       key   = "token"
       value = random_password.gitlab_internal["gitaly-secret"].result
     }
-    # "gitlab-workhorse-secret" = {
-    #   key   = "shared_secret"
-    #   value = base64encode(random_password.gitlab_internal["workhorse-secret"].result)
-    # }
-    "root-password" = {
+        "root-password" = {
       key   = "secret"
       value = random_password.gitlab_internal["root-password"].result
     }

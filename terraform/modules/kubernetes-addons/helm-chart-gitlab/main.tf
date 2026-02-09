@@ -12,7 +12,7 @@ resource "helm_release" "gitlab" {
     kubernetes_manifest.gitlab_certificate,
     kubernetes_secret.gitlab_postgres_password,
     kubernetes_secret.gitlab_redis_password,
-    kubernetes_secret.gitlab_minio_secret,
+    kubernetes_secret.gitlab_minio_secrets,
     kubernetes_secret.gitlab_internal_secrets,
     kubernetes_secret.gitlab_ca_bundle
   ]
@@ -89,84 +89,72 @@ resource "helm_release" "gitlab" {
 
         appConfig = {
           lfs = {
-            bucket = "gitlab-lfs",
+            bucket = var.external_services.minio.buckets["lfs"].name
             connection = {
-              secret = kubernetes_secret.gitlab_minio_secret.metadata[0].name,
+              secret = kubernetes_secret.gitlab_minio_secrets["lfs"].metadata[0].name
               key    = "connection"
             }
           }
           artifacts = {
-            bucket = "gitlab-artifacts",
+            bucket = var.external_services.minio.buckets["artifacts"].name
             connection = {
-              secret = kubernetes_secret.gitlab_minio_secret.metadata[0].name,
+              secret = kubernetes_secret.gitlab_minio_secrets["artifacts"].metadata[0].name
               key    = "connection"
             }
           }
           uploads = {
-            bucket = "gitlab-uploads",
+            bucket = var.external_services.minio.buckets["uploads"].name
             connection = {
-              secret = kubernetes_secret.gitlab_minio_secret.metadata[0].name,
+              secret = kubernetes_secret.gitlab_minio_secrets["uploads"].metadata[0].name
               key    = "connection"
             }
           }
           packages = {
-            bucket = "gitlab-packages",
+            bucket = var.external_services.minio.buckets["packages"].name
             connection = {
-              secret = kubernetes_secret.gitlab_minio_secret.metadata[0].name,
+              secret = kubernetes_secret.gitlab_minio_secrets["packages"].metadata[0].name
               key    = "connection"
             }
           }
           backups = {
-            bucket    = "gitlab-backups",
-            tmpBucket = "gitlab-tmp",
+            bucket    = var.external_services.minio.buckets["backups"].name
+            tmpBucket = var.external_services.minio.buckets["tmp"].name
             connection = {
-              secret = kubernetes_secret.gitlab_minio_secret.metadata[0].name,
+              secret = kubernetes_secret.gitlab_minio_secrets["backups"].metadata[0].name
               key    = "connection"
             }
           }
           terraformState = {
-            bucket = "gitlab-terraform-state",
+            bucket = var.external_services.minio.buckets["terraform-state"].name
             connection = {
-              secret = kubernetes_secret.gitlab_minio_secret.metadata[0].name,
+              secret = kubernetes_secret.gitlab_minio_secrets["terraform-state"].metadata[0].name
               key    = "connection"
             }
           }
         }
-        # shell = {
-        #   authToken = {
-        #     secret = kubernetes_secret.gitlab_internal_secrets["gitlab-shell-secret"].metadata[0].name
-        #     key    = var.gitlab_secrets["gitlab-shell-secret"].key
-        #   }
-        # }
 
-        # gitaly = {
-        #   authToken = {
-        #     secret = kubernetes_secret.gitlab_internal_secrets["gitlab-gitaly-secret"].metadata[0].name
-        #     key    = var.gitlab_secrets["gitlab-gitaly-secret"].key
-        #   }
-        # }
-
-        # rails = {
-        #   secret = {
-        #     secret = kubernetes_secret.gitlab_internal_secrets["gitlab-rails-secret"].metadata[0].name
-        #     key    = var.gitlab_secrets["gitlab-rails-secret"].key
-        #   }
-        # }
-
-        # workhorse = {
-        #   secret = kubernetes_secret.gitlab_internal_secrets["gitlab-workhorse-secret"].metadata[0].name
-        #   # key    = var.gitlab_secrets["gitlab-workhorse-secret"].key
-        # }
-
-        # initialRootPassword = {
-        #   secret = kubernetes_secret.gitlab_internal_secrets["gitlab-root-password"].metadata[0].name
-        #   key    = var.gitlab_secrets["gitlab-root-password"].key
-        # }
-
-        shell               = { authToken = { secret = kubernetes_secret.gitlab_internal_secrets["shell-secret"].metadata[0].name, key = "secret" } }
-        gitaly              = { authToken = { secret = kubernetes_secret.gitlab_internal_secrets["gitaly-secret"].metadata[0].name, key = "token" } }
-        rails               = { secret = { secret = kubernetes_secret.gitlab_internal_secrets["rails-secret"].metadata[0].name, key = "secret" } }
-        initialRootPassword = { secret = kubernetes_secret.gitlab_internal_secrets["root-password"].metadata[0].name, key = "secret" }
+        shell = {
+          authToken = {
+            secret = kubernetes_secret.gitlab_internal_secrets["shell-secret"].metadata[0].name,
+            key    = "secret"
+          }
+        }
+        gitaly = {
+          authToken = {
+            secret = kubernetes_secret.gitlab_internal_secrets["gitaly-secret"].metadata[0].name,
+            key    = "token"
+          }
+        }
+        rails = {
+          secret = {
+            secret = kubernetes_secret.gitlab_internal_secrets["rails-secret"].metadata[0].name,
+            key    = "secret"
+          }
+        }
+        initialRootPassword = {
+          secret = kubernetes_secret.gitlab_internal_secrets["root-password"].metadata[0].name,
+          key    = "secret"
+        }
 
         certificates = {
           customCAs = [
@@ -199,7 +187,7 @@ resource "helm_release" "gitlab" {
           backups = {
             objectStorage = {
               config = {
-                secret = kubernetes_secret.gitlab_minio_secret.metadata[0].name
+                secret = kubernetes_secret.gitlab_minio_secrets["backups"].metadata[0].name
                 key    = "connection"
               }
             }

@@ -58,12 +58,8 @@ data "vault_generic_secret" "db_vars" {
 # path: secret/on-premise-gitlab-deployment/gitlab/s3_credentials/[bucket_name]
 
 data "vault_generic_secret" "s3_credentials" {
-  for_each = local.s3_bucket_names
-  path     = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/${each.key}"
-}
-
-data "vault_generic_secret" "s3_artifacts" {
-  path = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/gitlab-artifacts"
+  for_each = local.minio_function_map
+  path     = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/${each.value}"
 }
 
 # Get PKI CA from Vault

@@ -62,9 +62,12 @@ resource "kubernetes_secret" "gitlab_redis_password" {
 }
 
 # MinIO Connection YAML (GitLab Specific Format)
-resource "kubernetes_secret" "gitlab_minio_secret" {
+resource "kubernetes_secret" "gitlab_minio_secrets" {
+
+  for_each = var.external_services.minio.buckets
+
   metadata {
-    name      = "gitlab-minio-secret"
+    name      = "gitlab-minio-${each.key}"
     namespace = var.helm_config.namespace
   }
   data = {
@@ -72,8 +75,8 @@ resource "kubernetes_secret" "gitlab_minio_secret" {
       provider              = "AWS"
       region                = var.external_services.minio.region
       endpoint              = var.external_services.minio.endpoint
-      aws_access_key_id     = var.external_services.minio.access_key
-      aws_secret_access_key = var.external_services.minio.secret_key
+      aws_access_key_id     = each.value.access_key
+      aws_secret_access_key = each.value.secret_key
       path_style            = true
     })
   }

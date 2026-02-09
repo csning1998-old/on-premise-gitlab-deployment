@@ -63,23 +63,14 @@ locals {
 }
 
 locals {
-  s3_endpoint = data.vault_generic_secret.s3_artifacts.data["endpoint"]
-  s3_region   = "us-east-1"
-  s3_bucket_names = toset([
-    "gitlab-artifacts",
-    "gitlab-lfs",
-    "gitlab-uploads",
-    "gitlab-packages",
-    "gitlab-terraform-state",
-    "gitlab-backups"
-  ])
-}
-
-locals {
-  gitlab_secrets = {
-    "rails-secret"  = { length = 64, special = false, key = "secret" }
-    "shell-secret"  = { length = 64, special = false, key = "secret" }
-    "gitaly-secret" = { length = 64, special = false, key = "token" }
-    "root-password" = { length = 24, special = false, key = "secret" }
+  s3_region = "us-east-1"
+  minio_function_map = {
+    "artifacts"       = "gitlab-artifacts"
+    "lfs"             = "gitlab-lfs"
+    "uploads"         = "gitlab-uploads"
+    "packages"        = "gitlab-packages"
+    "terraform-state" = "gitlab-terraform-state"
+    "backups"         = "gitlab-backups"
+    "tmp"             = "gitlab-tmp-backups"
   }
 }

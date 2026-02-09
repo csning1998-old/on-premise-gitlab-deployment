@@ -51,11 +51,17 @@ variable "external_services" {
       password = string
     })
     minio = object({
+hostname   = optional(string)
+      ip         = optional(string)
       endpoint   = string
       access_key = string
       secret_key = string
       region     = string
-      buckets    = list(string)
+      buckets = map(object({
+        name       = string
+        access_key = string
+        secret_key = string
+      }))
     })
   })
 }
