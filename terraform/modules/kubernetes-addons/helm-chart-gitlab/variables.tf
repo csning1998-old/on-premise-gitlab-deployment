@@ -51,7 +51,7 @@ variable "external_services" {
       password = string
     })
     minio = object({
-hostname   = optional(string)
+      hostname   = optional(string)
       ip         = optional(string)
       endpoint   = string
       access_key = string

@@ -78,7 +78,7 @@ module "gitlab_core" {
       key   = "token"
       value = random_password.gitlab_internal["gitaly-secret"].result
     }
-        "root-password" = {
+    "root-password" = {
       key   = "secret"
       value = random_password.gitlab_internal["root-password"].result
     }
