@@ -68,7 +68,8 @@ module "k8s_storage_local_path" {
 
 # CoreDNS Configuration
 module "coredns_config" {
-  source = "../../modules/kubernetes-addons/coredns-config"
+  source     = "../../modules/kubernetes-addons/coredns-config"
+  depends_on = [module.k8s_calico]
 
   hosts = local.dns_hosts
 }

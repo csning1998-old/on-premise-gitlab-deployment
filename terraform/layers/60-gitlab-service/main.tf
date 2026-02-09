@@ -50,6 +50,8 @@ module "gitlab_core" {
       scheme   = "rediss"
     }
     minio = {
+      ip         = local.minio_vip
+      hostname   = local.minio_hostname
       endpoint   = local.minio_address
       access_key = ""
       secret_key = ""
