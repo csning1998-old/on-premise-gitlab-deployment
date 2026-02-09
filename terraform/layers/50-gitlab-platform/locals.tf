@@ -15,9 +15,6 @@ locals {
 
 # for platform-trust-engine module
 locals {
-
-  gitlab_hostname = data.terraform_remote_state.vault_pki.outputs.pki_configuration.component_roles["gitlab-frontend"].allowed_domains[0]
-
   # K8s API Endpoint for Vault Callback
   k8s_api_endpoint = "https://${data.terraform_remote_state.kubeadm_provision.outputs.gitlab_kubeadm_virtual_ip}:6443"
 

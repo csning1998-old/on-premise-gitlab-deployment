@@ -44,8 +44,7 @@ resource "vault_generic_secret" "gitlab_redis_keys" {
 
   data_json = jsonencode({
     # Use variables to drive IP & Port
-    host = data.terraform_remote_state.redis.outputs.gitlab_redis_virtual_ip
-    # host     = "172.16.141.200" # TODO: Use variables to drive IP & Port
+    host     = data.terraform_remote_state.redis.outputs.gitlab_redis_virtual_ip
     port     = data.terraform_remote_state.redis.outputs.gitlab_redis_haproxy_stats_port
     password = local.redis_password
     scheme   = "rediss"
