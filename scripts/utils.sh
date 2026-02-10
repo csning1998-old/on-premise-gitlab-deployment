@@ -63,16 +63,29 @@ run_command() {
     local engine_cmd="podman"
     local service_name=""
 
-		# 0. Determine the Container to use
-		case "$cmd_string" in
-      packer*)    service_name="iac-packer" ;;
-      terraform*) service_name="iac-terraform" ;;
-      ansible*)   service_name="iac-ansible" ;;
-			vault*|openssl*|curl*) service_name="iac-terraform" ;;
+# 0. Determine the Container AND Service to use
+    case "$cmd_string" in
+      packer*)    
+        service_name="iac-packer" 
+        container_name="iac-controller-packer"
+        ;;
+      terraform*) 
+        service_name="iac-terraform" 
+        container_name="iac-controller-terraform"
+        ;;
+      ansible*)   
+        service_name="iac-ansible" 
+        container_name="iac-controller-ansible"
+        ;;
+      vault*|openssl*|curl*) 
+        service_name="iac-utils" 
+        container_name="iac-controller-utils"
+        ;;
       *)          
-				service_name="iac-ansible"
-				log_print "INFO" "Defaulting command '${cmd_string}' to '${service_name}' container."
-			;;
+        service_name="iac-utils"
+        container_name="iac-controller-utils"
+        log_print "INFO" "Defaulting command '${cmd_string}' to '${service_name}' container."
+        ;;
     esac
 
 	local container_work_dir="${host_work_dir/#$SCRIPT_DIR//app}"
@@ -91,7 +104,7 @@ run_command() {
 
     # 3. Ensure the controller service is running.
     if ! ${engine_cmd} ps -q --filter "name=${container_name}" | grep -q .; then
-			log_print "TASK" "Starting container service '${container_name}' using ${compose_file}..."
+			log_print "TASK" "Starting container service '${container_name}'..."
       (cd "${SCRIPT_DIR}" && ${compose_cmd} -f "${compose_file}" up -d "${service_name}")
     fi
 
@@ -101,11 +114,15 @@ run_command() {
 
     # local container_work_dir="${host_work_dir/#$SCRIPT_DIR//app}"
     echo "INFO: Executing command in container '${container_name}'..."
-    (cd "${SCRIPT_DIR}" && ${compose_cmd} -f "${compose_file}" exec \
-      -e "VAULT_ADDR=${DEV_VAULT_ADDR}" \
-      -e "VAULT_CACERT=${DEV_VAULT_CACERT_PODMAN}" \
-      -e "VAULT_TOKEN=${DEV_VAULT_TOKEN}" \
-      "${service_name}" bash -c "cd \"${container_work_dir}\" && ${cmd_string}")
+
+		${engine_cmd} exec \
+			-e "VAULT_ADDR=${DEV_VAULT_ADDR}" \
+			-e "VAULT_CACERT=${DEV_VAULT_CACERT_PODMAN:-/app/vault/tls/ca.pem}" \
+			-e "VAULT_TOKEN=${DEV_VAULT_TOKEN}" \
+			-w "${container_work_dir}" \
+			"${container_name}" \
+			bash -c "${cmd_string}"
+
   else
     # Native Mode: Execute the command directly on the host. 
     (cd "${host_work_dir}" && eval "${cmd_string}")

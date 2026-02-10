@@ -72,10 +72,12 @@ vault_status_reporter() {
   log_divider
 
   # Check Development Vault on Host
-	if run_command "curl -s --connect-timeout 0.5 --cacert ${DEV_CA} ${DEV_VAULT_ADDR}/v1/sys/health" > /dev/null 2>&1; then    
-	
+	local host_ca="${DEV_VAULT_CACERT:-${SCRIPT_DIR}/vault/tls/ca.pem}"
+
+	if curl -s --connect-timeout 0.5 --cacert "${host_ca}" "${DEV_VAULT_ADDR}/v1/sys/health" > /dev/null 2>&1; then
+
 		local dev_status_json
-		dev_status_json=$(run_command "vault status -address=${DEV_VAULT_ADDR} -ca-cert=${DEV_CA} -format=json" 2>/dev/null || true)
+		dev_status_json=$(curl -s --cacert "${host_ca}" "${DEV_VAULT_ADDR}/v1/sys/health")
     
 		if [[ -n "$dev_status_json" ]]; then
       local sealed
