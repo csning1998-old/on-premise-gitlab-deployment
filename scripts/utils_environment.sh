@@ -156,35 +156,22 @@ switch_strategy() {
   local new_value="$2"
   
   env_var_mutator "$var_name" "$new_value"
-  echo
   log_print "INFO" "Strategy '${var_name}' in .env updated to '${new_value}'."
   cd "${SCRIPT_DIR}" && exec ./entry.sh
 }
 
 strategy_switch_handler() {
   echo
-  log_print "INFO" "Resetting Terraform state before switching strategy to prevent inconsistencies..."
-  (cd "${TERRAFORM_DIR}" && rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup)
-  rm -rf "$HOME/.ssh/on-premise-gitlab-deployment_config"
-  log_print "INFO" "Terraform state reset."
+  log_print "INFO" "Switching strategy..."
+  log_print "INFO" "Cleaning Terraform plugins/cache (keeping state)..."
+  (cd "${TERRAFORM_DIR}" && rm -rf .terraform .terraform.lock.hcl) 
   
-  log_print "STEP" "Purge libvirt resources (VMs, networks, storage pools)"
-  libvirt_resource_purger "all"
-  
-  # Check if the storage pool exists before attempting to destroy or undefine
-  if sudo virsh pool-info iac-kubeadm >/dev/null 2>&1; then
-    log_print "TASK" "Destroying and undefining storage pool: iac-kubeadm"
-    sudo virsh pool-destroy iac-kubeadm >/dev/null 2>&1 || true
-    sudo virsh pool-undefine iac-kubeadm >/dev/null 2>&1 || true
-  else
-    log_print "INFO" "Storage pool iac-kubeadm does not exist, skipping destroy and undefine."
-  fi
-  log_divider
+	log_divider
 
   local new_strategy
   new_strategy=$([[ "$ENVIRONMENT_STRATEGY" == "container" ]] && echo "native" || echo "container")
 
-	# Configure Packer network settings based on strategy
-	packer_net_configurator "${new_strategy}"
+  # Configure Packer network settings based on strategy
+  packer_net_configurator "${new_strategy}"
   switch_strategy "ENVIRONMENT_STRATEGY" "$new_strategy"
 }
