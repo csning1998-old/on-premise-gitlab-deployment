@@ -2,6 +2,9 @@
 
 set -e -u
 
+# Define project root directory
+CURRENT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Define base directory and load configuration
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPTS_LIB_DIR="${SCRIPT_DIR}/scripts"
@@ -16,7 +19,7 @@ source "${SCRIPTS_LIB_DIR}/utils_environment.sh"
 # MAIN ENVIRONMENT BOOTSTRAP LOGIC
 host_os_detail_handler
 cpu_virt_support_checker
-env_file_bootstrapper
+env_file_bootstrapper "${CURRENT_ROOT}"
 iac_layer_discoverer
 
 # Source the .env file to export its variables to any sub-processes

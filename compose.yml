@@ -51,10 +51,10 @@ services:
     env_file:
       - .env
     environment:
-      - VAULT_CACERT=/app/vault/tls/ca.pem
+      - VAULT_CACERT=${PROJECT_ROOT}/vault/tls/ca.pem
       - HOME=/home/${UNAME}
     volumes:
-      - .:/app:z
+      - ${PROJECT_ROOT}:${PROJECT_ROOT}:z
       - ${UHOME}/.cache/packer:/home/${UNAME}/.cache/packer:z
       - ${UHOME}/.ssh:/home/${UNAME}/.ssh:z
       - /dev/kvm:/dev/kvm

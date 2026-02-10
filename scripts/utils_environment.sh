@@ -76,33 +76,35 @@ packer_net_configurator() {
   env_var_mutator "PKR_VAR_NET_DEVICE" "${device_val}"
 }
 
-# Function to generate the .env file with intelligent defaults if it doesn't exist.
 env_file_bootstrapper() {
-  cd "${SCRIPT_DIR}" || exit 1
-  if [ -f .env ]; then
-    return 0 # File already exists, do nothing.
-  fi
+  local detected_root="$1"
 
-  log_print "STEP" ".env file not found. Generating a new one with smart defaults..."
+  local env_path="${detected_root}/.env"
 
-  # 1. Set defaults
-  local default_strategy="native"
-  local default_ssh_key="$HOME/.ssh/id_ed25519_on-premise-gitlab-deployment"
-
-  # 2. Get the GID of the libvirt group on the host
-  local default_libvirt_gid
+  # 1. Prepare the variables.
+  local current_uid=$(id -u)
+  local current_gid=$(id -g)
+  local current_uname=$(whoami)
+  local current_libvirt_gid
+  
   if getent group libvirt > /dev/null 2>&1; then
-    default_libvirt_gid=$(getent group libvirt | cut -d: -f3)
+    current_libvirt_gid=$(getent group libvirt | cut -d: -f3)
   else
-    # Fallback or error if libvirt group doesn't exist
     log_print "WARN" "'libvirt' group not found on host. Using default GID 999."
-    default_libvirt_gid=999
+    current_libvirt_gid=999
   fi
 
-  # 3. Write the entire .env file
-  cat > .env <<EOF
+  # 2. Process vs update
+	# 2.1. If .env does not exist, create a new one.
+  if [[ ! -f "$env_path" ]]; then
+    log_print "INFO" "Creating new .env file at ${env_path}..."
+    
+    cat > "$env_path" <<EOF
+# Project Root (Auto-detected)
+PROJECT_ROOT="${detected_root}"
+
 # Core Strategy Selection: "container" or "native"
-ENVIRONMENT_STRATEGY="${default_strategy}"
+ENVIRONMENT_STRATEGY="native"
 
 # Discovered Packer Base and Terraform Layers
 ALL_PACKER_BASES=""
@@ -110,35 +112,61 @@ ALL_TERRAFORM_LAYERS=""
 
 # Vault Configuration
 DEV_VAULT_ADDR="https://127.0.0.1:8200"
-DEV_VAULT_CACERT="${PWD}/vault/tls/ca.pem"
-DEV_VAULT_CACERT_PODMAN="/app/vault/tls/ca.pem"
+DEV_VAULT_CACERT="\${PROJECT_ROOT}/vault/tls/ca.pem"
+DEV_VAULT_CACERT_PODMAN="\${PROJECT_ROOT}/vault/tls/ca.pem"
 DEV_VAULT_TOKEN=""
 
 # User and SSH Configuration
-# Path to the SSH private key. This will be updated by the 'Generate SSH Key' utility.
-SSH_PRIVATE_KEY="${default_ssh_key}"
+SSH_PRIVATE_KEY="\${HOME}/.ssh/id_ed25519_on-premise-gitlab-deployment"
 
-# Container Runtime Environment, used to map host user permissions into the container.
-HOST_UID=$(id -u)
-HOST_GID=$(id -g)
-UNAME=$(whoami)
-UHOME=${HOME}
+# Container Runtime Environment
+HOST_UID=${current_uid}
+HOST_GID=${current_gid}
+UNAME=${current_uname}
+UHOME=\${HOME}
 
 # For Unpriviledged Podman
 PKR_VAR_NET_BRIDGE=""
 PKR_VAR_NET_DEVICE="virtio-net"
 
-# For Podman on Ubuntu to get the GID of the libvirt group on the host
-LIBVIRT_GID=${default_libvirt_gid}
+# For Podman on Ubuntu/RHEL to get the GID of the libvirt group
+LIBVIRT_GID=${current_libvirt_gid}
 EOF
+    log_print "OK" ".env file created successfully."
 
-  log_print "OK" ".env file created successfully."
+  else
+    # 2.2. If .env exists, update the variables.
+    local saved_root
+    saved_root=$(grep "^PROJECT_ROOT=" "$env_path" | cut -d'=' -f2 | tr -d '"')
+    if [[ "$saved_root" != "$detected_root" ]]; then
+      log_print "WARN" "Project location changed. Updating PROJECT_ROOT..."
+      # 2.2.1 If PROJECT_ROOT does not exist in the old file, append it, otherwise replace it.
+      if grep -q "^PROJECT_ROOT=" "$env_path"; then
+				sed -i "s|^PROJECT_ROOT=.*|PROJECT_ROOT=\"${detected_root}\"|" "$env_path"
+      else
+				# 2.2.2 Insert at the first line to make it look better.
+				sed -i "1i PROJECT_ROOT=\"${detected_root}\"" "$env_path"
+      fi
+    fi
 
-  # 4. perform the initial discovery.
+    # 2.3 Update UID/GID (handle user switching or Libvirt GID changes)
+    env_var_mutator "HOST_UID" "${current_uid}"
+    env_var_mutator "HOST_GID" "${current_gid}"
+    env_var_mutator "LIBVIRT_GID" "${current_libvirt_gid}"
+    
+    # 2.4 Ensure DEV_VAULT_CACERT uses the new variable format. Force it to use the ${PROJECT_ROOT} variable format.
+    if grep -q "DEV_VAULT_CACERT=" "$env_path"; then
+        sed -i "s|^DEV_VAULT_CACERT=.*|DEV_VAULT_CACERT=\"\${PROJECT_ROOT}/vault/tls/ca.pem\"|" "$env_path"
+    fi
+  fi
+
+  # 4. Perform discovery
   iac_layer_discoverer
 
-	# 5. Configure Packer network settings based on strategy
-	packer_net_configurator "${default_strategy}"
+  # 5. Network config
+  local current_strategy
+  current_strategy=$(grep "^ENVIRONMENT_STRATEGY=" "$env_path" | cut -d'=' -f2 | tr -d '"')
+  packer_net_configurator "${current_strategy:-native}"
 }
 
 # Function to update a specific variable in the .env file

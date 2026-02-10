@@ -56,14 +56,14 @@ run_command() {
 
   if [[ "${ENVIRONMENT_STRATEGY}" == "container" ]]; then
 
-    # --- Containerized Execution Path ---
+    # Containerized Execution Path
     local compose_cmd="podman compose"
     local compose_file="compose.yml"
     local container_name=""
     local engine_cmd="podman"
     local service_name=""
 
-# 0. Determine the Container AND Service to use
+		# 0. Determine the Container AND Service to use
     case "$cmd_string" in
       packer*)    
         service_name="iac-packer" 
@@ -88,7 +88,7 @@ run_command() {
         ;;
     esac
 
-	local container_work_dir="${host_work_dir/#$SCRIPT_DIR//app}"
+		local container_work_dir="${host_work_dir}"
 
     # 1. Check if Podman is installed
     if ! command -v podman >/dev/null 2>&1; then
@@ -116,12 +116,12 @@ run_command() {
     echo "INFO: Executing command in container '${container_name}'..."
 
 		${engine_cmd} exec \
-			-e "VAULT_ADDR=${DEV_VAULT_ADDR}" \
-			-e "VAULT_CACERT=${DEV_VAULT_CACERT_PODMAN:-/app/vault/tls/ca.pem}" \
-			-e "VAULT_TOKEN=${DEV_VAULT_TOKEN}" \
-			-w "${container_work_dir}" \
-			"${container_name}" \
-			bash -c "${cmd_string}"
+      -e "VAULT_ADDR=${DEV_VAULT_ADDR}" \
+      -e "VAULT_CACERT=${DEV_VAULT_CACERT}" \
+      -e "VAULT_TOKEN=${DEV_VAULT_TOKEN}" \
+      -w "${container_work_dir}" \
+      "${container_name}" \
+      bash -c "${cmd_string}"
 
   else
     # Native Mode: Execute the command directly on the host. 
