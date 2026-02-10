@@ -53,14 +53,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Stage 3: User permission configuration: Remove default ubuntu user (UID 1000) to allow reusing UID 1000
-RUN userdel -r ubuntu || true && \
-    # Create libvirt group matching Host GID (for socket permission)
-    groupadd -g ${LIBVIRT_GID} libvirt-host && \
-    # Create User matching Host UID/GID for 1:1 file mapping
-    # Using --force on groupadd just in case of system group conflict
-    groupadd -g ${HOST_GID} -f ${USERNAME} && \
+#### a. Handle Libvirt Group for GID Conflict Resolution. If GID exists, do nothing; if not, create it.
+#### b. Handle User Primary Group for GID Conflict Resolution
+#### c. Create User. Assume that UID is available because we deleted 'ubuntu' above.
+#### d. Dynamic Name Resolution by adding user to the actual Libvirt group 
+####    for the cases where GID might be named 'kvm' or 'docker' instead of 'libvirt-host'
+
+RUN userdel -r ubuntu 2>/dev/null || true && \
+    (getent group ${LIBVIRT_GID} || groupadd -g ${LIBVIRT_GID} libvirt-host) && \
+    (getent group ${HOST_GID} || groupadd -g ${HOST_GID} ${USERNAME}) && \
     useradd -u ${HOST_UID} -g ${HOST_GID} -m -s /bin/bash ${USERNAME} && \
-    usermod -aG libvirt-host ${USERNAME}
+    LIBVIRT_GROUP_NAME=$(getent group ${LIBVIRT_GID} | cut -d: -f1) && \
+    usermod -aG "${LIBVIRT_GROUP_NAME}" ${USERNAME}
 
 # Finalization
 USER ${USERNAME}
