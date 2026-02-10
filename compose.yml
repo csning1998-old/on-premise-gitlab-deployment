@@ -1,9 +1,12 @@
 ---
+x-podman:
+  in_pod: false
+
 services:
   iac-vault-server:
     image: docker.io/hashicorp/vault:1.20.2
     container_name: iac-vault-server
-    user: "0:0"
+    # user: "0:0"
     entrypoint: "vault"
     command: server -config=/vault/vault.hcl
     volumes:
@@ -12,10 +15,11 @@ services:
       - ./vault/tls:/vault/tls:z
     cap_add:
       - IPC_LOCK
-      - SETFCAP
+      # - SETFCAP
     network_mode: "host"
-    security_opt:
-      - label=disable
+    userns_mode: keep-id
+    # security_opt:
+    #   - label=disable
     environment:
       - SKIP_SETCAP=true
       - VAULT_ADDR=https://127.0.0.1:8200
@@ -42,7 +46,10 @@ services:
         USERNAME: ${UNAME}
     image: on-premise-iac-controller:qemu-latest
     network_mode: "host"
-    user: "0:0"
+    userns_mode: keep-id
+    group_add:
+      - "keep-groups"
+    # user: "0:0"
     security_opt:
       - label=disable
       - apparmor=unconfined
@@ -75,12 +82,12 @@ services:
   iac-terraform:
     <<: *iac-base
     container_name: iac-controller-terraform
-    group_add:
-      - "keep-groups" # Needs for libvirt socket
+    # group_add:
+    #   - "keep-groups" # Needs for libvirt socket
 
   # Service 3: Ansible (With keep-groups)
   iac-ansible:
     <<: *iac-base
     container_name: iac-controller-ansible
-    group_add:
-      - "keep-groups" # Ensure able to read mapped SSH key
+    # group_add:
+    #   - "keep-groups" # Ensure able to read mapped SSH key
