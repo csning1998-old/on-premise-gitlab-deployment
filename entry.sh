@@ -89,23 +89,23 @@ select opt in "${options[@]}"; do
   case $opt in
     # --- Dev Vault ---
     "[DEV] Set up TLS for Dev Vault (Local)")
-      vault_dev_tls_generator
+      ENVIRONMENT_STRATEGY="native" vault_dev_tls_generator
       break
       ;;
     "[DEV] Initialize Dev Vault (Local)")
-      vault_dev_init_handler
+      ENVIRONMENT_STRATEGY="native" DEV_CA="${DEV_VAULT_CACERT}" vault_dev_init_handler
       break
       ;;
 
 		# Development Vault for Bootstrapping Packer / Production Vault
     "[DEV] Unseal Dev Vault (Local)")
-      vault_dev_unseal_handler
+      ENVIRONMENT_STRATEGY="native" DEV_CA="${DEV_VAULT_CACERT}" vault_dev_unseal_handler
       break
       ;;
     
     # Production Vault with PKI Functionality
     "[PROD] Unseal Production Vault (via Ansible)")
-      vault_prod_unseal_trigger
+      ENVIRONMENT_STRATEGY="native" vault_prod_unseal_trigger
       break
       ;;
 

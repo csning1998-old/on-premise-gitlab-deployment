@@ -7,9 +7,9 @@ readonly DEV_VAULT_ADDR="${DEV_VAULT_ADDR:-https://127.0.0.1:8200}"
 
 # Determine the CA path based on environment strategy
 if [[ "${ENVIRONMENT_STRATEGY}" == "container" ]]; then
-	readonly DEV_CA="${DEV_VAULT_CACERT_PODMAN:-/app/vault/tls/ca.pem}"
+	DEV_CA="${DEV_VAULT_CACERT_PODMAN:-/app/vault/tls/ca.pem}"
 else
-	readonly DEV_CA="${DEV_VAULT_CACERT:-${SCRIPT_DIR}/vault/tls/ca.pem}"
+	DEV_CA="${DEV_VAULT_CACERT:-${SCRIPT_DIR}/vault/tls/ca.pem}"
 fi
 readonly DEV_KEYS_DIR="${SCRIPT_DIR}/vault/keys"
 readonly DEV_TLS_DIR="${SCRIPT_DIR}/vault/tls"
