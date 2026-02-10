@@ -97,26 +97,24 @@ env_file_bootstrapper() {
 
   # 3. Write the entire .env file
   cat > .env <<EOF
-# --- Core Strategy Selection ---
-# "container" or "native"
+# Core Strategy Selection: "container" or "native"
 ENVIRONMENT_STRATEGY="${default_strategy}"
 
-# --- Discovered Packer Base and Terraform Layers ---
+# Discovered Packer Base and Terraform Layers
 ALL_PACKER_BASES=""
 ALL_TERRAFORM_LAYERS=""
 
-# --- Vault Configuration ---
+# Vault Configuration
 DEV_VAULT_ADDR="https://127.0.0.1:8200"
 DEV_VAULT_CACERT="${PWD}/vault/tls/ca.pem"
 DEV_VAULT_CACERT_PODMAN="/app/vault/tls/ca.pem"
 DEV_VAULT_TOKEN=""
 
-# --- User and SSH Configuration ---
+# User and SSH Configuration
 # Path to the SSH private key. This will be updated by the 'Generate SSH Key' utility.
 SSH_PRIVATE_KEY="${default_ssh_key}"
 
-# --- Container Runtime Environment ---
-# These are used to map host user permissions into the container.
+# Container Runtime Environment, used to map host user permissions into the container.
 HOST_UID=$(id -u)
 HOST_GID=$(id -g)
 UNAME=$(whoami)

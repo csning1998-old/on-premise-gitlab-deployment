@@ -52,7 +52,7 @@ log_divider() {
 # Function: Execute a command string based on the selected strategy.
 run_command() {
   local cmd_string="$1"
-  local host_work_dir="$2" # Optional working directory for native mode
+	local host_work_dir="${2:-${SCRIPT_DIR}}" # Optional working directory for native mode
 
   if [[ "${ENVIRONMENT_STRATEGY}" == "container" ]]; then
 
@@ -68,13 +68,14 @@ run_command() {
       packer*)    service_name="iac-packer" ;;
       terraform*) service_name="iac-terraform" ;;
       ansible*)   service_name="iac-ansible" ;;
+			vault*|openssl*|curl*) service_name="iac-terraform" ;;
       *)          
-			service_name="iac-ansible"
-			log_print "INFO" "Defaulting command '${cmd_string}' to '${service_name}' container."
+				service_name="iac-ansible"
+				log_print "INFO" "Defaulting command '${cmd_string}' to '${service_name}' container."
 			;;
     esac
 
-		local container_name="iac-controller-${service_name#iac-}"
+	local container_work_dir="${host_work_dir/#$SCRIPT_DIR//app}"
 
     # 1. Check if Podman is installed
     if ! command -v podman >/dev/null 2>&1; then
@@ -97,10 +98,11 @@ run_command() {
     # 4. Execute the command within the container.
     # The working directory inside the container is always /app.
     # Map the host path to the container's /app path.
-    local container_work_dir="${host_work_dir/#$SCRIPT_DIR//app}"
+
+    # local container_work_dir="${host_work_dir/#$SCRIPT_DIR//app}"
     echo "INFO: Executing command in container '${container_name}'..."
     (cd "${SCRIPT_DIR}" && ${compose_cmd} -f "${compose_file}" exec \
-      -e "VAULT_ADDR=${VAULT_ADDR}" \
+      -e "VAULT_ADDR=${DEV_VAULT_ADDR}" \
       -e "VAULT_CACERT=${DEV_VAULT_CACERT_PODMAN}" \
       -e "VAULT_TOKEN=${DEV_VAULT_TOKEN}" \
       "${service_name}" bash -c "cd \"${container_work_dir}\" && ${cmd_string}")
