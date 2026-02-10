@@ -59,36 +59,12 @@ run_command() {
     # Containerized Execution Path
     local compose_cmd="podman compose"
     local compose_file="compose.yml"
-    local container_name=""
+    local service_name="iac-runner"
+    local container_name="iac-runner"
     local engine_cmd="podman"
-    local service_name=""
 
 		# 0. Determine the Container AND Service to use
-    case "$cmd_string" in
-      packer*)    
-        service_name="iac-packer" 
-        container_name="iac-controller-packer"
-        ;;
-      terraform*) 
-        service_name="iac-terraform" 
-        container_name="iac-controller-terraform"
-        ;;
-      ansible*)   
-        service_name="iac-ansible" 
-        container_name="iac-controller-ansible"
-        ;;
-      vault*|openssl*|curl*) 
-        service_name="iac-utils" 
-        container_name="iac-controller-utils"
-        ;;
-      *)          
-        service_name="iac-utils"
-        container_name="iac-controller-utils"
-        log_print "INFO" "Defaulting command '${cmd_string}' to '${service_name}' container."
-        ;;
-    esac
-
-		local container_work_dir="${host_work_dir}"
+    local container_work_dir="${host_work_dir}"
 
     # 1. Check if Podman is installed
     if ! command -v podman >/dev/null 2>&1; then
