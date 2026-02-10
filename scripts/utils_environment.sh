@@ -57,10 +57,14 @@ cpu_virt_support_checker() {
 
 # Function: Configure Packer network settings based on strategy
 packer_net_configurator() {
+	local strategy="${1:-$ENVIRONMENT_STRATEGY}"
   local bridge_val=""
   local device_val="virtio-net"
 
-  if ip link show virbr0 >/dev/null 2>&1; then
+  if [[ "$strategy" == "container" ]]; then
+    log_print "WARN" "Container strategy detected. Forcing User Mode Networking (SLIRP) for Packer."
+    bridge_val=""
+  elif ip link show virbr0 >/dev/null 2>&1; then
     bridge_val="virbr0"
     log_print "INFO" "Network Mode: Bridge detected (virbr0). Using performance networking."
   else
@@ -121,8 +125,8 @@ UNAME=$(whoami)
 UHOME=${HOME}
 
 # For Unpriviledged Podman
-PKR_VAR_NET_DEVICE="virtio-net"
 PKR_VAR_NET_BRIDGE=""
+PKR_VAR_NET_DEVICE="virtio-net"
 
 # For Podman on Ubuntu to get the GID of the libvirt group on the host
 LIBVIRT_GID=${default_libvirt_gid}
