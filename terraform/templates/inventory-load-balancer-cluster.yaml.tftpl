@@ -1,0 +1,27 @@
+---
+all:
+  vars:
+    ansible_user: "${ansible_ssh_user}"
+    service_identifier: "${service_name}"
+    service_domain: "${service_domain}"
+    
+    lb_service_segments:
+%{ for seg in service_segments ~}
+      - name: ${seg.name}
+        cidr: ${seg.cidr}
+        vip: ${seg.vip}
+        vrid: ${seg.vrid}
+        interface_alias: "eth_${seg.name}"
+%{ endfor ~}
+
+  children:
+    load_balancer:
+      hosts:
+%{ for name, node in load_balancer_nodes ~}
+        ${name}:
+          ansible_host: ${node.ip}
+          service_ips:
+%{ for seg in service_segments ~}
+            ${seg.name}: ${seg.node_ips[name]}
+%{ endfor ~}
+%{ endfor ~}
