@@ -1,0 +1,104 @@
+
+domain_suffix = "iac.local"
+
+network_baseline = {
+  cidr_block    = "172.16.0.0/16"
+  vip_offset    = 250        # VIP always .250
+  node_ip_start = 200        # node ip from .200
+  mac_prefix    = "52:54:00" # KVM/Libvirt common prefix
+}
+
+/** Service Catalog Definition rules:
+ * 0. name: define UNIQUE name of the service. 
+ *      (e.g. gitlab)
+ * 1. owner: define the owner of the service 
+ *      (e.g. devops, secops...)
+ * 2. project_code: define the project code of the service 
+ *      (e.g. iac, core...)
+ * 3. provider: define the Terraform provider for the service 
+ *      (e.g. kvm, aws, gcp, azure, vmware...)
+ * 4. runtime: define the runtime of the service 
+ *      (e.g. kubeadm, microk8s, baremetal...)
+ * 5. stage: define the stage of the service 
+ *      (e.g. production, staging, development...)
+ * 6. cidr_index: used to calculate subnet 
+ *      (e.g. 172.16.X.0/24)
+ * 7. component: define the component of the service. 
+ *      (e.g. frontend, backend, database...)
+ *    - subdomains: define the subdomains of the component. 
+ *        (e.g. gitlab, kas...)
+ * 8. dependencies: define the external dependency of a specific component. Leave empty if no external dependency.
+ *      (e.g. postgres, redis, minio...)
+ *    - cidr_index: define the cidr index of the dependency.
+ *    - runtime: define the runtime of the dependency.
+ *    - component: define the component of the dependency.
+ */
+
+service_catalog = {
+  # Service: GitLab
+  "gitlab" = {
+    name         = "gitlab"
+    cidr_index   = 134          # Main Frontend Subnet
+    runtime      = "kubeadm"    # Parent Runtime
+    stage        = "production" # Determine TTL and OU
+    owner        = "devops"
+    project_code = "core"
+
+    components = {
+      "frontend" = { subdomains = ["gitlab", "kas"] }
+      "minio"    = { subdomains = ["minio"] } # S3 endpoint
+    }
+
+    dependencies = {
+      "postgres" = {
+        cidr_index = 140
+        runtime    = "baremetal" # Override parent runtime
+        component  = "postgres"  # Used to generate Role name
+      }
+      "redis" = {
+        cidr_index = 141
+        runtime    = "baremetal"
+        component  = "redis"
+      }
+      "minio" = {
+        cidr_index = 142
+        runtime    = "baremetal"
+        component  = "minio"
+      }
+    }
+  }
+
+  # Service: Harbor (Prod)
+  "harbor" = {
+    cidr_index   = 135
+    runtime      = "microk8s"
+    stage        = "production"
+    owner        = "devops"
+    project_code = "core"
+
+    components = {
+      "frontend" = { subdomains = ["harbor", "notary.harbor"] }
+    }
+
+    dependencies = {
+      "postgres" = { cidr_index = 137, runtime = "baremetal", component = "postgres" }
+      "redis"    = { cidr_index = 138, runtime = "baremetal", component = "redis" }
+      "minio"    = { cidr_index = 139, runtime = "baremetal", component = "minio" }
+    }
+  }
+
+  # Service: Vault
+  "vault" = {
+    cidr_index   = 136
+    runtime      = "baremetal"
+    stage        = "production"
+    owner        = "secops"
+    project_code = "core"
+
+    components = {
+      "core" = { subdomains = ["vault"] }
+    }
+
+    dependencies = {}
+  }
+}
