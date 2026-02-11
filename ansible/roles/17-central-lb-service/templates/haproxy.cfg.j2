@@ -1,0 +1,73 @@
+global
+    log /dev/log    local0
+    log /dev/log    local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+
+    # Default SSL material locations
+    ca-base /etc/ssl/certs
+    crt-base /etc/ssl/private
+
+defaults
+    log     global
+    mode    tcp
+    option  tcplog
+    option  dontlognull
+    timeout connect 5000
+    timeout client  50000
+    timeout server  50000
+
+# Stats Interface, only bind to management IP
+listen stats
+    bind {{ ansible_host }}:8404
+    mode http
+    stats enable
+    stats uri /
+    stats refresh 10s
+    stats admin if TRUE
+
+{# Service Port Mapping #}
+{% set service_ports = {
+    'vault':           [443],
+    'gitlab-frontend': [80, 443, 22],
+    'harbor-frontend': [80, 443],
+    'dev-harbor':      [80, 443],
+    'gitlab-postgres': [5432],
+    'harbor-postgres': [5432],
+    'gitlab-redis':    [6379],
+    'harbor-redis':    [6379],
+    'gitlab-minio':    [9000, 9001],
+    'harbor-minio':    [9000, 9001]
+} %}
+
+{# Iterate to generate Frontend/dependencies #}
+{% for segment in lb_service_segments %}
+{% if segment.name in service_ports %}
+    {% for port in service_ports[segment.name] %}
+
+# Service: {{ segment.name }} (Port {{ port }})
+frontend ft_{{ segment.name }}_{{ port }}
+    bind {{ segment.vip }}:{{ port }}
+    mode tcp
+    default_backend bk_{{ segment.name }}_{{ port }}
+
+backend bk_{{ segment.name }}_{{ port }}
+    mode tcp
+    balance roundrobin
+    option tcp-check
+    
+    {# Dynamically generate backend server list #}
+    {% set ip_parts = segment.cidr.split('.') %}
+    {% set subnet_prefix = ip_parts[0] ~ '.' ~ ip_parts[1] ~ '.' ~ ip_parts[2] %}
+    
+    server {{ segment.name }}-00 {{ subnet_prefix }}.200:{{ port }} check
+    server {{ segment.name }}-01 {{ subnet_prefix }}.201:{{ port }} check
+    server {{ segment.name }}-02 {{ subnet_prefix }}.202:{{ port }} check
+
+    {% endfor %}
+{% endif %}
+{% endfor %}

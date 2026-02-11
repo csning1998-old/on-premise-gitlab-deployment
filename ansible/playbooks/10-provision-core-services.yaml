@@ -35,3 +35,10 @@
   gather_facts: false
   roles:
     - 15-vault-unseal
+
+- name: "Play 5: Configure Central Load Balancer"
+  hosts: load_balancer
+  become: true
+  roles:
+    - 16-central-lb-base
+    - 17-central-lb-service
