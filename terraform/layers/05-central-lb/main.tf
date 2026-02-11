@@ -25,11 +25,4 @@ module "central_lb_cluster" {
     hostonly_bridge_name = local.hostonly_bridge_name
     storage_pool_name    = local.storage_pool_name
   }
-
-  vault_agent_config = {
-    role_id     = ""
-    secret_id   = ""
-    ca_cert_b64 = ""
-    role_name   = "load-balancer-role"
-  }
 }

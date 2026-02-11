@@ -79,12 +79,6 @@ module "ansible_runner" {
   extra_vars = {
     # Terraform Runner Subnet
     terraform_runner_subnet = var.infra_config.network.hostonly.cidrv4
-
-    # Vault Agent Config
-    "vault_agent_role_id"   = var.vault_agent_config.role_id
-    "vault_agent_secret_id" = var.vault_agent_config.secret_id
-    "vault_ca_cert_b64"     = var.vault_agent_config.ca_cert_b64
-    "vault_role_name"       = var.vault_agent_config.role_name
   }
 
   status_trigger = module.ssh_manager.ssh_access_ready_trigger
