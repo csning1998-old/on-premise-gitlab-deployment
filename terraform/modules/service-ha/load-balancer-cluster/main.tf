@@ -69,6 +69,7 @@ module "ansible_runner" {
     service_domain      = var.service_domain
     service_segments    = var.service_segments
     load_balancer_nodes = var.topology_config.load_balancer_config.nodes
+    interface_name      = var.service_segments[0].interface_name
   })
 
   vm_credentials = {

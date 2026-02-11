@@ -11,7 +11,7 @@ all:
         cidr: ${seg.cidr}
         vip: ${seg.vip}
         vrid: ${seg.vrid}
-        interface_alias: "eth_${seg.name}"
+        interface_alias: "${seg.interface_name}"
 %{ endfor ~}
 
   children:

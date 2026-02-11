@@ -60,15 +60,15 @@ locals {
 locals {
   # Hydration: Convert Map to List and fill in calculated IPs
   hydrated_service_segments = [
-    for seg_key, seg_conf in local.service_segments : {
-      name        = seg_key
+    for idx, seg_conf in values(local.service_segments) : {
+      name        = keys(local.service_segments)[idx]
       bridge_name = seg_conf.bridge_name
       cidr        = seg_conf.cidr
       vrid        = seg_conf.vrid
+      vip         = cidrhost(seg_conf.cidr, local.default_vip_hostnum)
 
       # Auto-calculate VIP: CIDR + .250
-      vip = cidrhost(seg_conf.cidr, local.default_vip_hostnum)
-
+      interface_name = "ens${5 + idx}"
       # Auto-calculate Node IPs: CIDR + (.251 + index)
       # e.g. Output: { "lb-node-00" = "172.16.134.251", "lb-node-01" = "172.16.134.252" }
       node_ips = {

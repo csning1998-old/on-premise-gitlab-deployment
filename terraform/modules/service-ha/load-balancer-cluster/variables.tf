@@ -85,12 +85,13 @@ variable "network_identity" {
 variable "service_segments" {
   description = "Topology Definition: List of all network segments the LB must connect to."
   type = list(object({
-    name        = string
-    bridge_name = string
-    cidr        = string
-    vrid        = number
-    vip         = string
-    node_ips    = map(string) # Map of "node_name" => "ip"
+    name           = string
+    bridge_name    = string
+    cidr           = string
+    vrid           = number
+    vip            = string
+    interface_name = string
+    node_ips       = map(string) # Map of "node_name" => "ip"
   }))
 }
 
