@@ -59,7 +59,7 @@ module "ansible_runner" {
   ansible_config = {
     root_path       = local.ansible_root_path
     ssh_config_path = module.ssh_manager.ssh_config_file_path
-    playbook_file   = "playbooks/20-provision-data-services.yaml"
+    playbook_file   = "playbooks/10-provision-core-services.yaml"
     inventory_file  = "inventory-${var.topology_config.cluster_identity.cluster_name}.yaml"
   }
 
