@@ -16,6 +16,7 @@ variable "topology_config" {
         interfaces = list(object({
           network_name   = string
           mac            = string
+          alias          = optional(string)
           addresses      = list(string)
           wait_for_lease = bool
         }))
@@ -47,12 +48,16 @@ variable "service_domain" {
 variable "service_segments" {
   description = "List of network segments (Infrastructure creation only)."
   type = list(object({
-    name           = string
-    bridge_name    = string
-    cidr           = optional(string)
-    vrid           = optional(number)
-    vip            = optional(string)
-    node_ips       = optional(map(string))
+    name        = string
+    bridge_name = string
+    cidr        = optional(string)
+    vrid        = optional(number)
+    vip         = optional(string)
+    node_ips    = optional(map(string))
+    backend_servers = optional(list(object({
+      name = string
+      ip   = string
+    })))
     interface_name = string
   }))
 }

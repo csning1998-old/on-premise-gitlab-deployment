@@ -35,7 +35,7 @@ locals {
    * Convert back to Map for IP/MAC calculation
    * 1. cidr_block: 172.16.X.0/24
    * 2. vrid: X
-   * 3. interface_alias: eth_ + segment.key + MD5 Hash (e.g., eth_'service_name'_'md5_hash')
+   * 3. interface_alias: v_ + segment.key + MD5 Hash (e.g., v_'service_name'_'md5_hash')
    * 4. vip: 172.16.X.250
    * 5. mac_address: Deterministic Hashing. Ensure "service_name" always generates the same MAC, regardless of its position in the list
    */
@@ -44,7 +44,7 @@ locals {
 
       cidr_block      = cidrsubnet(local.network_baseline.cidr_block, 8, seg.cidr_index)
       vrid            = seg.cidr_index
-      interface_alias = "eth_${replace(seg.key, "-", "_")}_${substr(md5(seg.key), 0, 4)}"
+      interface_alias = "v_${substr(replace(seg.key, "-", ""), 0, 8)}_${substr(md5(seg.key), 0, 4)}"
 
       vip = cidrhost(
         cidrsubnet(local.network_baseline.cidr_block, 8, seg.cidr_index),

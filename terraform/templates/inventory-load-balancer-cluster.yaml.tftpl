@@ -12,6 +12,11 @@ all:
         vip: ${seg.vip}
         vrid: ${seg.vrid}
         interface_alias: "${seg.interface_name}"
+        backends:
+%{ for server in seg.backend_servers ~}
+          - name: "${server.name}"
+            ip: "${server.ip}"
+%{ endfor ~}
 %{ endfor ~}
 
   children:

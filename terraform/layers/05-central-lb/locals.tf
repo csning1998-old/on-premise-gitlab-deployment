@@ -1,7 +1,14 @@
 locals {
   # Data Ingestion
-  raw_segments = data.terraform_remote_state.topology.outputs.network_segments
-  service_name = var.service_catalog_name
+  global_topology  = data.terraform_remote_state.topology.outputs
+  raw_segments     = data.terraform_remote_state.topology.outputs.network_segments
+  service_name     = var.service_catalog_name
+  service_meta     = local.global_topology.service_structure[local.service_name].meta
+  node_name_prefix = "${local.service_meta.name}-${local.service_meta.project_code}-node"
+  node_naming_map = {
+    for idx, key in local.sorted_node_keys :
+    key => "${local.node_name_prefix}-${format("%02d", idx)}"
+  }
 }
 
 locals {
@@ -44,7 +51,7 @@ locals {
 locals {
   # Payload Construction
   nodes_configuration = {
-    for node_name, node_spec in var.node_config : node_name => {
+    for node_name, node_spec in var.node_config : local.node_naming_map[node_name] => {
       vcpu            = node_spec.vcpu
       ram             = node_spec.ram
       base_image_path = var.base_image_path
@@ -78,7 +85,12 @@ locals {
             local.lb_base_mac_parts[4],
             parseint(local.lb_base_mac_parts[5], 16) + index(local.sorted_node_keys, node_name)
           )
-          addresses      = [cidrhost(local.my_segment.cidr_block, node_spec.ip_suffix)]
+          addresses = [
+            format("%s/%s",
+              cidrhost(local.my_segment.cidr_block, node_spec.ip_suffix),
+              split("/", local.my_segment.cidr_block)[1]
+            )
+          ]
           wait_for_lease = false
         }],
 
@@ -87,11 +99,17 @@ locals {
         [
           for seg_key in local.sorted_segment_keys : {
             network_name = seg_key
+            alias        = local.raw_segments[seg_key].interface_alias
             mac = format("%s:%02x",
               join(":", slice(split(":", local.raw_segments[seg_key].mac_address), 0, 5)),
               parseint(element(split(":", local.raw_segments[seg_key].mac_address), 5), 16) + index(local.sorted_node_keys, node_name)
             )
-            addresses      = [cidrhost(local.raw_segments[seg_key].cidr_block, node_spec.ip_suffix)]
+            addresses = [
+              format("%s/%s",
+                cidrhost(local.raw_segments[seg_key].cidr_block, node_spec.ip_suffix),
+                split("/", local.raw_segments[seg_key].cidr_block)[1]
+              )
+            ]
             wait_for_lease = false
           }
         ]
@@ -112,9 +130,15 @@ locals {
       interface_name = local.raw_segments[seg_key].interface_alias
 
       node_ips = {
-        for node_name, node_spec in var.node_config :
-        node_name => cidrhost(local.raw_segments[seg_key].cidr_block, node_spec.ip_suffix)
+        for node_name, node_spec in var.node_config : local.node_naming_map[node_name] =>
+        cidrhost(local.raw_segments[seg_key].cidr_block, node_spec.ip_suffix)
       }
+      backend_servers = [
+        for i in range(3) : {
+          name = "${seg_key}-${format("%02d", i)}"
+          ip   = cidrhost(local.raw_segments[seg_key].cidr_block, 200 + i)
+        }
+      ]
     }
   ]
 }

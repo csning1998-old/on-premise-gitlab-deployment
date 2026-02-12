@@ -20,6 +20,7 @@ locals {
       service_segments    = var.service_segments
       load_balancer_nodes = local.nodes_map_for_template
       interface_name      = var.service_segments[0].interface_name
+      backend_servers     = var.service_segments[0].backend_servers
     })
   }
 }
@@ -28,12 +29,9 @@ locals {
   nodes_config = var.topology_config.load_balancer_config.nodes
 
   nodes_list_for_ssh = [
-    for name, config in local.nodes_config : {
-      key = name
-      ip = [
-        for iface in config.interfaces : iface.addresses[0]
-        if iface.network_name == var.network_identity.hostonly_net_name
-      ][0]
+    for key, node in local.nodes_config : {
+      key = key
+      ip  = split("/", node.interfaces[1].addresses[0])[0]
     }
   ]
 }

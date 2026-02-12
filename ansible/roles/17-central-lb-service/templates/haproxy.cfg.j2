@@ -60,13 +60,9 @@ backend bk_{{ segment.name }}_{{ port }}
     balance roundrobin
     option tcp-check
     
-    {# Dynamically generate backend server list #}
-    {% set ip_parts = segment.cidr.split('.') %}
-    {% set subnet_prefix = ip_parts[0] ~ '.' ~ ip_parts[1] ~ '.' ~ ip_parts[2] %}
-    
-    server {{ segment.name }}-00 {{ subnet_prefix }}.200:{{ port }} check
-    server {{ segment.name }}-01 {{ subnet_prefix }}.201:{{ port }} check
-    server {{ segment.name }}-02 {{ subnet_prefix }}.202:{{ port }} check
+    {% for server in segment.backends %}
+    server {{ server.name }} {{ server.ip }}:{{ port }} check
+    {% endfor %}
 
     {% endfor %}
 {% endif %}

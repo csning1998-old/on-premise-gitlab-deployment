@@ -16,6 +16,7 @@ variable "vm_config" {
     interfaces = list(object({
       network_name   = string
       mac            = string
+      alias          = optional(string)
       addresses      = optional(list(string), [])
       wait_for_lease = optional(bool, false)
     }))

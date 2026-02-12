@@ -3,21 +3,23 @@ network:
   version: 2
   renderer: networkd
   ethernets:
-    mgmt_interface:
+    id0:
       match:
         macaddress: "${config.nat_mac}"
-      set-name: ens3
+%{ if config.nat_ip_cidr != "" ~}
       dhcp4: false
       addresses:
         - "${config.nat_ip_cidr}"
       gateway4: "${config.nat_gateway}"
+%{ else ~}
+      dhcp4: true
+%{ endif ~}
       nameservers:
         addresses: [8.8.8.8, 1.1.1.1]
 
-    internal_interface:
+    id1:
       match:
         macaddress: "${config.hostonly_mac}"
-      set-name: ens4
       dhcp4: false
       addresses:
         - "${config.hostonly_ip_cidr}"
@@ -27,10 +29,12 @@ network:
           metric: 100
 
 %{ for iface in config.service_interfaces ~}
-    service_iface_${iface.index}:
+    id${iface.index + 2}:
       match:
         macaddress: "${iface.mac_address}"
-      set-name: ${iface.os_dev_name}
+%{ if iface.alias != null ~}
+      set-name: ${iface.alias}
+%{ endif ~}
       dhcp4: false
       addresses:
         - "${iface.ip_cidr}"

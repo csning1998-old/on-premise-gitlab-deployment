@@ -113,6 +113,7 @@ resource "libvirt_cloudinit_disk" "cloud_init" {
           os_dev_name = "ens${5 + idx}" # ens3=NAT, ens4=HostOnly, Service start from ens5
           mac_address = iface.mac
           ip_cidr     = try(iface.addresses[0], "")
+          alias       = iface.alias
         }
       ]
     }
