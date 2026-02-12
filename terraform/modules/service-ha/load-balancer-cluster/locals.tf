@@ -1,20 +1,46 @@
 
 locals {
-  # Ansible execution path
-  ansible_root_path = abspath("${path.root}/../../../ansible")
+  nodes_map_for_template = {
+    for node in local.nodes_list_for_ssh : node.key => {
+      ip = node.ip
+    }
+  }
+  inventory_template = "${path.module}/../../../templates/inventory-load-balancer-cluster.yaml.tftpl"
 
-  # Gateway IP prefix extraction
-  nat_network_subnet_prefix = join(".", slice(split(".", var.infra_config.network.nat.gateway), 0, 3))
+  ansible = {
+    root_path          = abspath("${path.module}/../../../../ansible")
+    playbook_file      = "playbooks/10-provision-core-services.yaml"
+    inventory_file     = "inventory-${var.topology_config.cluster_identity.cluster_name}.yaml"
+    inventory_template = local.inventory_template
 
-  # Image Injection Logic: Inject Load Balancer Base Image Path
-  load_balancer_nodes_with_img = {
-    for k, v in var.topology_config.load_balancer_config.nodes : k => merge(v, {
-      base_image_path = var.topology_config.load_balancer_config.base_image_path
+    inventory_contents = templatefile(local.inventory_template, {
+      ansible_ssh_user    = var.vm_credentials.username
+      service_name        = var.topology_config.cluster_identity.service_name
+      service_domain      = var.service_domain
+      service_segments    = var.service_segments
+      load_balancer_nodes = local.nodes_map_for_template
+      interface_name      = var.service_segments[0].interface_name
     })
   }
+}
 
-  # Merge all
-  all_nodes_map = merge(
-    local.load_balancer_nodes_with_img,
-  )
+locals {
+  nodes_config = var.topology_config.load_balancer_config.nodes
+
+  nodes_list_for_ssh = [
+    for name, config in local.nodes_config : {
+      key = name
+      ip = [
+        for iface in config.interfaces : iface.addresses[0]
+        if iface.network_name == var.network_identity.hostonly_net_name
+      ][0]
+    }
+  ]
+}
+
+locals {
+  vm_credentials = {
+    username             = var.vm_credentials.username
+    ssh_private_key_path = var.vm_credentials.ssh_private_key_path
+  }
 }

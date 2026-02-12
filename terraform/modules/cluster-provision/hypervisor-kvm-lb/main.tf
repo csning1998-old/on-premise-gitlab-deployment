@@ -52,9 +52,8 @@ resource "libvirt_network" "hostonly_net" {
 resource "libvirt_network" "service_networks" {
   for_each = { for seg in var.service_segments : seg.name => seg }
 
-  name   = each.value.name        # e.g., "gitlab-frontend"
-  bridge = each.value.bridge_name # e.g., "br-gitlab-front"
-
+  name      = each.value.name        # e.g., "gitlab-frontend"
+  bridge    = each.value.bridge_name # e.g., "br-gitlab-front"
   mode      = "none"
   autostart = true
 }
@@ -71,7 +70,7 @@ resource "libvirt_volume" "os_disk" {
 
   depends_on = [libvirt_pool.storage_pool]
 
-  for_each = var.vm_config.all_nodes_map
+  for_each = var.vm_config
   name     = "${each.key}-os.qcow2"
   pool     = libvirt_pool.storage_pool.name
   format   = "qcow2"
@@ -87,7 +86,7 @@ resource "libvirt_cloudinit_disk" "cloud_init" {
 
   depends_on = [libvirt_pool.storage_pool]
 
-  for_each = var.vm_config.all_nodes_map
+  for_each = var.vm_config
   name     = "${each.key}-cloud-init.iso"
 
   meta_data = yamlencode({})
@@ -99,12 +98,29 @@ resource "libvirt_cloudinit_disk" "cloud_init" {
   })
 
   network_config = templatefile("${path.module}/../../../templates/network_config_lb.tftpl", {
-    config = local.nodes_config[each.key]
+    config = {
+      nat_mac     = each.value.interfaces[0].mac
+      nat_ip_cidr = try(each.value.interfaces[0].addresses[0], "")
+      nat_gateway = var.libvirt_infrastructure.network.nat.ips.address
+
+      hostonly_mac     = each.value.interfaces[1].mac
+      hostonly_ip_cidr = try(each.value.interfaces[1].addresses[0], "")
+      hostonly_gateway = var.libvirt_infrastructure.network.hostonly.ips.address
+
+      service_interfaces = [
+        for idx, iface in slice(each.value.interfaces, 2, length(each.value.interfaces)) : {
+          index       = idx
+          os_dev_name = "ens${5 + idx}" # ens3=NAT, ens4=HostOnly, Service start from ens5
+          mac_address = iface.mac
+          ip_cidr     = try(iface.addresses[0], "")
+        }
+      ]
+    }
   })
 }
 
 resource "libvirt_volume" "cloud_init_iso" {
-  for_each = var.vm_config.all_nodes_map
+  for_each = var.vm_config
 
   name   = "${each.key}-cloud-init.iso"
   pool   = libvirt_pool.storage_pool.name
@@ -129,7 +145,7 @@ resource "libvirt_domain" "nodes" {
     libvirt_pool.storage_pool
   ]
 
-  for_each = var.vm_config.all_nodes_map
+  for_each = var.vm_config
 
   # 1. Basic Configuration (Required)
   name      = each.key
@@ -175,31 +191,14 @@ resource "libvirt_domain" "nodes" {
     ]
 
     # Network Interfaces
-    interfaces = concat(
-      # 1. NAT (Management/Outbound) corresponds to ens3
-      [{
-        type           = "network"
-        source         = { network = libvirt_network.nat_net.name }
-        mac            = local.nodes_config[each.key].nat_mac
-        wait_for_lease = true
-      }],
-      # 2. Hostonly (SSH/Internal) corresponds to ens4
-      [{
-        type           = "network"
-        source         = { network = libvirt_network.hostonly_net.name }
-        mac            = local.nodes_config[each.key].hostonly_mac
-        wait_for_lease = false
-      }],
-      # 3. Service Interfaces for Later Configuration.
-      [
-        for iface in local.nodes_config[each.key].service_interfaces : {
-          type           = "bridge" # Bridge to Physical Bridge
-          source         = { bridge = iface.bridge_name }
-          mac            = iface.mac_address
-          wait_for_lease = false # Service Interface doesn't need to wait for DHCP due to Static IP.
-        }
-      ]
-    )
+    # Lookup the network ID from the map then assign MAC and relative properties to the interface
+    interfaces = [
+      for iface in each.value.interfaces : {
+        type   = "network"
+        source = { network = iface.network_name }
+        mac    = iface.mac
+      }
+    ]
 
     # Other Peripherals
     consoles = [

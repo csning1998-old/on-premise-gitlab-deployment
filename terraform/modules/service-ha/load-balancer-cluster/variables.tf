@@ -10,11 +10,16 @@ variable "topology_config" {
 
     load_balancer_config = object({
       nodes = map(object({
-        ip   = string
-        vcpu = number
-        ram  = number
+        base_image_path = string
+        vcpu            = number
+        ram             = number
+        interfaces = list(object({
+          network_name   = string
+          mac            = string
+          addresses      = list(string)
+          wait_for_lease = bool
+        }))
       }))
-      base_image_path = string
     })
   })
 
@@ -32,6 +37,24 @@ variable "topology_config" {
     ])
     error_message = "Load Balancer nodes require at least 2 vCPUs and 1024MB RAM."
   }
+}
+
+variable "service_domain" {
+  description = "The FQDN for the Load Balancer service"
+  type        = string
+}
+
+variable "service_segments" {
+  description = "List of network segments (Infrastructure creation only)."
+  type = list(object({
+    name           = string
+    bridge_name    = string
+    cidr           = optional(string)
+    vrid           = optional(number)
+    vip            = optional(string)
+    node_ips       = optional(map(string))
+    interface_name = string
+  }))
 }
 
 variable "infra_config" {
@@ -65,11 +88,6 @@ variable "infra_config" {
   }
 }
 
-variable "service_domain" {
-  description = "The FQDN for the Load Balancer service"
-  type        = string
-}
-
 # Network Identity for Naming Policy
 variable "network_identity" {
   description = "Pre-calculated network and bridge names passed from Layer"
@@ -80,19 +98,6 @@ variable "network_identity" {
     hostonly_bridge_name = string
     storage_pool_name    = string
   })
-}
-
-variable "service_segments" {
-  description = "Topology Definition: List of all network segments the LB must connect to."
-  type = list(object({
-    name           = string
-    bridge_name    = string
-    cidr           = string
-    vrid           = number
-    vip            = string
-    interface_name = string
-    node_ips       = map(string) # Map of "node_name" => "ip"
-  }))
 }
 
 # Credentials Injection

@@ -1,106 +1,126 @@
 locals {
-  # 1. Basic Settings: VIP and LB Node IP Offset Rules
-  default_vip_hostnum   = 250 # Default VIP is .250
-  lb_node_start_hostnum = 251 # LB Node IP starts from .251 (e.g., .251, .252)
+  # Data Ingestion
+  raw_segments = data.terraform_remote_state.topology.outputs.network_segments
+  service_name = var.service_catalog_name
+}
 
-  # 2. Source of Truth
-  service_segments = {
-    "gitlab-frontend" = {
-      bridge_name = "br-gitlab-front",
-      cidr        = "172.16.134.0/24",
-      vrid        = 134
-    },
-    "harbor-frontend" = {
-      bridge_name = "br-harbor-front",
-      cidr        = "172.16.135.0/24",
-      vrid        = 135
-    },
-    "vault" = {
-      bridge_name = "br-vault",
-      cidr        = "172.16.136.0/24",
-      vrid        = 136
-    },
-    "harbor-postgres" = {
-      bridge_name = "br-harbor-pg",
-      cidr        = "172.16.137.0/24",
-      vrid        = 137
-    },
-    "harbor-redis" = {
-      bridge_name = "br-harbor-redis",
-      cidr        = "172.16.138.0/24",
-      vrid        = 138
-    },
-    "harbor-minio" = {
-      bridge_name = "br-harbor-minio",
-      cidr        = "172.16.139.0/24",
-      vrid        = 139
-    },
-    "gitlab-postgres" = {
-      bridge_name = "br-gitlab-pg",
-      cidr        = "172.16.140.0/24",
-      vrid        = 140
-    },
-    "gitlab-redis" = {
-      bridge_name = "br-gitlab-redis",
-      cidr        = "172.16.141.0/24",
-      vrid        = 141
-    },
-    "gitlab-minio" = {
-      bridge_name = "br-gitlab-minio",
-      cidr        = "172.16.142.0/24",
-      vrid        = 142
-    },
-    "dev-harbor" = {
-      bridge_name = "br-dev-harbor",
-      cidr        = "172.16.143.0/24",
-      vrid        = 143
+locals {
+  # Deterministic Ordering
+  sorted_node_keys = sort(keys(var.node_config))
+
+  sorted_segment_keys = sort([
+    for k, v in local.raw_segments : k
+    if k != local.service_name
+  ])
+
+  # MAC Address Derivation Base (From Layer 00 "central-lb")
+  # Example: 52:54:00:0a:a4:f5 (where 0a is VRID 10)
+  lb_base_mac_parts = split(":", local.raw_segments[local.service_name].mac_address)
+
+  # Infrastructure Network Config
+  my_segment = local.raw_segments[local.service_name]
+}
+
+locals {
+  infra_network = {
+    nat = {
+      gateway      = var.network_config.gateway
+      cidrv4       = var.network_config.cidrv4
+      dhcp         = var.network_config.dhcp
+      name_network = "iac-${local.service_name}-nat"
+      name_bridge  = "iac-mgmt-br"
+    }
+    hostonly = {
+      gateway      = cidrhost(local.my_segment.cidr_block, 1)
+      cidrv4       = local.my_segment.cidr_block
+      name_network = "iac-${local.service_name}-hostonly"
+      name_bridge  = "iac-internal-br"
+    }
+  }
+
+  allowed_subnet = var.allowed_subnet
+}
+
+locals {
+  # Payload Construction
+  nodes_configuration = {
+    for node_name, node_spec in var.node_config : node_name => {
+      vcpu            = node_spec.vcpu
+      ram             = node_spec.ram
+      base_image_path = var.base_image_path
+
+      interfaces = flatten([
+        # Interface 1: NAT (Management) [ens3]
+        # Logic: Use Layer 00 Base MAC, but force 4th octet (VRID) to '00' for Management differentiation
+        [{
+          network_name = local.infra_network.nat.name_network
+          mac = format("%s:%s:%s:00:%s:%02x",
+            local.lb_base_mac_parts[0], # 52
+            local.lb_base_mac_parts[1], # 54
+            local.lb_base_mac_parts[2], # 00
+            # 4th octet forced to 00 for NAT
+            local.lb_base_mac_parts[4],
+            parseint(local.lb_base_mac_parts[5], 16) + index(local.sorted_node_keys, node_name)
+          )
+          addresses      = [] # DHCP
+          wait_for_lease = true
+        }],
+
+        # Interface 2: HostOnly (Internal) [ens4]
+        # Logic: Inherit Layer 00 Base MAC (VRID=10) directly + Node Index
+        [{
+          network_name = local.infra_network.hostonly.name_network
+          mac = format("%s:%s:%s:%s:%s:%02x",
+            local.lb_base_mac_parts[0],
+            local.lb_base_mac_parts[1],
+            local.lb_base_mac_parts[2],
+            local.lb_base_mac_parts[3], # Keep VRID (e.g., 0a)
+            local.lb_base_mac_parts[4],
+            parseint(local.lb_base_mac_parts[5], 16) + index(local.sorted_node_keys, node_name)
+          )
+          addresses      = [cidrhost(local.my_segment.cidr_block, node_spec.ip_suffix)]
+          wait_for_lease = false
+        }],
+
+        # Interface 3..N: Service Segments [ens5...]
+        # Logic: Use each Segment's Layer 00 MAC + Node Index
+        [
+          for seg_key in local.sorted_segment_keys : {
+            network_name = seg_key
+            mac = format("%s:%02x",
+              join(":", slice(split(":", local.raw_segments[seg_key].mac_address), 0, 5)),
+              parseint(element(split(":", local.raw_segments[seg_key].mac_address), 5), 16) + index(local.sorted_node_keys, node_name)
+            )
+            addresses      = [cidrhost(local.raw_segments[seg_key].cidr_block, node_spec.ip_suffix)]
+            wait_for_lease = false
+          }
+        ]
+      ])
     }
   }
 }
-locals {
-  # Hydration: Convert Map to List and fill in calculated IPs
-  hydrated_service_segments = [
-    for idx, seg_conf in values(local.service_segments) : {
-      name        = keys(local.service_segments)[idx]
-      bridge_name = seg_conf.bridge_name
-      cidr        = seg_conf.cidr
-      vrid        = seg_conf.vrid
-      vip         = cidrhost(seg_conf.cidr, local.default_vip_hostnum)
 
-      # Auto-calculate VIP: CIDR + .250
-      interface_name = "ens${5 + idx}"
-      # Auto-calculate Node IPs: CIDR + (.251 + index)
-      # e.g. Output: { "lb-node-00" = "172.16.134.251", "lb-node-01" = "172.16.134.252" }
+locals {
+  # Service Segments List (Infrastructure Creation)
+  hydrated_service_segments = [
+    for seg_key in local.sorted_segment_keys : {
+      name           = seg_key
+      bridge_name    = "br-${substr(seg_key, 0, 6)}-${substr(md5(seg_key), 0, 4)}"
+      cidr           = local.raw_segments[seg_key].cidr_block
+      vrid           = local.raw_segments[seg_key].vrid
+      vip            = local.raw_segments[seg_key].vip
+      interface_name = local.raw_segments[seg_key].interface_alias
+
       node_ips = {
-        for node_key, node_conf in var.load_balancer_compute.load_balancer_config.nodes :
-        node_key => cidrhost(
-          seg_conf.cidr,
-          local.lb_node_start_hostnum + index(keys(var.load_balancer_compute.load_balancer_config.nodes), node_key)
-        )
+        for node_name, node_spec in var.node_config :
+        node_name => cidrhost(local.raw_segments[seg_key].cidr_block, node_spec.ip_suffix)
       }
     }
   ]
 }
 
 locals {
-  # Network Identity (Standard Libvirt Naming)
-  svc_name     = var.load_balancer_compute.cluster_identity.service_name
-  comp_name    = var.load_balancer_compute.cluster_identity.component
-  layer_number = var.load_balancer_compute.cluster_identity.layer_number
-  cluster_name = "${local.layer_number}-${local.svc_name}-${local.comp_name}"
-
-  nat_net_name      = "iac-${local.svc_name}-${local.comp_name}-nat"
-  hostonly_net_name = "iac-${local.svc_name}-${local.comp_name}-hostonly"
-  storage_pool_name = "iac-${local.svc_name}-${local.comp_name}"
-
-  # Bridge Naming for Mgmt/Hostonly
-  svc_abbr             = substr(local.svc_name, 0, 3)  # loa
-  comp_abbr            = substr(local.comp_name, 0, 3) # cor
-  nat_bridge_name      = "iac-mgmt-br"                 # Management Bridge
-  hostonly_bridge_name = "iac-internal-br"
-}
-
-locals {
+  # Credentials
   vm_credentials = {
     username             = data.vault_generic_secret.iac_vars.data["vm_username"]
     password             = data.vault_generic_secret.iac_vars.data["vm_password"]

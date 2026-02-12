@@ -7,20 +7,24 @@
 # Module-level variable definitions
 
 variable "vm_config" {
-  description = "All configurations related to the virtual machines being provisioned."
-  type = object({
-    all_nodes_map = map(object({
-      ip              = string
-      vcpu            = number
-      ram             = number
-      base_image_path = string
+  description = "Fully resolved configuration for nodes, including hardware specs and ordered interfaces."
+  type = map(object({
+    vcpu            = number
+    ram             = number
+    base_image_path = string
 
-      data_disks = optional(list(object({
-        name_suffix = string
-        capacity    = number
-      })), [])
+    interfaces = list(object({
+      network_name   = string
+      mac            = string
+      addresses      = optional(list(string), [])
+      wait_for_lease = optional(bool, false)
     }))
-  })
+
+    data_disks = optional(list(object({
+      name_suffix = string
+      capacity    = number
+    })), [])
+  }))
 }
 
 variable "credentials" {
@@ -72,8 +76,9 @@ variable "service_segments" {
   type = list(object({
     name        = string
     bridge_name = string
-    cidr        = string
-    vrid        = number
-    node_ips    = map(string)
+    cidr        = optional(string)
+    vrid        = optional(number)
+    vip         = optional(string)
+    node_ips    = optional(map(string))
   }))
 }

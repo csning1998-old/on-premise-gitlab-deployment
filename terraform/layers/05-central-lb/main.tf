@@ -2,27 +2,43 @@
 module "central_lb_cluster" {
   source = "../../modules/service-ha/load-balancer-cluster"
 
-  topology_config = merge(
-    var.load_balancer_compute,
-    {
-      cluster_identity = merge(
-        var.load_balancer_compute.cluster_identity,
-        {
-          cluster_name = local.cluster_name
-        }
-      )
+  topology_config = {
+    cluster_identity = {
+      layer_number = 10
+      service_name = local.service_name
+      component    = "core"
+      cluster_name = "10-${local.service_name}-core"
     }
-  )
-  infra_config     = var.load_balancer_infra
+    load_balancer_config = {
+      nodes = local.nodes_configuration
+    }
+  }
+
+  infra_config = {
+    network = {
+      nat = {
+        gateway = local.infra_network.nat.gateway
+        cidrv4  = local.infra_network.nat.cidrv4
+        dhcp    = local.infra_network.nat.dhcp
+      }
+      hostonly = {
+        gateway = local.infra_network.hostonly.gateway
+        cidrv4  = local.infra_network.hostonly.cidrv4
+      }
+    }
+    allowed_subnet = local.allowed_subnet
+  }
+
   service_segments = local.hydrated_service_segments
-  service_domain   = "iac.local"
-  vm_credentials   = local.vm_credentials
+
+  service_domain = "iac.local"
+  vm_credentials = local.vm_credentials
 
   network_identity = {
-    nat_net_name         = local.nat_net_name
-    nat_bridge_name      = local.nat_bridge_name
-    hostonly_net_name    = local.hostonly_net_name
-    hostonly_bridge_name = local.hostonly_bridge_name
-    storage_pool_name    = local.storage_pool_name
+    nat_net_name         = local.infra_network.nat.name_network
+    nat_bridge_name      = local.infra_network.nat.name_bridge
+    hostonly_net_name    = local.infra_network.hostonly.name_network
+    hostonly_bridge_name = local.infra_network.hostonly.name_bridge
+    storage_pool_name    = "iac-${local.service_name}"
   }
 }

@@ -1,47 +1,42 @@
 
-variable "load_balancer_compute" {
-  description = "Compute topology for Load Balancer service"
-  type = object({
-    cluster_identity = object({
-      layer_number = number
-      service_name = string
-      component    = string
-    })
-
-    load_balancer_config = object({
-      nodes = map(object({
-        ip   = string
-        vcpu = number
-        ram  = number
-      }))
-      base_image_path = string
-    })
-  })
-}
-
-variable "load_balancer_infra" {
-  description = "Infrastructure config for Load Balancer service"
-  type = object({
-    network = object({
-      nat = object({
-        gateway = string
-        cidrv4  = string
-        dhcp = optional(object({
-          start = string
-          end   = string
-        }))
-      })
-      hostonly = object({
-        gateway = string
-        cidrv4  = string
-      })
-    })
-    allowed_subnet = string
-  })
+variable "service_catalog_name" {
+  description = "The name of the service catalog. This should match the name in the service catalog."
+  type        = string
 }
 
 variable "vault_dev_addr" {
   description = "The address of the Vault server"
   type        = string
   default     = "https://127.0.0.1:8200"
+}
+
+variable "network_config" {
+  description = "Management/NAT network configuration for the LB cluster."
+  type = object({
+    gateway = string
+    cidrv4  = string
+    dhcp = object({
+      start = string
+      end   = string
+    })
+  })
+}
+
+variable "node_config" {
+  description = "Configuration for Load Balancer nodes (resources and IP suffix)."
+  type = map(object({
+    ip_suffix = number
+    vcpu      = number
+    ram       = number
+  }))
+}
+
+variable "base_image_path" {
+  description = "The path to the base image for the Load Balancer nodes."
+  type        = string
+}
+
+variable "allowed_subnet" {
+  description = "The subnet CIDR allowed to access the management interface of the LB nodes."
+  type        = string
 }
