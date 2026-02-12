@@ -29,11 +29,12 @@ locals {
 }
 
 locals {
+  # Infrastructure Network Config
   infra_network = {
     nat = {
-      gateway      = var.network_config.gateway
-      cidrv4       = var.network_config.cidrv4
-      dhcp         = var.network_config.dhcp
+      gateway      = local.my_segment.nat_gateway
+      cidrv4       = local.my_segment.nat_cidr_block
+      dhcp         = local.my_segment.nat_dhcp
       name_network = "iac-${local.service_name}-nat"
       name_bridge  = "iac-mgmt-br"
     }
@@ -123,8 +124,10 @@ locals {
   hydrated_service_segments = [
     for seg_key in local.sorted_segment_keys : {
       name           = seg_key
-      bridge_name    = "br-${substr(replace(seg_key, "-", ""), 0, 6)}-${substr(md5("${local.global_topology.network_baseline.cidr_block}${seg_key}"), 0, 4)}"
+      bridge_name    = "br-${substr(replace(seg_key, "-", ""), 0, 6)}-${substr(md5("${seg_key}"), 0, 4)}"
       cidr           = local.raw_segments[seg_key].cidr_block
+      nat_cidr       = local.raw_segments[seg_key].nat_cidr_block
+      nat_gateway    = local.raw_segments[seg_key].nat_gateway
       vrid           = local.raw_segments[seg_key].vrid
       vip            = local.raw_segments[seg_key].vip
       interface_name = local.raw_segments[seg_key].interface_alias

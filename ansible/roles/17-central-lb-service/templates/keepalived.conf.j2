@@ -11,24 +11,22 @@ vrrp_instance VI_{{ segment.name | upper | replace('-', '_') }} {
     state BACKUP
     {# Bind to the specific interface alias defined in Inventory, e.g. v_gitlab-frontend #}
     interface {{ segment.interface_alias }}
-    
+
     {# Each segment must have its own VRID (computed and passed by Terraform) #}
     virtual_router_id {{ segment.vrid }}
-    
+
     {# Priority setting: Node-00 (Master) = 100, Node-01 (Backup) = 90 #}
     priority {{ 100 if 'node-00' in inventory_hostname else 90 }}
-    
+
     advert_int 1
-    nopreempt
 
     authentication {
         auth_type PASS
-        auth_pass {{ segment.name | hash('md5') | truncate(8, true, '') }}
+        auth_pass {{ segment.vrid }}123 # Simple auth based on VRID
     }
 
     virtual_ipaddress {
         {{ segment.vip }}
     }
 }
-
 {% endfor %}

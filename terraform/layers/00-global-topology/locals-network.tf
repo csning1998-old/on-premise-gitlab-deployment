@@ -53,11 +53,17 @@ locals {
   network_topology = {
     for seg in local.network_segments_list : seg.key => {
 
-      cidr_block      = cidrsubnet(local.network_baseline.cidr_block, 8, seg.cidr_index)
-      nat_gateway     = cidrhost(cidrsubnet(local.network_baseline.cidr_block, 8, seg.cidr_index - 124), 1)
-      nat_cidr_block  = cidrsubnet(local.network_baseline.cidr_block, 8, seg.cidr_index - 124)
-      nat_cidr_index  = seg.cidr_index - 124
-      interface_alias = "v_${substr(replace(seg.key, "-", ""), 0, 8)}_${substr(md5("${seg.cidr_index}${seg.key}"), 0, 4)}"
+      cidr_block     = cidrsubnet(local.network_baseline.cidr_block, 8, seg.cidr_index)
+      nat_gateway    = cidrhost(cidrsubnet(local.network_baseline.cidr_block, 8, seg.cidr_index - 124), 1)
+      nat_cidr_block = cidrsubnet(local.network_baseline.cidr_block, 8, seg.cidr_index - 124)
+      nat_cidr_index = seg.cidr_index - 124
+
+      nat_dhcp = {
+        start = cidrhost(cidrsubnet(local.network_baseline.cidr_block, 8, seg.cidr_index - 124), 100)
+        end   = cidrhost(cidrsubnet(local.network_baseline.cidr_block, 8, seg.cidr_index - 124), 199)
+      }
+
+      interface_alias = "v_${substr(replace(seg.key, "-", ""), 0, 8)}_${substr(md5("${local.network_baseline.cidr_block}${seg.key}"), 0, 4)}"
       vrid            = seg.cidr_index
       ip_range        = seg.ip_range
       ports           = seg.ports

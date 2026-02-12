@@ -7,15 +7,21 @@ all:
     
     lb_service_segments:
 %{ for seg in service_segments ~}
-      - name: ${seg.name}
-        cidr: ${seg.cidr}
-        vip: ${seg.vip}
+      - name: "${seg.name}"
+        vip: "${seg.vip}"
         vrid: ${seg.vrid}
         interface_alias: "${seg.interface_name}"
-        backends:
-%{ for server in seg.backend_servers ~}
-          - name: "${server.name}"
-            ip: "${server.ip}"
+        ports:
+%{ for p_key, p_val in seg.ports ~}
+          ${p_key}:
+            frontend: ${p_val.frontend_port}
+            backend: ${p_val.backend_port}
+%{ endfor ~}
+        tags: ${jsonencode(seg.tags)}
+        backend_servers:
+%{ for srv in seg.backend_servers ~}
+          - name: "${srv.name}"
+            ip: "${srv.ip}"
 %{ endfor ~}
 %{ endfor ~}
 

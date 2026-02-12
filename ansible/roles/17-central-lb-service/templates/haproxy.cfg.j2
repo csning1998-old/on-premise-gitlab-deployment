@@ -31,39 +31,26 @@ listen stats
     stats admin if TRUE
 
 {# Service Port Mapping #}
-{% set service_ports = {
-    'vault':           [443],
-    'gitlab-frontend': [80, 443, 22],
-    'harbor-frontend': [80, 443],
-    'dev-harbor':      [80, 443],
-    'gitlab-postgres': [5432],
-    'harbor-postgres': [5432],
-    'gitlab-redis':    [6379],
-    'harbor-redis':    [6379],
-    'gitlab-minio':    [9000, 9001],
-    'harbor-minio':    [9000, 9001]
-} %}
-
-{# Iterate to generate Frontend/dependencies #}
 {% for segment in lb_service_segments %}
-{% if segment.name in service_ports %}
-    {% for port in service_ports[segment.name] %}
+# --- Service: {{ segment.name }} ---
+{% for port_name, port_cfg in segment.ports.items() %}
 
-# Service: {{ segment.name }} (Port {{ port }})
-frontend ft_{{ segment.name }}_{{ port }}
-    bind {{ segment.vip }}:{{ port }}
+# Frontend for {{ port_name }}
+frontend fe_{{ segment.name | replace('-', '_') }}_{{ port_name }}
+    bind {{ segment.vip }}:{{ port_cfg.frontend }}
     mode tcp
-    default_backend bk_{{ segment.name }}_{{ port }}
+    option tcplog
+    default_backend be_{{ segment.name | replace('-', '_') }}_{{ port_name }}
 
-backend bk_{{ segment.name }}_{{ port }}
+# Backend for {{ port_name }} (Saturation Slots)
+backend be_{{ segment.name | replace('-', '_') }}_{{ port_name }}
     mode tcp
     balance roundrobin
     option tcp-check
-    
-    {% for server in segment.backends %}
-    server {{ server.name }} {{ server.ip }}:{{ port }} check
+    {% for server in segment.backend_servers %}
+    # Slot {{ loop.index0 }}: If backend is down, HAProxy will exclude it via health check
+    server {{ server.name }} {{ server.ip }}:{{ port_cfg.backend }} check inter 3s fall 3 rise 2
     {% endfor %}
 
-    {% endfor %}
-{% endif %}
+{% endfor %}
 {% endfor %}

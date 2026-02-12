@@ -59,6 +59,11 @@ variable "service_segments" {
       ip   = string
     })))
     interface_name = string
+    ports = optional(map(object({
+      frontend_port = number
+      backend_port  = number
+    })))
+    tags = optional(list(string))
   }))
 }
 
