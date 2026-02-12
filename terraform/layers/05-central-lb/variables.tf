@@ -10,18 +10,6 @@ variable "vault_dev_addr" {
   default     = "https://127.0.0.1:8200"
 }
 
-variable "network_config" {
-  description = "Management/NAT network configuration for the LB cluster."
-  type = object({
-    gateway = string
-    cidrv4  = string
-    dhcp = object({
-      start = string
-      end   = string
-    })
-  })
-}
-
 variable "node_config" {
   description = "Configuration for Load Balancer nodes (resources and IP suffix)."
   type = map(object({

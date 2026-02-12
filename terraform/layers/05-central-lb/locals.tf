@@ -123,20 +123,29 @@ locals {
   hydrated_service_segments = [
     for seg_key in local.sorted_segment_keys : {
       name           = seg_key
-      bridge_name    = "br-${substr(seg_key, 0, 6)}-${substr(md5(seg_key), 0, 4)}"
+      bridge_name    = "br-${substr(replace(seg_key, "-", ""), 0, 6)}-${substr(md5("${local.global_topology.network_baseline.cidr_block}${seg_key}"), 0, 4)}"
       cidr           = local.raw_segments[seg_key].cidr_block
       vrid           = local.raw_segments[seg_key].vrid
       vip            = local.raw_segments[seg_key].vip
       interface_name = local.raw_segments[seg_key].interface_alias
+      ports          = local.raw_segments[seg_key].ports
+      tags           = local.raw_segments[seg_key].tags
 
       node_ips = {
         for node_name, node_spec in var.node_config : local.node_naming_map[node_name] =>
         cidrhost(local.raw_segments[seg_key].cidr_block, node_spec.ip_suffix)
       }
       backend_servers = [
-        for i in range(3) : {
-          name = "${seg_key}-${format("%02d", i)}"
-          ip   = cidrhost(local.raw_segments[seg_key].cidr_block, 200 + i)
+        for i in range(
+          local.raw_segments[seg_key].ip_range.end_ip - local.raw_segments[seg_key].ip_range.start_ip + 1
+          ) : {
+          # Name: service-slot-200, service-slot-201...
+          name = "${seg_key}-slot-${local.raw_segments[seg_key].ip_range.start_ip + i}"
+
+          ip = cidrhost(
+            local.raw_segments[seg_key].cidr_block,
+            local.raw_segments[seg_key].ip_range.start_ip + i
+          )
         }
       ]
     }

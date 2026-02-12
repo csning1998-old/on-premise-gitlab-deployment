@@ -42,7 +42,8 @@ locals {
           "Env=${s.stage}",
           "Owner=${s.owner}",
           "Project=${s.project_code}",
-          "Runtime=${d_data.runtime}"
+          "Runtime=${d_data.runtime}",
+          "Tag=${join(",", d_data.tags)}"
         ]
 
         ttl_stage = s.stage
@@ -82,7 +83,8 @@ locals {
           "Env=${s.stage}",
           "Owner=${s.owner}",
           "Project=${s.project_code}",
-          "Runtime=${s.runtime}"
+          "Runtime=${s.runtime}",
+          "Tag=${join(",", s.tags)}"
         ]
 
         ttl_stage = s.stage

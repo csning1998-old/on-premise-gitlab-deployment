@@ -42,17 +42,39 @@ variable "service_catalog" {
     runtime      = string
     stage        = string
     cidr_index   = number
+    tags         = optional(list(string), [])
+
+    ip_range = object({
+      start_ip = number
+      end_ip   = number
+    })
+
+    ports = optional(map(object({
+      frontend_port = number
+      backend_port  = number
+    })), {})
 
     components = map(object({
       subdomains = list(string)
     }))
 
-    dependencies = map(object({
+    dependencies = optional(map(object({
       component  = string
       provider   = string
       runtime    = string
       cidr_index = number
-    }))
+      tags       = optional(list(string), [])
+
+      ip_range = optional(object({
+        start_ip = number
+        end_ip   = number
+      }))
+
+      ports = optional(map(object({
+        frontend_port = number
+        backend_port  = number
+      })), {})
+    })), {})
   }))
 
   # Validate Service Name Uniqueness
@@ -113,9 +135,9 @@ variable "service_catalog" {
   # Validate CIDR Index for Main Service
   validation {
     condition = alltrue([
-      for k, v in var.service_catalog : v.cidr_index > 0 && v.cidr_index < 255
+      for k, v in var.service_catalog : v.cidr_index > 124 && v.cidr_index < 255
     ])
-    error_message = "Service cidr_index must be between 1 and 254."
+    error_message = "Service cidr_index must be in range [125, 254]."
   }
 
   # Validate Global CIDR Index Uniqueness
@@ -132,6 +154,28 @@ variable "service_catalog" {
         )
     ])))
     error_message = "Duplicate 'cidr_index' detected! Every service and dependency must have a unique CIDR index to avoid network collision."
+  }
+
+  # Validate Start IP < End IP
+  validation {
+    condition = alltrue(flatten([
+      for s in var.service_catalog : [
+        s.ip_range.end_ip >= s.ip_range.start_ip,
+        [for d in values(s.dependencies) : d.ip_range.end_ip >= d.ip_range.start_ip]
+      ]
+    ]))
+    error_message = "Invalid reservation: 'end_ip' must be greater than or equal to 'start_ip'."
+  }
+
+  # Validate Boundary (1-254)
+  validation {
+    condition = alltrue(flatten([
+      for s in var.service_catalog : [
+        s.ip_range.start_ip > 0 && s.ip_range.end_ip < 255,
+        [for d in values(s.dependencies) : d.ip_range.start_ip > 0 && d.ip_range.end_ip < 255]
+      ]
+    ]))
+    error_message = "Reservation out of bounds: IPs must be between 1 and 254."
   }
 
   # Validate Service Key Format (DNS Safe: lowercase, numbers, hyphens)
