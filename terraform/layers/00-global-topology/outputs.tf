@@ -4,6 +4,11 @@
 #### THIS IS THE SINGLE SOURCE OF TRUTH ACROSS ALL SERVICES ####
 ################################################################
 
+output "domain_suffix" {
+  description = "The root domain suffix (e.g., iac.local) for all downstream layers."
+  value       = var.domain_suffix
+}
+
 # For Load Balancer Usage: Only cares about how many network segments to set
 output "network_segments" {
   description = "Flat map of all network segments for LB iteration."
