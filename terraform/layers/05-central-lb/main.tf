@@ -5,9 +5,9 @@ module "central_lb_cluster" {
   topology_config = {
     cluster_identity = {
       layer_number = 10
-      service_name = local.service_name
+      service_name = var.service_catalog_name
       component    = "core"
-      cluster_name = "10-${local.service_name}-core"
+      cluster_name = "10-${var.service_catalog_name}-core"
     }
     load_balancer_config = {
       nodes = local.nodes_configuration
@@ -30,15 +30,14 @@ module "central_lb_cluster" {
   }
 
   service_segments = local.hydrated_service_segments
-
-  service_domain = "iac.local"
-  vm_credentials = local.vm_credentials
+  service_domain   = local.domain_suffix
+  vm_credentials   = local.vm_credentials
 
   network_identity = {
     nat_net_name         = local.infra_network.nat.name_network
     nat_bridge_name      = local.infra_network.nat.name_bridge
     hostonly_net_name    = local.infra_network.hostonly.name_network
     hostonly_bridge_name = local.infra_network.hostonly.name_bridge
-    storage_pool_name    = "iac-${local.service_name}"
+    storage_pool_name    = local.storage_pool_name
   }
 }

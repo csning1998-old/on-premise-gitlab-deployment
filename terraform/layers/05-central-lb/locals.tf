@@ -2,8 +2,8 @@ locals {
   # Data Ingestion
   global_topology  = data.terraform_remote_state.topology.outputs
   raw_segments     = data.terraform_remote_state.topology.outputs.network_segments
-  service_name     = var.service_catalog_name
-  service_meta     = local.global_topology.service_structure[local.service_name].meta
+  service_meta     = local.global_topology.service_structure[var.service_catalog_name].meta
+  domain_suffix    = local.global_topology.domain_suffix
   node_name_prefix = "${local.service_meta.name}-${local.service_meta.project_code}-node"
   node_naming_map = {
     for idx, key in local.sorted_node_keys :
@@ -17,15 +17,15 @@ locals {
 
   sorted_segment_keys = sort([
     for k, v in local.raw_segments : k
-    if k != local.service_name
+    if k != var.service_catalog_name
   ])
 
   # MAC Address Derivation Base (From Layer 00 "central-lb")
   # Example: 52:54:00:0a:a4:f5 (where 0a is VRID 10)
-  lb_base_mac_parts = split(":", local.raw_segments[local.service_name].mac_address)
+  lb_base_mac_parts = split(":", local.raw_segments[var.service_catalog_name].mac_address)
 
   # Infrastructure Network Config
-  my_segment = local.raw_segments[local.service_name]
+  my_segment = local.raw_segments[var.service_catalog_name]
 }
 
 locals {
@@ -35,16 +35,17 @@ locals {
       gateway      = local.my_segment.nat_gateway
       cidrv4       = local.my_segment.nat_cidr_block
       dhcp         = local.my_segment.nat_dhcp
-      name_network = "iac-${local.service_name}-nat"
+      name_network = "iac-${var.service_catalog_name}-nat"
       name_bridge  = "iac-mgmt-br"
     }
     hostonly = {
       gateway      = cidrhost(local.my_segment.cidr_block, 1)
       cidrv4       = local.my_segment.cidr_block
-      name_network = "iac-${local.service_name}-hostonly"
+      name_network = "iac-${var.service_catalog_name}-hostonly"
       name_bridge  = "iac-internal-br"
     }
   }
+  storage_pool_name = "iac-${local.service_meta.project_code}-${local.service_meta.name}"
 
   allowed_subnet = local.raw_segments[var.service_catalog_name].cidr_block
 }
