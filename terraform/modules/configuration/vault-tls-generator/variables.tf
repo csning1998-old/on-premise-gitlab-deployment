@@ -7,9 +7,6 @@ variable "vault_cluster" {
         ip = string
       }))
     })
-    haproxy_config = object({
-      virtual_ip = string
-    })
   })
 }
 
