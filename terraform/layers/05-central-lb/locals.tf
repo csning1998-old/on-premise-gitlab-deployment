@@ -46,7 +46,7 @@ locals {
     }
   }
 
-  allowed_subnet = var.allowed_subnet
+  allowed_subnet = local.raw_segments[var.service_catalog_name].cidr_block
 }
 
 locals {

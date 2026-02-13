@@ -23,8 +23,3 @@ variable "base_image_path" {
   description = "The path to the base image for the Load Balancer nodes."
   type        = string
 }
-
-variable "allowed_subnet" {
-  description = "The subnet CIDR allowed to access the management interface of the LB nodes."
-  type        = string
-}

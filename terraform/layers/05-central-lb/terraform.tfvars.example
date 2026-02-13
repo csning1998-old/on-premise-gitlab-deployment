@@ -18,5 +18,3 @@ node_config = {
   "lb-node-01" = { ip_suffix = 201, vcpu = 2, ram = 1024 }
   # "lb-node-02" = { ip_suffix = 202, vcpu = 2, ram = 1024 }
 }
-
-allowed_subnet = "172.16.0.0/16"
