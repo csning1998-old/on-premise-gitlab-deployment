@@ -1,5 +1,11 @@
 
 locals {
+  # Determine whether to establish NAT and HostOnly networks
+  create_nat_network      = var.libvirt_infrastructure.network.nat.mode != "bridge"
+  create_hostonly_network = var.libvirt_infrastructure.network.hostonly.mode != "bridge"
+}
+
+locals {
   nat_net_prefixlen      = var.libvirt_infrastructure.network.nat.ips.prefix
   hostonly_net_prefixlen = var.libvirt_infrastructure.network.hostonly.ips.prefix
 

@@ -4,6 +4,9 @@ data "local_file" "ssh_public_key" {
 }
 
 resource "libvirt_network" "nat_net" {
+
+  count = var.create_networks ? 1 : 0
+
   name      = var.libvirt_infrastructure.network.nat.name_network
   mode      = var.libvirt_infrastructure.network.nat.mode
   bridge    = var.libvirt_infrastructure.network.nat.name_bridge
@@ -27,6 +30,9 @@ resource "libvirt_network" "nat_net" {
 }
 
 resource "libvirt_network" "hostonly_net" {
+
+  count = var.create_networks ? 1 : 0
+
   name      = var.libvirt_infrastructure.network.hostonly.name_network
   mode      = var.libvirt_infrastructure.network.hostonly.mode
   bridge    = var.libvirt_infrastructure.network.hostonly.name_bridge
@@ -115,8 +121,6 @@ resource "libvirt_volume" "cloud_init_iso" {
 resource "libvirt_domain" "nodes" {
 
   depends_on = [
-    libvirt_network.nat_net,
-    libvirt_network.hostonly_net,
     libvirt_pool.storage_pool,
     libvirt_volume.os_disk,
     libvirt_cloudinit_disk.cloud_init,
@@ -174,7 +178,7 @@ resource "libvirt_domain" "nodes" {
       {
         type = "network"
         source = {
-          network = libvirt_network.nat_net.name
+          network = var.libvirt_infrastructure.network.nat.name_network
         }
         mac = local.nodes_config[each.key].nat_mac
       },
@@ -182,7 +186,7 @@ resource "libvirt_domain" "nodes" {
       {
         type = "network"
         source = {
-          network = libvirt_network.hostonly_net.name
+          network = var.libvirt_infrastructure.network.hostonly.name_network
         }
         mac = local.nodes_config[each.key].hostonly_mac
       }

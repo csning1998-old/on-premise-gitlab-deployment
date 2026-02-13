@@ -1,22 +1,67 @@
 
 locals {
-  # Define the absolute path for TLS directory.
-  layer_tls_dir = abspath("${path.root}/tls")
+  global_topology    = data.terraform_remote_state.topology.outputs
+  central_lb_outputs = data.terraform_remote_state.central_lb.outputs
+  network_topology   = local.central_lb_outputs.infra_network
+  hydrated_topology  = local.central_lb_outputs.hydrated_topology
+  service_meta       = local.global_topology.service_structure[var.service_catalog_name]
+  domain_suffix      = local.global_topology.domain_suffix
+  cluster_name       = "${local.service_meta.meta.name}-${local.service_meta.meta.project_code}"
 
-  # Service Identity
-  svc_name     = var.vault_compute.cluster_identity.service_name
-  comp_name    = var.vault_compute.cluster_identity.component
-  layer_number = var.vault_compute.cluster_identity.layer_number
-  cluster_name = "${local.layer_number}-${local.svc_name}-${local.comp_name}"
+  # Extract the Bridge Network Info for Service with Salted Hash Name
+  my_segment_info = [
+    for seg in local.hydrated_topology : seg
+    if seg.name == var.service_catalog_name
+  ][0]
 
-  # Naming Convention
-  nat_net_name      = "iac-${local.svc_name}-${local.comp_name}-nat"
-  hostonly_net_name = "iac-${local.svc_name}-${local.comp_name}-hostonly"
-  storage_pool_name = "iac-${local.svc_name}-${local.comp_name}"
+  # TLS Output Directory
+  layer_tls_dir = "${path.root}/tls"
+}
 
-  # Bridges
-  svc_abbr             = substr(local.svc_name, 0, 3)
-  comp_abbr            = substr(local.comp_name, 0, 3)
-  nat_bridge_name      = "${local.svc_abbr}-${local.comp_abbr}-natbr"
-  hostonly_bridge_name = "${local.svc_abbr}-${local.comp_abbr}-hostbr"
+locals {
+  # 1. Lookup Service Metadata and Extract Network Facts from SSoT
+  service_vip         = local.service_meta.network.vip
+  service_bridge_name = local.my_segment_info.bridge_name
+
+  # 2. Network Identity & Specs (Corrected Source)
+  # Use unique network names for this service cluster to avoid conflict with LB infra
+  nat_net_name      = "${local.cluster_name}-nat"
+  hostonly_net_name = "${local.cluster_name}-hostonly"
+
+  # NAT Bridge usually remains shared (mgmt-br), but HostOnly Bridge MUST be the service-specific one
+  nat_bridge_name      = local.network_topology.nat.name_bridge
+  hostonly_bridge_name = local.my_segment_info.bridge_name
+
+  # Extract Gateways and CIDRs from the Service Segment Info (Vault Specific), NOT Central LB
+  nat_gateway = local.my_segment_info.nat_gateway # e.g. 172.16.12.1
+  nat_cidr    = local.my_segment_info.nat_cidr    # e.g. 172.16.12.0/24
+
+  hostonly_cidr    = local.my_segment_info.cidr              # e.g. 172.16.136.0/24
+  hostonly_gateway = cidrhost(local.my_segment_info.cidr, 1) # Implied Gateway for HostOnly is typically the .1 of the CIDR
+
+  # 3. Subnet Prefix (Based on the Vault NAT gateway)
+  nat_network_subnet_prefix = join(".", slice(split(".", local.nat_gateway), 0, 3))
+}
+locals {
+  vm_credentials = {
+    username             = data.vault_generic_secret.iac_vars.data["vm_username"]
+    password             = data.vault_generic_secret.iac_vars.data["vm_password"]
+    ssh_public_key_path  = data.vault_generic_secret.iac_vars.data["ssh_public_key_path"]
+    ssh_private_key_path = data.vault_generic_secret.iac_vars.data["ssh_private_key_path"]
+  }
+}
+
+locals {
+  # 1. Cluster Identity Construction
+  node_name_prefix  = "${local.cluster_name}-node"
+  storage_pool_name = "iac-${local.service_meta.meta.project_code}-${local.service_meta.meta.name}"
+
+  # 2. Inject Base Image Path
+  nodes_configuration = {
+    for k, v in var.vault_config.nodes : k => merge(v, {
+      base_image_path = var.base_image_path
+    })
+  }
+  # 3. Final Node Map
+  nodes_map = local.nodes_configuration
 }
