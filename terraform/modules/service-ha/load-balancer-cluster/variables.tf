@@ -2,11 +2,9 @@
 variable "topology_config" {
   description = "Standardized compute topology configuration for Load Balancer HA Cluster."
   type = object({
-    cluster_identity = object({
-      service_name = string
-      component    = string
-      cluster_name = string
-    })
+
+    cluster_name      = string
+    storage_pool_name = string
 
     load_balancer_config = object({
       nodes = map(object({
@@ -106,7 +104,6 @@ variable "network_identity" {
     nat_bridge_name      = string
     hostonly_net_name    = string
     hostonly_bridge_name = string
-    storage_pool_name    = string
   })
 }
 

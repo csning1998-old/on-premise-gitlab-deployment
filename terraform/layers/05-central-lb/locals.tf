@@ -4,7 +4,8 @@ locals {
   raw_segments     = data.terraform_remote_state.topology.outputs.network_segments
   service_meta     = local.global_topology.service_structure[var.service_catalog_name].meta
   domain_suffix    = local.global_topology.domain_suffix
-  node_name_prefix = "${local.service_meta.name}-${local.service_meta.project_code}-node"
+  cluster_name     = "${local.service_meta.name}-${local.service_meta.project_code}"
+  node_name_prefix = "${local.cluster_name}-node"
   node_naming_map = {
     for idx, key in local.sorted_node_keys :
     key => "${local.node_name_prefix}-${format("%02d", idx)}"

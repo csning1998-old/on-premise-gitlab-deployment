@@ -10,12 +10,12 @@ locals {
   ansible = {
     root_path          = abspath("${path.module}/../../../../ansible")
     playbook_file      = "playbooks/10-provision-core-services.yaml"
-    inventory_file     = "inventory-${var.topology_config.cluster_identity.cluster_name}.yaml"
+    inventory_file     = "inventory-${var.topology_config.cluster_name}.yaml"
     inventory_template = local.inventory_template
 
     inventory_contents = templatefile(local.inventory_template, {
       ansible_ssh_user    = var.vm_credentials.username
-      service_name        = var.topology_config.cluster_identity.service_name
+      service_name        = var.topology_config.cluster_name
       service_domain      = var.service_domain
       service_segments    = var.service_segments
       load_balancer_nodes = local.nodes_map_for_template

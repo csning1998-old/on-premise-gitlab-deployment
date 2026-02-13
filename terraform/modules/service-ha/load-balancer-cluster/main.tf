@@ -33,7 +33,7 @@ module "hypervisor_kvm" {
         }
       }
     }
-    storage_pool_name = var.network_identity.storage_pool_name
+    storage_pool_name = var.topology_config.storage_pool_name
   }
   service_segments = var.service_segments
 }
@@ -44,7 +44,7 @@ module "ssh_manager" {
   status_trigger = module.hypervisor_kvm.vm_status_trigger
   nodes          = local.nodes_list_for_ssh
   vm_credentials = local.vm_credentials
-  config_name    = var.topology_config.cluster_identity.cluster_name
+  config_name    = var.topology_config.cluster_name
 }
 
 module "ansible_runner" {
