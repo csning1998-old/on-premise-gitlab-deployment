@@ -1,5 +1,16 @@
 
 locals {
+  nodes_config = var.topology_config.load_balancer_config.nodes
+
+  nodes_list_for_ssh = [
+    for key, node in local.nodes_config : {
+      key = key
+      ip  = split("/", node.interfaces[1].addresses[0])[0]
+    }
+  ]
+}
+
+locals {
   nodes_map_for_template = {
     for node in local.nodes_list_for_ssh : node.key => {
       ip = node.ip
@@ -26,18 +37,13 @@ locals {
 }
 
 locals {
-  nodes_config = var.topology_config.load_balancer_config.nodes
+  vm_credentials_for_hypervisor = {
+    username            = var.vm_credentials.username
+    password            = var.vm_credentials.password
+    ssh_public_key_path = var.vm_credentials.ssh_public_key_path
+  }
 
-  nodes_list_for_ssh = [
-    for key, node in local.nodes_config : {
-      key = key
-      ip  = split("/", node.interfaces[1].addresses[0])[0]
-    }
-  ]
-}
-
-locals {
-  vm_credentials = {
+  vm_credentials_for_ssh = {
     username             = var.vm_credentials.username
     ssh_private_key_path = var.vm_credentials.ssh_private_key_path
   }

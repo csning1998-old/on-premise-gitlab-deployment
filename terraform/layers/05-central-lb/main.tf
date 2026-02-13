@@ -3,7 +3,6 @@ module "central_lb_cluster" {
   source = "../../modules/service-ha/load-balancer-cluster"
 
   topology_config = {
-
     cluster_name      = local.cluster_name
     storage_pool_name = local.storage_pool_name
 
@@ -12,7 +11,7 @@ module "central_lb_cluster" {
     }
   }
 
-  infra_config = {
+  network_config = {
     network = {
       nat = {
         gateway = local.infra_network.nat.gateway

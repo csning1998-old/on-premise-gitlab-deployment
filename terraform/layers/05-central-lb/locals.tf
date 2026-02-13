@@ -1,3 +1,4 @@
+
 locals {
   # Data Ingestion
   global_topology  = data.terraform_remote_state.topology.outputs
@@ -6,10 +7,6 @@ locals {
   domain_suffix    = local.global_topology.domain_suffix
   cluster_name     = "${local.service_meta.name}-${local.service_meta.project_code}"
   node_name_prefix = "${local.cluster_name}-node"
-  node_naming_map = {
-    for idx, key in local.sorted_node_keys :
-    key => "${local.node_name_prefix}-${format("%02d", idx)}"
-  }
 }
 
 locals {
@@ -20,6 +17,11 @@ locals {
     for k, v in local.raw_segments : k
     if k != var.service_catalog_name
   ])
+
+  node_naming_map = {
+    for idx, key in local.sorted_node_keys :
+    key => "${local.node_name_prefix}-${format("%02d", idx)}"
+  }
 
   # MAC Address Derivation Base (From Layer 00 "central-lb")
   # Example: 52:54:00:0a:a4:f5 (where 0a is VRID 10)
@@ -47,8 +49,7 @@ locals {
     }
   }
   storage_pool_name = "iac-${local.service_meta.project_code}-${local.service_meta.name}"
-
-  allowed_subnet = local.raw_segments[var.service_catalog_name].cidr_block
+  allowed_subnet    = local.my_segment.cidr_block
 }
 
 locals {

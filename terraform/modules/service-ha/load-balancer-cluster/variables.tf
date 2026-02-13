@@ -65,7 +65,7 @@ variable "service_segments" {
   }))
 }
 
-variable "infra_config" {
+variable "network_config" {
   description = "Standardized infrastructure network configuration."
   type = object({
     network = object({
@@ -88,9 +88,9 @@ variable "infra_config" {
   # Network CIDR validation
   validation {
     condition = alltrue([
-      can(cidrnetmask(var.infra_config.network.nat.cidrv4)),
-      can(cidrnetmask(var.infra_config.network.hostonly.cidrv4)),
-      can(cidrnetmask(var.infra_config.allowed_subnet))
+      can(cidrnetmask(var.network_config.network.nat.cidrv4)),
+      can(cidrnetmask(var.network_config.network.hostonly.cidrv4)),
+      can(cidrnetmask(var.network_config.allowed_subnet))
     ])
     error_message = "All network CIDRs must be valid."
   }
