@@ -39,7 +39,7 @@ module "vault_cluster" {
       nat = {
         gateway = local.nat_gateway
         cidrv4  = local.nat_cidr
-        dhcp    = local.network_topology.nat.dhcp
+        dhcp    = local.nat_dhcp
       }
       hostonly = {
         gateway = local.hostonly_gateway

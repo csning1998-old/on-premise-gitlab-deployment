@@ -26,7 +26,7 @@ module "hypervisor_kvm" {
       hostonly = {
         name_network = var.network_identity.hostonly_net_name
         name_bridge  = var.network_identity.hostonly_bridge_name
-        mode         = "route"
+        mode         = "bridge"
         ips = {
           prefix  = tonumber(split("/", var.network_config.network.hostonly.cidrv4)[1])
           address = var.network_config.network.hostonly.gateway

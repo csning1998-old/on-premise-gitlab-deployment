@@ -12,7 +12,7 @@ resource "libvirt_network" "nat_net" {
   bridge    = var.libvirt_infrastructure.network.nat.name_bridge
   autostart = true
 
-  ips = [
+  ips = var.libvirt_infrastructure.network.nat.mode == "bridge" ? null : [
     {
       address = var.libvirt_infrastructure.network.nat.ips.address
       prefix  = var.libvirt_infrastructure.network.nat.ips.prefix
@@ -38,7 +38,7 @@ resource "libvirt_network" "hostonly_net" {
   bridge    = var.libvirt_infrastructure.network.hostonly.name_bridge
   autostart = true
 
-  ips = [
+  ips = var.libvirt_infrastructure.network.hostonly.mode == "bridge" ? null : [
     {
       address = var.libvirt_infrastructure.network.hostonly.ips.address
       prefix  = var.libvirt_infrastructure.network.hostonly.ips.prefix
