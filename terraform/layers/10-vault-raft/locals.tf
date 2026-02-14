@@ -7,6 +7,7 @@ locals {
   domain_suffix      = local.global_topology.domain_suffix
   cluster_name       = "${local.service_meta.meta.name}-${local.service_meta.meta.project_code}"
   network_segment    = local.global_topology.network_segments[var.service_catalog_name]
+  vault_pki          = try(data.terraform_remote_state.topology.outputs.vault_pki, null)
 
   # Extract the Bridge Network Info for Service with Salted Hash Name
   my_segment_info = [

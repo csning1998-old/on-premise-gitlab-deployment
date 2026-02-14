@@ -4,9 +4,9 @@ output "vault_ha_virtual_ip" {
   value       = local.service_vip
 }
 
-output "vault_ca_cert" {
-  description = "The Certificates content of the Vault Cluster"
-  value = {
-    ca_cert = module.vault_tls_generator.ca_cert_pem # for PKI
-  }
-}
+# output "vault_ca_cert" {
+#   description = "The Certificates content of the Vault Cluster"
+#   value = {
+#     ca_cert = module.vault_tls_generator.ca_cert_pem # for PKI
+#   }
+# }
