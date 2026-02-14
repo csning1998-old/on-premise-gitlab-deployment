@@ -71,7 +71,7 @@ locals {
             local.lb_base_mac_parts[2], # 00
             # 4th octet forced to 00 for NAT
             local.lb_base_mac_parts[4],
-            parseint(local.lb_base_mac_parts[5], 16) + index(local.sorted_node_keys, node_name)
+            (parseint(local.lb_base_mac_parts[5], 16) + index(local.sorted_node_keys, node_name)) % 256
           )
           addresses      = [] # DHCP
           wait_for_lease = true
@@ -87,7 +87,7 @@ locals {
             local.lb_base_mac_parts[2],
             local.lb_base_mac_parts[3], # Keep VRID (e.g., 0a)
             local.lb_base_mac_parts[4],
-            parseint(local.lb_base_mac_parts[5], 16) + index(local.sorted_node_keys, node_name)
+            (parseint(local.lb_base_mac_parts[5], 16) + index(local.sorted_node_keys, node_name)) % 256
           )
           addresses = [
             format("%s/%s",
@@ -106,7 +106,7 @@ locals {
             alias        = local.raw_segments[seg_key].interface_alias
             mac = format("%s:%02x",
               join(":", slice(split(":", local.raw_segments[seg_key].mac_address), 0, 5)),
-              parseint(element(split(":", local.raw_segments[seg_key].mac_address), 5), 16) + index(local.sorted_node_keys, node_name)
+              (parseint(element(split(":", local.raw_segments[seg_key].mac_address), 5), 16) + index(local.sorted_node_keys, node_name)) % 256
             )
             addresses = [
               format("%s/%s",
