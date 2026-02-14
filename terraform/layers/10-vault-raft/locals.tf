@@ -14,9 +14,6 @@ locals {
     for seg in local.hydrated_topology : seg
     if seg.name == var.service_catalog_name
   ][0]
-
-  # TLS Output Directory
-  layer_tls_dir = "${abspath(path.root)}/tls"
 }
 
 locals {
