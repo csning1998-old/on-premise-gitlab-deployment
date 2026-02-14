@@ -10,6 +10,12 @@ variable "vault_cluster" {
   })
 }
 
+variable "vault_vip" {
+  description = "Optional Virtual IP to include in the Server Certificate SANs"
+  type        = string
+  default     = null
+}
+
 variable "output_dir" {
   description = "The absolute path where the generated certificates should be saved."
   type        = string

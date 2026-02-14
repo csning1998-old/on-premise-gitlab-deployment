@@ -8,6 +8,11 @@ network_baseline = {
   mac_prefix    = "52:54:00" # KVM/Libvirt common prefix
 }
 
+# The Single Source of Truth for the Root CA Identity
+pki_settings = {
+  root_ca_common_name = "on-premise-gitlab-deployment-root-ca"
+}
+
 /** Service Catalog Definition rules:
  * 0. name: define UNIQUE name of the service. 
  *      (e.g. gitlab)

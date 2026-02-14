@@ -3,7 +3,8 @@ module "vault_tls_generator" {
   source     = "../../modules/configuration/vault-tls-generator"
   output_dir = local.layer_tls_dir
 
-  tls_mode = var.tls_mode
+  tls_mode  = var.tls_mode
+  vault_vip = local.service_vip
 
   vault_cluster = {
     vault_config = {

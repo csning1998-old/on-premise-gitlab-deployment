@@ -9,6 +9,11 @@ output "domain_suffix" {
   value       = var.domain_suffix
 }
 
+output "pki_settings" {
+  description = "Global PKI Identity Settings for downstream layers (e.g. Vault PKI)."
+  value       = var.pki_settings
+}
+
 # For Load Balancer Usage: Only cares about how many network segments to set
 output "network_segments" {
   description = "Flat map of all network segments for LB iteration."

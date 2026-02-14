@@ -4,6 +4,13 @@ variable "domain_suffix" {
   type        = string
 }
 
+variable "pki_settings" {
+  description = "Global PKI Identity Settings (SSoT). Defines the legal identity of the infrastructure."
+  type = object({
+    root_ca_common_name = string
+  })
+}
+
 variable "network_baseline" {
   description = "Base network configuration including CIDR, VIP offsets, and MAC prefixes."
   type = object({
