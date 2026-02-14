@@ -43,46 +43,35 @@ locals {
 }
 
 # 4. Generate Vault Roles (Based on Dynamic Catalog)
+#    a. Map domains from Global Topology Service Structure
+#    b. Inject Metadata (OU)
+#    c. Apply TTL Policy
 locals {
-  # A. Component Roles (Server Certs): 
-  #    Iterate over local.service_catalog instead of var.service_catalog
+  # Component Roles (Server Certs): 
   component_roles = {
     for s_name, s_data in local.global_topology.service_structure :
-    # Flatten the nested loop logic
     s_name => {
       for c_key, c_val in s_data.meta.components : "${s_name}-${c_key}" => {
-        name = "${s_name}-${c_key}-role"
-        # Map domains from Layer 00
-        allowed_domains = [for sub in c_val.subdomains : "${sub}.${local.root_domain}"]
-
-        # Inject Metadata (OU)
-        ou = [s_data.meta.stage, s_data.meta.runtime]
-
-        # Apply TTL Policy
-        max_ttl = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).max
-        ttl     = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).default
+        name            = "${s_name}-${c_key}-role"
+        allowed_domains = [for sub in c_val.subdomains : "${sub}.${s_data.meta.stage}.${local.root_domain}"]
+        ou              = [s_data.meta.stage, s_data.meta.runtime]
+        max_ttl         = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).max
+        ttl             = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).default
       }
     }
   }
 
-  # B. Dependency Roles (Client Certs / Auth): 
-  #    Iterate over local.service_catalog instead of var.service_catalog
+  # Dependency Roles (Client Certs / Auth): 
   dependency_roles = {
     for s_name, s_data in local.global_topology.service_structure :
     s_name => {
       for d_key, d_val in s_data.meta.dependencies : "${s_name}-${d_key}" => {
         name = "${s_name}-${d_key}-role"
-
-        # Logic from original locals: postgres.gitlab.iac.local AND gitlab.iac.local
         allowed_domains = [
-          "${d_key}.${s_name}.${local.root_domain}",
-          "${s_name}.${local.root_domain}"
+          "${d_key}.${s_name}.${s_data.meta.stage}.${local.root_domain}",
+          "${s_name}.${s_data.meta.stage}.${local.root_domain}"
         ]
-
-        # Inject Metadata (OU) - Dependency Runtime is inside d_val
-        ou = [s_data.meta.stage, d_val.runtime]
-
-        # Apply TTL Policy
+        ou      = [s_data.meta.stage, d_val.runtime]
         max_ttl = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).max
         ttl     = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).default
       }
