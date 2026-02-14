@@ -15,13 +15,12 @@ locals {
   ][0]
 
   # TLS Output Directory
-  layer_tls_dir = "${path.root}/tls"
+  layer_tls_dir = "${abspath(path.root)}/tls"
 }
 
 locals {
   # 1. Lookup Service Metadata and Extract Network Facts from SSoT
-  service_vip         = local.service_meta.network.vip
-  service_bridge_name = local.my_segment_info.bridge_name
+  service_vip = local.service_meta.network.vip
 
   # 2. Network Identity & Specs (Corrected Source)
   # Use unique network names for this service cluster to avoid conflict with LB infra
