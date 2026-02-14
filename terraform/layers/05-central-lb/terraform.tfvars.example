@@ -2,19 +2,11 @@
 # This should match the name in the service catalog.
 service_catalog_name = "central-lb"
 
-# Management / NAT Network
-network_config = {
-  gateway = "172.16.85.1"
-  cidrv4  = "172.16.85.0/24"
-  dhcp = {
-    start = "172.16.85.100"
-    end   = "172.16.85.199"
-  }
-}
-
 # LB Nodes definition
 node_config = {
-  "lb-node-00" = { ip_suffix = 200, vcpu = 2, ram = 1024 }
-  "lb-node-01" = { ip_suffix = 201, vcpu = 2, ram = 1024 }
-  # "lb-node-02" = { ip_suffix = 202, vcpu = 2, ram = 1024 }
+  "lb-node-00" = { ip_suffix = 10, vcpu = 2, ram = 1024 }
+  "lb-node-01" = { ip_suffix = 11, vcpu = 2, ram = 1024 }
+  # "lb-node-02" = { ip_suffix = 12, vcpu = 2, ram = 1024 }
 }
+
+base_image_path = "../../../packer/output/08-base-haproxy/ubuntu-server-24-08-base-haproxy.qcow2"
