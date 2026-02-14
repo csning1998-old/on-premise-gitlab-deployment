@@ -1,9 +1,15 @@
 
-# 1. Global Topology
+# 1. Global Topology and Bootstrap CA.
 locals {
   global_topology     = data.terraform_remote_state.topology.outputs
   root_domain         = local.global_topology.domain_suffix
   root_ca_common_name = local.global_topology.pki_settings.root_ca_common_name
+  root_ca_pem         = base64decode(data.terraform_remote_state.topology.outputs.vault_pki.ca_cert)
+}
+
+resource "local_file" "bootstrap_ca" {
+  content  = local.root_ca_pem
+  filename = "${path.module}/tls/bootstrap-ca.crt"
 }
 
 # 2. TTL Policy for different environments
