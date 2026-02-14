@@ -48,14 +48,7 @@
         regexp: "^#?ListenAddress "
         line: "ListenAddress {{ ansible_host }}"
         state: present
-      register: ssh_config_update
-
-    - name: "Step A7. Ensure SSHD is restarted and binding correctly"
-      ansible.builtin.service:
-        name: ssh
-        state: restarted
-        enabled: true
-      when: ssh_config_update.changed
+      notify: Restart sshd Service
 
 - name: "Section B: Package Installation & User Prep"
   block:
