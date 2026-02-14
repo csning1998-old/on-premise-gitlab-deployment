@@ -22,10 +22,10 @@
 
     - name: "E3. Read existing Infrastructure Secrets"
       community.hashi_vault.vault_kv2_get:
-        url: "{{dev_vault_url}}:{{dev_vault_port}}"
+        url: "{{ dev_vault_url }}"
         engine_mount_point: "secret"
-        path: "{{dev_vault_api_path}}"
-        token: "{{ lookup('file', playbook_dir + dev_root_token_path) }}"
+        path: "{{ dev_vault_api_path }}"
+        token: "{{ lookup('file', dev_root_token_path) }}"
         validate_certs: false
       register: existing_secrets
       delegate_to: localhost
@@ -34,10 +34,10 @@
 
     - name: "E4. Write Merged Secrets back to Vault"
       community.hashi_vault.vault_kv2_write:
-        url: "{{dev_vault_url}}:{{dev_vault_port}}"
+        url: "{{ dev_vault_url }}"
         engine_mount_point: "secret"
-        path: "{{dev_vault_api_path}}"
-        token: "{{ lookup('file', playbook_dir + dev_root_token_path) }}"
+        path: "{{ dev_vault_api_path }}"
+        token: "{{ lookup('file', dev_root_token_path) }}"
         validate_certs: false
         data: >-
           {{ 
