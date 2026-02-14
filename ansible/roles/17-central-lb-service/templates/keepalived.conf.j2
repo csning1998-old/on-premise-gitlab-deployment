@@ -22,7 +22,7 @@ vrrp_instance VI_{{ segment.name | upper | replace('-', '_') }} {
 
     authentication {
         auth_type PASS
-        auth_pass {{ segment.vrid }}123 # Simple auth based on VRID
+        auth_pass {{ keepalived_auth_pass }}
     }
 
     virtual_ipaddress {

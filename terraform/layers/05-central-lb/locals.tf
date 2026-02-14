@@ -166,4 +166,9 @@ locals {
     ssh_public_key_path  = data.vault_generic_secret.iac_vars.data["ssh_public_key_path"]
     ssh_private_key_path = data.vault_generic_secret.iac_vars.data["ssh_private_key_path"]
   }
+
+  haproxy_credentials = {
+    haproxy_stats_pass   = data.vault_generic_secret.infra_vars.data["haproxy_stats_pass"]
+    keepalived_auth_pass = data.vault_generic_secret.infra_vars.data["keepalived_auth_pass"]
+  }
 }

@@ -47,4 +47,10 @@ locals {
     username             = var.vm_credentials.username
     ssh_private_key_path = var.vm_credentials.ssh_private_key_path
   }
+
+  # Secrets for HAProxy and Keepalived
+  haproxy_credentials_for_ansible = {
+    haproxy_stats_pass   = var.haproxy_credentials.haproxy_stats_pass
+    keepalived_auth_pass = var.haproxy_credentials.keepalived_auth_pass
+  }
 }

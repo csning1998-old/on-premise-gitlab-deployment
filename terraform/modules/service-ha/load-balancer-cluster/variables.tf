@@ -118,3 +118,12 @@ variable "vm_credentials" {
     ssh_private_key_path = string
   })
 }
+
+variable "haproxy_credentials" {
+  description = "HAProxy credentials (stats user, stats password, keepalived auth password)"
+  sensitive   = true
+  type = object({
+    haproxy_stats_pass   = string
+    keepalived_auth_pass = string
+  })
+}

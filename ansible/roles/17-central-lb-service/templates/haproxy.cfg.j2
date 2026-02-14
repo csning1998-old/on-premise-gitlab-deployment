@@ -23,11 +23,12 @@ defaults
 
 # Stats Interface, only bind to management IP
 listen stats
-    bind {{ ansible_host }}:8404
+    bind {{ ansible_host }}:{{ haproxy_stats_port }}
     mode http
     stats enable
     stats uri /
     stats refresh 10s
+    stats auth {{ haproxy_stats_user }}:{{ haproxy_stats_pass }}
     stats admin if TRUE
 
 {# Service Port Mapping #}

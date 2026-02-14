@@ -59,5 +59,7 @@ module "ansible_runner" {
 
   extra_vars = {
     terraform_runner_subnet = var.network_config.network.hostonly.cidrv4
+    haproxy_stats_pass      = local.haproxy_credentials_for_ansible.haproxy_stats_pass
+    keepalived_auth_pass    = local.haproxy_credentials_for_ansible.keepalived_auth_pass
   }
 }

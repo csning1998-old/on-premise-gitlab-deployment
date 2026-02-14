@@ -26,9 +26,10 @@ module "central_lb_cluster" {
     allowed_subnet = local.allowed_subnet
   }
 
-  service_segments = local.hydrated_service_segments
-  service_domain   = local.domain_suffix
-  vm_credentials   = local.vm_credentials
+  service_segments    = local.hydrated_service_segments
+  service_domain      = local.domain_suffix
+  vm_credentials      = local.vm_credentials
+  haproxy_credentials = local.haproxy_credentials
 
   network_identity = {
     nat_net_name         = local.infra_network.nat.name_network
