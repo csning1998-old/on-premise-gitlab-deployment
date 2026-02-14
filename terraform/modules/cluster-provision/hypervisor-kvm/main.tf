@@ -5,7 +5,7 @@ data "local_file" "ssh_public_key" {
 
 resource "libvirt_network" "nat_net" {
 
-  count = var.create_networks ? 1 : 0
+  count = var.create_networks && var.libvirt_infrastructure.network.nat.mode != "bridge" ? 1 : 0
 
   name      = var.libvirt_infrastructure.network.nat.name_network
   mode      = var.libvirt_infrastructure.network.nat.mode
@@ -31,7 +31,7 @@ resource "libvirt_network" "nat_net" {
 
 resource "libvirt_network" "hostonly_net" {
 
-  count = var.create_networks ? 1 : 0
+  count = var.create_networks && var.libvirt_infrastructure.network.hostonly.mode != "bridge" ? 1 : 0
 
   name      = var.libvirt_infrastructure.network.hostonly.name_network
   mode      = var.libvirt_infrastructure.network.hostonly.mode
@@ -176,16 +176,21 @@ resource "libvirt_domain" "nodes" {
     interfaces = [
       # NAT Network for Outbound
       {
-        type = "network"
-        source = {
+        type = var.libvirt_infrastructure.network.nat.mode == "bridge" ? "bridge" : "network"
+        source = var.libvirt_infrastructure.network.nat.mode == "bridge" ? {
+          bridge = var.libvirt_infrastructure.network.nat.name_bridge
+          } : {
           network = var.libvirt_infrastructure.network.nat.name_network
         }
+
         mac = local.nodes_config[each.key].nat_mac
       },
       # Hostonly Network for Internal
       {
-        type = "network"
-        source = {
+        type = var.libvirt_infrastructure.network.hostonly.mode == "bridge" ? "bridge" : "network"
+        source = var.libvirt_infrastructure.network.hostonly.mode == "bridge" ? {
+          bridge = var.libvirt_infrastructure.network.hostonly.name_bridge
+          } : {
           network = var.libvirt_infrastructure.network.hostonly.name_network
         }
         mac = local.nodes_config[each.key].hostonly_mac

@@ -2,7 +2,6 @@
 locals {
   global_topology    = data.terraform_remote_state.topology.outputs
   central_lb_outputs = data.terraform_remote_state.central_lb.outputs
-  network_topology   = local.central_lb_outputs.infra_network
   hydrated_topology  = local.central_lb_outputs.hydrated_topology
   service_meta       = local.global_topology.service_structure[var.service_catalog_name]
   domain_suffix      = local.global_topology.domain_suffix
