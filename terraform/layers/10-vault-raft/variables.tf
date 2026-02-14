@@ -14,9 +14,9 @@ variable "vault_config" {
   description = "Compute topology for Vault Core service."
   type = object({
     nodes = map(object({
-      ip   = string
-      vcpu = number
-      ram  = number
+      ip_suffix = number
+      vcpu      = number
+      ram       = number
     }))
   })
 }

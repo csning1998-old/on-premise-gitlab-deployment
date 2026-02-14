@@ -18,6 +18,7 @@ locals {
       ip = node.ip
     }
   }
+
   inventory_template = "${path.module}/../../../templates/inventory-vault-cluster.yaml.tftpl"
 
   ansible = {

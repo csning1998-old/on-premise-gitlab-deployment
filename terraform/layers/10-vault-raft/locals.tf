@@ -24,23 +24,36 @@ locals {
 
   # 2. Network Identity & Specs (Corrected Source)
   # Use unique network names for this service cluster to avoid conflict with LB infra
-  nat_net_name      = "${local.cluster_name}-nat"
-  hostonly_net_name = "${local.cluster_name}-hostonly"
-
-  # NAT Bridge usually remains shared (mgmt-br), but HostOnly Bridge MUST be the service-specific one
-  nat_bridge_name      = "br-nat-${substr(md5(local.cluster_name), 0, 6)}"
-  hostonly_bridge_name = local.my_segment_info.bridge_name
-
-  # Extract Gateways and CIDRs from the Service Segment Info (Vault Specific), NOT Central LB
-  hostonly_gateway = cidrhost(local.my_segment_info.cidr, 1) # Implied Gateway for HostOnly is typically the .1 of the CIDR
-  hostonly_cidr    = local.my_segment_info.cidr              # e.g. 172.16.136.0/24
-  nat_gateway      = local.my_segment_info.nat_gateway       # e.g. 172.16.12.1
-  nat_cidr         = local.my_segment_info.nat_cidr          # e.g. 172.16.12.0/24
-  nat_dhcp         = local.network_segment.nat_dhcp          # .12.100 - .12.199
+  network_identity = {
+    nat_net_name         = "${local.cluster_name}-nat"
+    nat_bridge_name      = "br-nat-${substr(md5(local.cluster_name), 0, 6)}"
+    hostonly_net_name    = "${local.cluster_name}-hostonly"
+    hostonly_bridge_name = local.my_segment_info.bridge_name
+  }
 
   # 3. Subnet Prefix (Based on the Vault NAT gateway)
-  nat_network_subnet_prefix = join(".", slice(split(".", local.nat_gateway), 0, 3))
+  nat_network_subnet_prefix = join(".", slice(split(".", local.my_segment_info.nat_gateway), 0, 3))
 }
+
+locals {
+  # Extract Gateways and CIDRs from the Service Segment Info (Vault Specific), NOT Central LB
+  network_config = {
+    network = {
+      nat = {
+        gateway = local.my_segment_info.nat_gateway # e.g. 172.16.12.1
+        cidrv4  = local.my_segment_info.nat_cidr    # e.g. 172.16.12.0/24
+        dhcp    = local.network_segment.nat_dhcp    # .12.100 - .12.199
+      }
+      hostonly = {
+        gateway = cidrhost(local.my_segment_info.cidr, 1) # Implied Gateway for HostOnly is typically the .1 of the CIDR
+        cidrv4  = local.my_segment_info.cidr              # e.g. 172.16.136.0/24
+      }
+    }
+    allowed_subnet = local.my_segment_info.cidr
+  }
+}
+
+
 locals {
   vm_credentials = {
     username             = data.vault_generic_secret.iac_vars.data["vm_username"]
@@ -57,9 +70,12 @@ locals {
 
   # 2. Inject Base Image Path
   nodes_configuration = {
-    for k, v in var.vault_config.nodes : k => merge(v, {
+    for k, v in var.vault_config.nodes : "${local.node_name_prefix}-${k}" => {
+      ip              = cidrhost(local.network_config.network.hostonly.cidrv4, v.ip_suffix)
+      vcpu            = v.vcpu
+      ram             = v.ram
       base_image_path = var.base_image_path
-    })
+    }
   }
   # 3. Final Node Map
   nodes_map = local.nodes_configuration
