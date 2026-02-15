@@ -57,29 +57,25 @@ locals {
   component_roles = {
     for s_name, s_data in local.global_topology.service_structure :
     s_name => {
-      for c_key, c_val in s_data.meta.components : "${s_name}-${c_key}" => {
-        name            = "${s_name}-${c_key}-role"
-        allowed_domains = [for sub in c_val.subdomains : "${sub}.${s_data.meta.stage}.${local.root_domain}"]
-        ou              = [s_data.meta.stage, s_data.meta.runtime]
+      for c_key, c_val in s_data.components : "${s_name}-${c_key}" => {
+        name            = c_val.role_name
+        allowed_domains = c_val.dns_san
+        ou              = c_val.ou
         max_ttl         = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).max
         ttl             = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).default
       }
     }
   }
-
   # Dependency Roles (Client Certs / Auth): 
   dependency_roles = {
     for s_name, s_data in local.global_topology.service_structure :
     s_name => {
-      for d_key, d_val in s_data.meta.dependencies : "${s_name}-${d_key}" => {
-        name = "${s_name}-${d_key}-role"
-        allowed_domains = [
-          "${d_key}.${s_name}.${s_data.meta.stage}.${local.root_domain}",
-          "${s_name}.${s_data.meta.stage}.${local.root_domain}"
-        ]
-        ou      = [s_data.meta.stage, d_val.runtime]
-        max_ttl = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).max
-        ttl     = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).default
+      for d_key, d_val in s_data.dependencies : "${s_name}-${d_key}-dep" => {
+        name            = d_val.role.role_name
+        allowed_domains = d_val.role.dns_san
+        ou              = d_val.role.ou
+        max_ttl         = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).max
+        ttl             = lookup(local.ttl_policy, s_data.meta.stage, local.ttl_policy["default"]).default
       }
     }
   }
