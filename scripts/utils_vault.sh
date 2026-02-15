@@ -105,23 +105,15 @@ vault_status_reporter() {
 	if [[ ! -f "$PROD_CA_CERT" ]]; then
     log_print "WARN" "Production Vault (Layer10): Unknown (CA Cert missing at $PROD_CA_CERT)"
     log_print "INFO" "Run Layer 20 Terraform to generate the Bootstrap CA file."
-  elif curl -s --connect-timeout 1 --cacert "${PROD_CA_CERT}" "${PROD_VAULT_ADDR}/v1/sys/health" > /dev/null 2>&1; then
-		local prod_status_json
-    # Attempt to use the token if context is given, otherwise just check seal status
-    # Note: vault status command doesn't strictly need a token, but context helper sets it.
-    prod_status_json=$(vault status -address="${PROD_VAULT_ADDR}" -ca-cert="${PROD_CA_CERT}" -format=json 2>/dev/null || true)
-	
-		if [[ -n "$prod_status_json" ]]; then
-        local p_sealed
-        p_sealed=$(echo "$prod_status_json" | jq .sealed 2>/dev/null)
-        if [[ "$p_sealed" == "true" ]]; then
-          log_print "WARN" "Production Vault (Layer10): Running (Sealed)"
-        else
-					log_print "OK" "Production Vault (Layer10): Running (Unsealed)"
-        fi
-		fi
-	else	# including connection refused, SSL error, Unsealed, EOF, timeout...
-		log_print "ERROR" "Production Vault (Layer10): Stopped or Unreachable"
+  else
+    # Exit code 0 for Unsealed; 2 for Sealed; 1 for Error
+    if vault status -address="${PROD_VAULT_ADDR}" -ca-cert="${PROD_CA_CERT}" -format=json >/dev/null 2>&1; then
+      log_print "OK" "Production Vault (Layer10): Running (Unsealed)"
+    elif [[ $? -eq 2 ]]; then
+      log_print "WARN" "Production Vault (Layer10): Running (Sealed)"
+    else
+      log_print "ERROR" "Production Vault (Layer10): Stopped or Unreachable"
+    fi
 	fi
   log_divider
 }
@@ -282,15 +274,13 @@ vault_prod_unseal_trigger() {
 		return 1
   fi
 
-  # [MODIFIED] Use the Ansible logic from previous steps (using Lookup plugin)
   # No need to pass token string, just the path and URL.
-  ansible-playbook \
+  if ansible-playbook \
     -i "$inventory_file" \
     "$playbook_file" \
     --extra-vars "dev_vault_url=${DEV_VAULT_ADDR}" \
-    --extra-vars "dev_root_token_path=${DEV_ROOT_TOKEN_FILE}"
-
-  if [[ $? -eq 0 ]]; then
+    --extra-vars "dev_root_token_path=${DEV_ROOT_TOKEN_FILE}"; then
+    
     log_print "OK" "[Prod Vault] Unseal Playbook execution completed."
   else
     log_print "ERROR" "[Prod Vault] Unseal Playbook failed."
