@@ -1,106 +1,77 @@
 
+variable "cluster_name" {
+  description = "The unique name of the cluster (e.g. gitlab-core)"
+  type        = string
+}
+
 variable "topology_config" {
-  description = "Standardized compute topology configuration for Postgres HA Cluster."
-  type = object({
-    cluster_identity = object({
-      service_name = string
-      component    = string
-      cluster_name = string
-    })
+  description = "Map of component configurations (postgres, etcd) containing distinct network, storage, and node specs."
+  type = map(object({
 
-    # Postgres Data Nodes (Map)
-    postgres_config = object({
-      nodes = map(object({
-        ip   = string
-        vcpu = number
-        ram  = number
-      }))
+    storage_pool_name = string
+
+    nodes_configuration = map(object({
+      ip              = string
+      vcpu            = number
+      ram             = number
       base_image_path = string
-    })
+      role            = string
+    }))
+  }))
 
-    # Etcd Nodes (Map)
-    etcd_config = object({
-      nodes = map(object({
-        ip   = string
-        vcpu = number
-        ram  = number
-      }))
-      base_image_path = string
-    })
-
-    haproxy_config = object({
-      virtual_ip = string
-      stats_port = number
-      rw_proxy   = number
-      ro_proxy   = number
-
-      # HAProxy Nodes (Map)
-      nodes = map(object({
-        ip   = string
-        vcpu = number
-        ram  = number
-      }))
-      base_image_path = string
-    })
-  })
-
-  # Etcd Raft Quorum
+  # 1. Etcd Raft Quorum Check
   validation {
-    condition     = length(var.topology_config.etcd_config.nodes) % 2 != 0
+    condition     = length(var.topology_config["etcd"].nodes_configuration) % 2 != 0
     error_message = "Etcd node count must be an odd number (1, 3, 5, etc.) to ensure a stable Raft quorum."
   }
 
-  # At least one HAProxy node
-  validation {
-    condition     = length(var.topology_config.haproxy_config.nodes) > 0
-    error_message = "High Availability architecture requires at least one HAProxy node."
-  }
-
-  # VIP format check
-  validation {
-    condition     = can(cidrnetmask("${var.topology_config.haproxy_config.virtual_ip}/32"))
-    error_message = "The High Availability Virtual IP (VIP) must be a valid IPv4 address."
-  }
-
-  # Postgres Data Node specification (vCPU >= 2, RAM >= 2048)
+  # 2. Postgres Data Node Specification Check
   validation {
     condition = alltrue([
-      for k, node in var.topology_config.postgres_config.nodes :
+      for k, node in var.topology_config["postgres"].nodes_configuration :
       node.vcpu >= 2 && node.ram >= 2048
     ])
     error_message = "Postgres data nodes require at least 2 vCPUs and 2048MB RAM."
   }
 
-  # Etcd Node specification (vCPU >= 1, RAM >= 1024)
+  # 3. Etcd Node Specification Check
   validation {
     condition = alltrue([
-      for k, node in var.topology_config.etcd_config.nodes :
+      for k, node in var.topology_config["etcd"].nodes_configuration :
       node.vcpu >= 1 && node.ram >= 1024
     ])
     error_message = "Etcd nodes require at least 1 vCPU and 1024MB RAM."
   }
-
-  # HAProxy Node Hardware Specification
-  validation {
-    condition = alltrue([
-      for k, node in var.topology_config.haproxy_config.nodes :
-      node.vcpu >= 1 && node.ram >= 512
-    ])
-    error_message = "All HAProxy nodes must meet minimum requirements: 1 vCPU and 512MB RAM."
-  }
 }
 
-variable "infra_config" {
-  description = "Standardized infrastructure network configuration."
-  type = object({
+variable "service_vip" {
+  type = string
+}
+
+variable "service_domain" {
+  description = "The FQDN for the Load Balancer service"
+  type        = string
+}
+
+# Network Identity for Naming Policy
+variable "network_identity" {
+  description = "Pre-calculated network and bridge names passed from Layer"
+  type = map(object({
+    nat_net_name         = string
+    nat_bridge_name      = string
+    hostonly_net_name    = string
+    hostonly_bridge_name = string
+  }))
+}
+
+variable "network_config" {
+  description = "Network Config for Hypervisor (Gateways/CIDRs)"
+  type = map(object({
     network = object({
       nat = object({
         gateway = string
         cidrv4  = string
-        dhcp = optional(object({
-          start = string
-          end   = string
-        }))
+        dhcp    = optional(object({ start = string, end = string }))
       })
       hostonly = object({
         gateway = string
@@ -108,34 +79,24 @@ variable "infra_config" {
       })
     })
     allowed_subnet = string
-  })
+  }))
 
   # Network CIDR validation
   validation {
     condition = alltrue([
-      can(cidrnetmask(var.infra_config.network.nat.cidrv4)),
-      can(cidrnetmask(var.infra_config.network.hostonly.cidrv4)),
-      can(cidrnetmask(var.infra_config.allowed_subnet))
+      for k, v in var.network_config :
+      can(cidrnetmask(v.network.nat.cidrv4)) &&
+      can(cidrnetmask(v.network.hostonly.cidrv4)) &&
+      can(cidrnetmask(v.allowed_subnet))
     ])
     error_message = "All network CIDRs must be valid."
   }
 }
 
-variable "service_domain" {
-  description = "The FQDN for the Postgres service"
-  type        = string
-}
-
-# Network Identity for Naming Policy
-variable "network_identity" {
-  description = "Pre-calculated network and bridge names passed from Layer"
-  type = object({
-    nat_net_name         = string
-    nat_bridge_name      = string
-    hostonly_net_name    = string
-    hostonly_bridge_name = string
-    storage_pool_name    = string
-  })
+variable "pki_artifacts" {
+  description = "PKI certificates passed from Layer 00 via Layer 30"
+  type        = any
+  default     = null
 }
 
 # Credentials Injection
@@ -164,9 +125,10 @@ variable "vault_agent_config" {
   description = "Vault Agent Configuration"
   sensitive   = true
   type = object({
-    role_id     = string
-    secret_id   = string
-    ca_cert_b64 = string
-    role_name   = string # PKI Role Name
+    role_id       = string
+    secret_id     = string
+    ca_cert_b64   = string
+    role_name     = string # PKI Role Name
+    vault_address = string
   })
 }
