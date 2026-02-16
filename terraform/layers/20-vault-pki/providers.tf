@@ -11,7 +11,7 @@ terraform {
 # Bootstrap Provider (Podman Vault)
 provider "vault" {
   alias           = "bootstrapper"
-  address         = "https://127.0.0.1:8200"
+  address         = var.vault_dev_addr
   token           = trimspace(file(abspath("${path.root}/../../../vault/keys/root-token.txt")))
   skip_tls_verify = true
 }

@@ -39,3 +39,8 @@ output "auth_backend_paths" {
   description = "Map of enabled Auth Backend paths"
   value       = module.vault_pki_setup.auth_backend_paths
 }
+
+output "bootstrap_ca_path" {
+  description = "Path to the bootstrap CA certificate"
+  value       = abspath(local_file.bootstrap_ca.filename)
+}

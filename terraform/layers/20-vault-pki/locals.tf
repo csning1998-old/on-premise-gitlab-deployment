@@ -9,7 +9,7 @@ locals {
 
 resource "local_file" "bootstrap_ca" {
   content  = local.root_ca_pem
-  filename = "${path.module}/tls/bootstrap-ca.crt"
+  filename = "${path.root}/tls/bootstrap-ca.crt"
 }
 
 # 2. TTL Policy for different environments
