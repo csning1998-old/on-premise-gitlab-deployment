@@ -1,35 +1,34 @@
 
 locals {
-  nodes_config = var.topology_config.vault_config.nodes
-
   nodes_list_for_ssh = [
-    for key, node in local.nodes_config : {
+    for key, node in var.topology_config.vault_config.nodes : {
       key = key
       ip  = node.ip
     }
   ]
-  # Gateway IP prefix extraction
-  nat_network_subnet_prefix = join(".", slice(split(".", var.network_config.network.nat.gateway), 0, 3))
-}
 
-locals {
   nodes_map_for_template = {
     for node in local.nodes_list_for_ssh : node.key => {
       ip = node.ip
     }
   }
 
+  # Gateway IP prefix extraction
+  nat_network_subnet_prefix = join(".", slice(split(".", var.network_config.network.nat.gateway), 0, 3))
+}
+
+locals {
   inventory_template = "${path.module}/../../../templates/inventory-vault-cluster.yaml.tftpl"
 
   ansible = {
     root_path          = abspath("${path.module}/../../../../ansible")
     playbook_file      = "playbooks/10-provision-core-services.yaml"
-    inventory_file     = "inventory-${var.topology_config.cluster_name}.yaml"
+    inventory_file     = "inventory-${var.cluster_name}.yaml"
     inventory_template = local.inventory_template
 
     inventory_contents = templatefile(local.inventory_template, {
       ansible_ssh_user        = var.vm_credentials.username
-      service_identifier      = var.topology_config.cluster_name
+      service_identifier      = var.cluster_name
       service_domain          = var.service_domain
       vault_nodes             = local.nodes_map_for_template
       vault_nat_subnet_prefix = local.nat_network_subnet_prefix

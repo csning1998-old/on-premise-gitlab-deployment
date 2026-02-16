@@ -4,7 +4,7 @@ module "hypervisor_kvm" {
 
   # VM Configuration
   vm_config = {
-    all_nodes_map = local.nodes_config
+    all_nodes_map = var.topology_config.vault_config.nodes
   }
 
   # VM Credentials from Vault
@@ -45,7 +45,9 @@ module "ssh_manager" {
 
   nodes          = local.nodes_list_for_ssh
   vm_credentials = local.vm_credentials_for_ssh
-  config_name    = var.topology_config.cluster_name
+  config_name = {
+    cluster_name = var.cluster_name
+  }
 }
 
 module "ansible_runner" {

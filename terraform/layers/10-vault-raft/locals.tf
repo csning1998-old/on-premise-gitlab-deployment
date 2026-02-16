@@ -71,9 +71,7 @@ locals {
       ip              = cidrhost(local.network_config.network.hostonly.cidrv4, v.ip_suffix)
       vcpu            = v.vcpu
       ram             = v.ram
-      base_image_path = var.base_image_path
+      base_image_path = var.vault_config.base_image_path
     }
   }
-  # 3. Final Node Map
-  nodes_map = local.nodes_configuration
 }

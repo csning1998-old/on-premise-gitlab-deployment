@@ -18,12 +18,8 @@ variable "vault_config" {
       vcpu      = number
       ram       = number
     }))
+    base_image_path = string
   })
-}
-
-variable "base_image_path" {
-  description = "The path to the base image for the Load Balancer nodes."
-  type        = string
 }
 
 variable "tls_mode" {

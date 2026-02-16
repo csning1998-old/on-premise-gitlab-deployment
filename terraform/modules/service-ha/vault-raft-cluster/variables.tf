@@ -1,9 +1,13 @@
 
+variable "cluster_name" {
+  description = "The unique name of the cluster (e.g. gitlab-core)"
+  type        = string
+}
+
 variable "topology_config" {
   description = "Compute topology for Vault Core service"
   type = object({
 
-    cluster_name      = string
     storage_pool_name = string
 
     vault_config = object({
