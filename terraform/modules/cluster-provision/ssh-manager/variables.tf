@@ -14,7 +14,7 @@ variable "nodes" {
   }))
 }
 
-variable "vm_credentials" {
+variable "credentials_vm" {
   description = "Credentials for SSH access to the target VMs."
   type = object({
     username             = string

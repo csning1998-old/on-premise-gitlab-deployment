@@ -22,8 +22,8 @@ resource "local_file" "ssh_config" {
 
   content = templatefile("${path.module}/../../../templates/ssh_config.tftpl", {
     nodes                = var.nodes
-    ssh_user             = var.vm_credentials.username
-    ssh_private_key_path = var.vm_credentials.ssh_private_key_path
+    ssh_user             = var.credentials_vm.username
+    ssh_private_key_path = var.credentials_vm.ssh_private_key_path
     config_name          = local.cluster_name
     known_hosts_path     = local.known_hosts_path
   })
