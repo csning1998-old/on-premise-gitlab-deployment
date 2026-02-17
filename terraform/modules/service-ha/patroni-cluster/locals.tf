@@ -86,7 +86,6 @@ locals {
 # - If 'default' is not found, find the first tier used
 locals {
   primary_tier_key = contains(keys(var.network_bindings), "default") ? "default" : keys(var.network_bindings)[0]
-  primary_binding  = var.network_bindings[local.primary_tier_key]
   primary_params   = var.network_parameters[local.primary_tier_key]
 }
 

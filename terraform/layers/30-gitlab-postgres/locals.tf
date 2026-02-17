@@ -6,7 +6,7 @@ locals {
   vault_pki_state       = data.terraform_remote_state.vault_pki.outputs
   service_meta          = local.global_topology.service_structure[var.service_catalog_name]
   service_fqdn          = local.global_topology.domain_suffix
-  cluster_name          = "${local.service_meta.meta.name}-${local.service_meta.meta.project_code}-data"
+  cluster_name          = "${local.service_meta.meta.name}-${local.service_meta.meta.project_code}"
   security_pki_bundle   = try(local.global_topology.gitlab_postgres_pki, null)
   postgres_topology     = local.central_lb_outputs.network_service_topology[local.postgres_topology_key]
   postgres_topology_key = "${var.service_catalog_name}-postgres"
@@ -68,7 +68,7 @@ locals {
 
 # Topology Component Construction
 locals {
-  storage_pool_name = "iac-${local.service_meta.meta.project_code}-${local.service_meta.meta.name}-data"
+  storage_pool_name = "iac-${local.cluster_name}"
 
   topology_cluster = {
     storage_pool_name = local.storage_pool_name
