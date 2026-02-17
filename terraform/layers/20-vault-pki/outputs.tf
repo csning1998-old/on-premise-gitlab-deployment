@@ -1,7 +1,7 @@
 
-output "vault_ha_virtual_ip" {
+output "vault_service_vip" {
   description = "The Virtual IP of the Vault Raft Cluster"
-  value       = data.terraform_remote_state.vault_raft_config.outputs.vault_ha_virtual_ip
+  value       = data.terraform_remote_state.vault_raft_config.outputs.service_vip
 }
 
 output "pki_configuration" {
