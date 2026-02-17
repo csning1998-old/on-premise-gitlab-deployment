@@ -13,12 +13,14 @@ variable "vault_dev_addr" {
 variable "vault_config" {
   description = "Compute topology for Vault Core service."
   type = object({
-    nodes = map(object({
-      ip_suffix = number
-      vcpu      = number
-      ram       = number
-    }))
     base_image_path = string
+    nodes = map(object({
+      ip_suffix    = number
+      vcpu         = number
+      ram          = number
+      role         = optional(string, "vault")
+      network_tier = optional(string, "default")
+    }))
   })
 }
 
