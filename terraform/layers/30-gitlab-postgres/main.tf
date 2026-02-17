@@ -1,24 +1,35 @@
 
-# Call the Identity Module to generate AppRole & Secret ID
-resource "vault_approle_auth_backend_role_secret_id" "this" {
-  backend   = data.terraform_remote_state.vault_pki.outputs.workload_identities_dependencies["${var.service_catalog_name}-postgres-dep"].auth_path
-  role_name = data.terraform_remote_state.vault_pki.outputs.workload_identities_dependencies["${var.service_catalog_name}-postgres-dep"].role_name
-}
 
 module "build_gitlab_postgres_cluster" {
   source = "../../modules/service-ha/patroni-cluster"
 
-  # Topology
-  topology_config  = local.cluster_components
-  cluster_name     = local.cluster_name
-  service_vip      = local.service_vip
-  service_domain   = local.service_domain
-  vm_credentials   = local.vm_credentials
-  db_credentials   = local.db_credentials
-  network_config   = local.network_config
-  network_identity = local.network_identity
-  pki_artifacts    = local.vault_pki
-  vault_agent_config = merge(local.vault_agent_config, {
-    secret_id = vault_approle_auth_backend_role_secret_id.this.secret_id
-  })
+  # Identity & Service Definitions
+  cluster_name   = local.cluster_name
+  service_vip    = local.service_vip
+  service_domain = local.service_fqdn
+
+  # Topology (Compute & Storage)
+  topology_cluster = local.topology_cluster
+
+  # Network Infrastructure with Dual-Tier
+  network_bindings   = local.network_bindings
+  network_parameters = local.network_parameters
+
+  # Credentials & Security
+  credentials_system   = local.credentials_system
+  credentials_postgres = local.credentials_postgres
+
+  # Layer 00 Artifacts (Root CA) for Ansible trust store
+  security_pki_bundle = local.security_pki_bundle
+
+  # Vault Agent Identity Injection
+  credentials_vault_agent = merge(
+    local.vault_agent_identity,
+    {
+      secret_id = vault_approle_auth_backend_role_secret_id.patroni_agent.secret_id
+    }
+  )
+
+  # Ansible Configuration
+  ansible_files = var.ansible_files
 }

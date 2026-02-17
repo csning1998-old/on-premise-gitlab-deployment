@@ -4,46 +4,6 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "topology_config" {
-  description = "Map of component configurations (postgres, etcd) containing distinct network, storage, and node specs."
-  type = map(object({
-
-    storage_pool_name = string
-
-    nodes_configuration = map(object({
-      ip              = string
-      vcpu            = number
-      ram             = number
-      base_image_path = string
-      role            = string
-    }))
-  }))
-
-  # 1. Etcd Raft Quorum Check
-  validation {
-    condition     = length(var.topology_config["etcd"].nodes_configuration) % 2 != 0
-    error_message = "Etcd node count must be an odd number (1, 3, 5, etc.) to ensure a stable Raft quorum."
-  }
-
-  # 2. Postgres Data Node Specification Check
-  validation {
-    condition = alltrue([
-      for k, node in var.topology_config["postgres"].nodes_configuration :
-      node.vcpu >= 2 && node.ram >= 2048
-    ])
-    error_message = "Postgres data nodes require at least 2 vCPUs and 2048MB RAM."
-  }
-
-  # 3. Etcd Node Specification Check
-  validation {
-    condition = alltrue([
-      for k, node in var.topology_config["etcd"].nodes_configuration :
-      node.vcpu >= 1 && node.ram >= 1024
-    ])
-    error_message = "Etcd nodes require at least 1 vCPU and 1024MB RAM."
-  }
-}
-
 variable "service_vip" {
   type = string
 }
@@ -53,9 +13,71 @@ variable "service_domain" {
   type        = string
 }
 
+variable "security_pki_bundle" {
+  description = "PKI certificates passed from Layer 00 via Layer 10"
+  type        = any
+  default     = null
+}
+
+
+variable "topology_cluster" {
+  description = "Standardized compute topology supporting multi-component architecture."
+  type = object({
+    storage_pool_name = string
+
+    # Key: Component Name (e.g., "node", whatever if it matches `locals.topology_cluster.components.name`.)
+    components = map(object({
+      base_image_path = string
+      role            = string
+      network_tier    = optional(string, "default")
+
+      nodes = map(object({
+        ip_suffix = number
+        vcpu      = number
+        ram       = number
+
+        data_disks = optional(list(object({
+          name_suffix = string
+          capacity    = number
+        })), [])
+      }))
+    }))
+  })
+}
+
+variable "network_parameters" {
+  description = "Map of L3 network configurations keyed by tier name."
+  type = map(object({
+    network = object({
+      nat = object({
+        gateway = string,
+        cidrv4  = string,
+        dhcp    = optional(any)
+      })
+      hostonly = object({
+        gateway = string,
+        cidrv4  = string
+      })
+    })
+    network_access_scope = string
+  }))
+
+  # Network CIDR validation
+  validation {
+    condition = alltrue(flatten([
+      for k, v in var.network_parameters : [
+        can(cidrnetmask(v.network.nat.cidrv4)),
+        can(cidrnetmask(v.network.hostonly.cidrv4)),
+        can(cidrnetmask(v.network_access_scope))
+      ]
+    ]))
+    error_message = "All network CIDRs must be valid IPv4 CIDR ranges."
+  }
+}
+
 # Network Identity for Naming Policy
-variable "network_identity" {
-  description = "Pre-calculated network and bridge names passed from Layer"
+variable "network_bindings" {
+  description = "Map of L2 network bindings keyed by tier name."
   type = map(object({
     nat_net_name         = string
     nat_bridge_name      = string
@@ -64,43 +86,8 @@ variable "network_identity" {
   }))
 }
 
-variable "network_config" {
-  description = "Network Config for Hypervisor (Gateways/CIDRs)"
-  type = map(object({
-    network = object({
-      nat = object({
-        gateway = string
-        cidrv4  = string
-        dhcp    = optional(object({ start = string, end = string }))
-      })
-      hostonly = object({
-        gateway = string
-        cidrv4  = string
-      })
-    })
-    allowed_subnet = string
-  }))
-
-  # Network CIDR validation
-  validation {
-    condition = alltrue([
-      for k, v in var.network_config :
-      can(cidrnetmask(v.network.nat.cidrv4)) &&
-      can(cidrnetmask(v.network.hostonly.cidrv4)) &&
-      can(cidrnetmask(v.allowed_subnet))
-    ])
-    error_message = "All network CIDRs must be valid."
-  }
-}
-
-variable "pki_artifacts" {
-  description = "PKI certificates passed from Layer 00 via Layer 30"
-  type        = any
-  default     = null
-}
-
 # Credentials Injection
-variable "vm_credentials" {
+variable "credentials_system" {
   description = "System level credentials (ssh user, password, keys)"
   sensitive   = true
   type = object({
@@ -111,7 +98,7 @@ variable "vm_credentials" {
   })
 }
 
-variable "db_credentials" {
+variable "credentials_postgres" {
   description = "Database level credentials (patroni, replication)"
   sensitive   = true
   type = object({
@@ -121,8 +108,8 @@ variable "db_credentials" {
   })
 }
 
-variable "vault_agent_config" {
-  description = "Vault Agent Configuration"
+variable "credentials_vault_agent" {
+  description = "Vault Agent Credentials"
   sensitive   = true
   type = object({
     role_id       = string
@@ -130,5 +117,13 @@ variable "vault_agent_config" {
     ca_cert_b64   = string
     role_name     = string # PKI Role Name
     vault_address = string
+  })
+}
+
+variable "ansible_files" {
+  description = "Meta configuration of Ansible inventory for Vault Core service."
+  type = object({
+    playbook_file           = string
+    inventory_template_file = string
   })
 }

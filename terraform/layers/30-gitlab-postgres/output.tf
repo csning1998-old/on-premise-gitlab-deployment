@@ -1,20 +1,37 @@
 
-output "gitlab_postgres_cluster_name" {
-  description = "GitLab Postgres cluster name."
-  value       = local.cluster_name
-}
-
-output "gitlab_postgres_db_ip_list" {
-  description = "List of Postgres node IPs for GitLab"
-  value       = [for k, node in local.cluster_components["postgres"].nodes_configuration : node.ip]
-}
-
-output "gitlab_postgres_etcd_ip_list" {
-  description = "List of Postgres etcd node IPs for GitLab"
-  value       = [for k, node in local.cluster_components["etcd"].nodes_configuration : node.ip]
-}
-
-output "gitlab_postgres_virtual_ip" {
-  description = "Postgres virtual IP for GitLab"
+output "service_vip" {
+  description = "The virtual IP assigned to the Postgres service from Central LB topology."
   value       = local.service_vip
+}
+
+output "security_pki_bundle" {
+  description = "PKI artifacts (Root CA) used for trust establishment."
+  value       = local.security_pki_bundle
+  sensitive   = true
+}
+
+output "credentials_system" {
+  description = "System-level access credentials (SSH) for the cluster nodes."
+  value       = local.credentials_system
+  sensitive   = true
+}
+output "credentials_postgres" {
+  description = "Database-level credentials for Patroni and PostgreSQL replication."
+  value       = local.credentials_postgres
+  sensitive   = true
+}
+
+output "network_bindings" {
+  description = "L2 network identity mapping for VM interface attachment (Verified from KVM)."
+  value       = module.build_gitlab_postgres_cluster.network_bindings
+}
+
+output "network_parameters" {
+  description = "L3 network configurations including gateways (Verified from KVM)."
+  value       = module.build_gitlab_postgres_cluster.network_parameters
+}
+
+output "topology_cluster" {
+  description = "The actual provisioned configuration for all Postgres and Etcd nodes."
+  value       = module.build_gitlab_postgres_cluster.cluster_nodes
 }

@@ -4,12 +4,6 @@ variable "service_catalog_name" {
   type        = string
 }
 
-variable "service_dependencies" {
-  description = "List of dependency components to provision (e.g. ['postgres', 'etcd'])."
-  type        = list(string)
-  default     = ["postgres", "etcd"]
-}
-
 variable "vault_dev_addr" {
   description = "The address of the Vault server"
   type        = string
@@ -18,25 +12,28 @@ variable "vault_dev_addr" {
 
 variable "gitlab_postgres_config" {
   description = "Compute topology for Gitlab Postgres service"
-  type = object({
-    # Postgres Data Nodes (Map)
-    postgres_config = object({
-      nodes = map(object({
-        ip_suffix = number
-        vcpu      = number
-        ram       = number
-      }))
-      base_image_path = string
-    })
+  type = map(object({
+    role            = string
+    network_tier    = string
+    base_image_path = string
 
-    # Postgres Etcd Nodes (Map)
-    etcd_config = object({
-      nodes = map(object({
-        ip_suffix = number
-        vcpu      = number
-        ram       = number
-      }))
-      base_image_path = string
-    })
+    nodes = map(object({
+      ip_suffix = number
+      vcpu      = number
+      ram       = number
+
+      data_disks = optional(list(object({
+        name_suffix = string
+        capacity    = number
+      })), [])
+    }))
+  }))
+}
+
+variable "ansible_files" {
+  description = "Meta configuration of Ansible inventory for Vault Core service."
+  type = object({
+    playbook_file           = string
+    inventory_template_file = string
   })
 }

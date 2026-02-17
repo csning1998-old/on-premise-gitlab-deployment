@@ -25,7 +25,7 @@ provider "vault" {
 
 # Production Provider (Layer 10 Vault)
 provider "vault" {
-  address      = "https://${data.terraform_remote_state.vault_raft_config.outputs.vault_ha_virtual_ip}:443"
+  address      = local.vault_prod_addr
   token        = data.vault_generic_secret.prod_credential.data["prod_vault_root_token"]
   ca_cert_file = data.terraform_remote_state.vault_pki.outputs.bootstrap_ca_path
 }
