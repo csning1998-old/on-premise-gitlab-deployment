@@ -12,16 +12,22 @@ variable "vault_dev_addr" {
 
 variable "vault_config" {
   description = "Compute topology for Vault Core service."
-  type = object({
+  type = map(object({
+    role            = string
+    network_tier    = string
     base_image_path = string
+
     nodes = map(object({
-      ip_suffix    = number
-      vcpu         = number
-      ram          = number
-      role         = optional(string, "vault")
-      network_tier = optional(string, "default")
+      ip_suffix = number
+      vcpu      = number
+      ram       = number
+
+      data_disks = optional(list(object({
+        name_suffix = string
+        capacity    = number
+      })), [])
     }))
-  })
+  }))
 }
 
 variable "ansible_files" {

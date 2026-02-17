@@ -7,11 +7,11 @@ output "cluster_nodes" {
 output "network_bindings" {
   description = "L2 network identity mapping (Sourced from KVM)."
   value = {
-    "${local.primary_tier_key}" = {
-      nat_net_name         = module.hypervisor_kvm.infrastructure_config.network.nat.name_network
-      nat_bridge_name      = module.hypervisor_kvm.infrastructure_config.network.nat.name_bridge
-      hostonly_net_name    = module.hypervisor_kvm.infrastructure_config.network.hostonly.name_network
-      hostonly_bridge_name = module.hypervisor_kvm.infrastructure_config.network.hostonly.name_bridge
+    for tier, config in module.hypervisor_kvm.infrastructure_config : tier => {
+      nat_net_name         = config.network.nat.name_network
+      nat_bridge_name      = config.network.nat.name_bridge
+      hostonly_net_name    = config.network.hostonly.name_network
+      hostonly_bridge_name = config.network.hostonly.name_bridge
     }
   }
 }
@@ -19,20 +19,20 @@ output "network_bindings" {
 output "network_parameters" {
   description = "L3 network configurations (Sourced from KVM)."
   value = {
-    "${local.primary_tier_key}" = {
+    for tier, config in module.hypervisor_kvm.infrastructure_config : tier => {
       network = {
         nat = {
-          gateway = module.hypervisor_kvm.infrastructure_config.network.nat.ips.address
-          cidrv4  = "${module.hypervisor_kvm.infrastructure_config.network.nat.ips.address}/${module.hypervisor_kvm.infrastructure_config.network.nat.ips.prefix}"
-          dhcp    = module.hypervisor_kvm.infrastructure_config.network.nat.ips.dhcp
+          cidrv4  = "${config.network.nat.ips.address}/${config.network.nat.ips.prefix}"
+          gateway = config.network.nat.ips.address
+          dhcp    = config.network.nat.ips.dhcp
         }
         hostonly = {
-          gateway = module.hypervisor_kvm.infrastructure_config.network.hostonly.ips.address
-          cidrv4  = "${module.hypervisor_kvm.infrastructure_config.network.hostonly.ips.address}/${module.hypervisor_kvm.infrastructure_config.network.hostonly.ips.prefix}"
+          cidrv4  = "${config.network.hostonly.ips.address}/${config.network.hostonly.ips.prefix}"
+          gateway = config.network.hostonly.ips.address
         }
       }
       # Access Scope belongs to logic layer and this is not passed to KVM module.
-      network_access_scope = local.primary_params.network_access_scope
+      network_access_scope = var.network_parameters[tier].network_access_scope
     }
   }
 }

@@ -91,35 +91,37 @@ locals {
 # - If 'default' is not found, find the first tier used
 locals {
   primary_tier_key = contains(keys(var.network_bindings), "default") ? "default" : keys(var.network_bindings)[0]
-  primary_binding  = var.network_bindings[local.primary_tier_key]
   primary_params   = var.network_parameters[local.primary_tier_key]
 }
 
 # KVM Module Adaptation (Interface Translation)
+# - Convert input bindings/params into KVM Module's expected Map structure
 locals {
   hypervisor_kvm_infrastructure = {
-    network = {
-      nat = {
-        name_network = local.primary_binding.nat_net_name
-        name_bridge  = local.primary_binding.nat_bridge_name
-        mode         = "nat"
-        ips = {
-          address = local.primary_params.network.nat.gateway
-          prefix  = tonumber(split("/", local.primary_params.network.nat.cidrv4)[1])
-          dhcp    = local.primary_params.network.nat.dhcp
+    for tier, binding in var.network_bindings : tier => {
+      network = {
+        nat = {
+          name_network = binding.nat_net_name
+          name_bridge  = binding.nat_bridge_name
+          mode         = "nat"
+          ips = {
+            prefix  = tonumber(split("/", var.network_parameters[tier].network.nat.cidrv4)[1])
+            address = var.network_parameters[tier].network.nat.gateway
+            dhcp    = var.network_parameters[tier].network.nat.dhcp
+          }
+        }
+        hostonly = {
+          name_network = binding.hostonly_net_name
+          name_bridge  = binding.hostonly_bridge_name
+          mode         = "route"
+          ips = {
+            prefix  = tonumber(split("/", var.network_parameters[tier].network.hostonly.cidrv4)[1])
+            address = var.network_parameters[tier].network.hostonly.gateway
+            dhcp    = null
+          }
         }
       }
-      hostonly = {
-        name_network = local.primary_binding.hostonly_net_name
-        name_bridge  = local.primary_binding.hostonly_bridge_name
-        mode         = "route"
-        ips = {
-          address = local.primary_params.network.hostonly.gateway
-          prefix  = tonumber(split("/", local.primary_params.network.hostonly.cidrv4)[1])
-          dhcp    = null
-        }
-      }
+      storage_pool_name = var.topology_cluster.storage_pool_name
     }
-    storage_pool_name = var.topology_cluster.storage_pool_name
   }
 }

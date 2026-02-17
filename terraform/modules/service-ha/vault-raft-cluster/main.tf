@@ -10,6 +10,7 @@ module "hypervisor_kvm" {
         ram             = v.ram
         base_image_path = v.base_image_path
         data_disks      = v.data_disks
+        network_tier    = v.network_tier
       }
     }
   }
