@@ -35,7 +35,7 @@ locals {
   ansible = {
     root_path      = abspath("${path.module}/../../../../ansible")
     playbook_file  = "playbooks/${var.ansible_files.playbook_file}"
-    inventory_file = "inventory-${var.cluster_name}.yaml"
+    inventory_file = "inventory-${var.cluster_name}-postgres.yaml"
 
     inventory_contents = templatefile(local.inventory_template, {
 
