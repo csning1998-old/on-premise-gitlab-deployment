@@ -30,11 +30,11 @@ locals {
 
 # Ansible Configuration (Dynamic Inventory)
 locals {
-  inventory_template = "${path.module}/../../../templates/inventory-vault-cluster.yaml.tftpl"
+  inventory_template = "${path.module}/../../../templates/${var.ansible_files.inventory_template_file}"
 
   ansible = {
     root_path      = abspath("${path.module}/../../../../ansible")
-    playbook_file  = "playbooks/10-provision-core-services.yaml"
+    playbook_file  = "playbooks/${var.ansible_files.playbook_file}"
     inventory_file = "inventory-${var.cluster_name}.yaml"
 
     inventory_contents = templatefile(local.inventory_template, {

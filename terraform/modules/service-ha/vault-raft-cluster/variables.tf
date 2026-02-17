@@ -44,7 +44,6 @@ variable "topology_cluster" {
   })
 }
 
-
 variable "network_parameters" {
   description = "Map of L3 network configurations keyed by tier name."
   type = map(object({
@@ -95,5 +94,13 @@ variable "credentials_system" {
     password             = string
     ssh_public_key_path  = string
     ssh_private_key_path = string
+  })
+}
+
+variable "ansible_files" {
+  description = "Meta configuration of Ansible inventory for Vault Core service."
+  type = object({
+    playbook_file           = string
+    inventory_template_file = string
   })
 }

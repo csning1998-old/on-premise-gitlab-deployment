@@ -17,4 +17,7 @@ module "vault_cluster" {
   # Security & Credentials
   credentials_system  = local.credentials_system
   security_pki_bundle = local.security_pki_bundle
+
+  # Ansible Configuration
+  ansible_files = var.ansible_files
 }

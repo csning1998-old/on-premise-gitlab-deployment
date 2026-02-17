@@ -24,7 +24,10 @@ variable "vault_config" {
   })
 }
 
-variable "tls_mode" {
-  description = "TLS generation mode: 'generated' (Terraform creates keys via tls provider) or 'manual' (Terraform assumes files exist and does nothing)."
-  type        = string
+variable "ansible_files" {
+  description = "Meta configuration of Ansible inventory for Vault Core service."
+  type = object({
+    playbook_file           = string
+    inventory_template_file = string
+  })
 }
