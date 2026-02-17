@@ -11,7 +11,7 @@ all:
       hosts:
 %{ for key, node in etcd_nodes ~}
         ${key}:
-          ansible_host: ${node.ip}
+          advertise_ip: ${node.ip}
           node_role: "etcd"
 %{ endfor ~}
 
@@ -19,6 +19,6 @@ all:
       hosts:
 %{ for key, node in postgres_nodes ~}
         ${key}:
-          ansible_host: ${node.ip}
+          advertise_ip: ${node.ip}
           node_role: "postgres"
 %{ endfor ~}
