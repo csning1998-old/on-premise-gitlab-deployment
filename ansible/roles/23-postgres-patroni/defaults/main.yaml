@@ -9,3 +9,10 @@ postgres_mtls_pod_subnet: "10.1.0.0/16"
 # Ports
 postgres_port: 5432
 patroni_restapi_port: 8008
+
+# Static Routes for Asymmetric Routing Fix
+postgres_static_routes:
+  - name: "vault-vip-bypass"
+    to: "172.16.136.250/32" # Vault VIP (Target)
+    via: "172.16.127.250" # Local LB VIP (Next Hop / Gateway)
+    metric: 100
