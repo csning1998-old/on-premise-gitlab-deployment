@@ -15,6 +15,11 @@ locals {
   vault_prod_addr       = "https://${data.terraform_remote_state.vault_raft_config.outputs.service_vip}:443"
 }
 
+locals {
+  postgres_dep_meta     = local.service_meta.dependencies["postgres"]
+  postgres_service_fqdn = try(local.postgres_dep_meta.role.dns_san[0], "")
+}
+
 # Network Map Construction (Multi-Tier Support)
 locals {
   service_vip = local.postgres_topology.lb_config.vip
@@ -100,8 +105,9 @@ locals {
   vault_agent_identity = {
     vault_address = local.vault_prod_addr
     role_id       = try(local.vault_pki_state.workload_identities_dependencies[local.vault_identity_key].role_id, "")
-    role_name     = try(local.vault_pki_state.workload_identities_dependencies[local.vault_identity_key].role_name, "")
+    role_name     = try(local.vault_pki_state.pki_configuration.dependency_roles[local.vault_identity_key].name, "")
     ca_cert_b64   = local.global_topology.vault_pki.ca_cert
+    common_name   = local.postgres_service_fqdn
   }
 }
 

@@ -4,7 +4,9 @@ all:
     service_identifier: "${cluster_identity.name}-postgres-cluster"
     postgres_ha_virtual_ip: "${cluster_network.vip}"
     postgres_nat_subnet_prefix: "${cluster_network.nat_prefix}"
-    postgres_service_domain: "${cluster_identity.domain}"
+    postgres_common_name: "${cluster_identity.common_name}"
+    postgres_cluster_name: "${cluster_identity.name}"
+    postgres_mtls_node_subnet: "${cluster_network.access_scope}"
 
   children:
     postgres_etcd_nodes:

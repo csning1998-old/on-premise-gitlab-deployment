@@ -43,8 +43,9 @@ locals {
       postgres_nodes = try(local.nodes_by_role["postgres"], {})
 
       cluster_identity = {
-        name   = var.cluster_name
-        domain = var.service_domain
+        name        = var.cluster_name
+        domain      = var.service_domain
+        common_name = var.credentials_vault_agent.common_name
       }
 
       cluster_network = {
@@ -58,6 +59,16 @@ locals {
   ansible_extra_vars = merge(
     {
       ansible_user = var.credentials_system.username
+
+      vault_ca_cert_b64     = var.credentials_vault_agent.ca_cert_b64
+      vault_agent_role_id   = var.credentials_vault_agent.role_id
+      vault_agent_secret_id = var.credentials_vault_agent.secret_id
+      vault_addr            = var.credentials_vault_agent.vault_address
+      vault_role_name       = var.credentials_vault_agent.role_name
+
+      pg_superuser_password   = var.credentials_postgres.superuser_password
+      pg_replication_password = var.credentials_postgres.replication_password
+      pg_vrrp_secret          = var.credentials_postgres.vrrp_secret
     },
     var.security_pki_bundle != null ? {
       vault_server_cert = var.security_pki_bundle.server_cert

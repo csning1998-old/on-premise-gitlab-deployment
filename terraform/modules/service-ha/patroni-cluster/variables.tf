@@ -117,6 +117,7 @@ variable "credentials_vault_agent" {
     ca_cert_b64   = string
     role_name     = string # PKI Role Name
     vault_address = string
+    common_name   = string
   })
 }
 
