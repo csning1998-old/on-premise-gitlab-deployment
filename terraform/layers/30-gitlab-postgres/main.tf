@@ -1,5 +1,4 @@
 
-
 module "build_gitlab_postgres_cluster" {
   source = "../../modules/service-ha/patroni-cluster"
 
@@ -19,6 +18,9 @@ module "build_gitlab_postgres_cluster" {
   credentials_system   = local.credentials_system
   credentials_postgres = local.credentials_postgres
 
+  # Ansible Configuration
+  ansible_files = var.ansible_files
+
   # Layer 00 Artifacts (Root CA) for Ansible trust store
   security_pki_bundle = local.security_pki_bundle
 
@@ -29,7 +31,4 @@ module "build_gitlab_postgres_cluster" {
       secret_id = vault_approle_auth_backend_role_secret_id.patroni_agent.secret_id
     }
   )
-
-  # Ansible Configuration
-  ansible_files = var.ansible_files
 }

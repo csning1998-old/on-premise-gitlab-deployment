@@ -19,7 +19,6 @@ variable "security_pki_bundle" {
   default     = null
 }
 
-
 variable "topology_cluster" {
   description = "Standardized compute topology supporting multi-component architecture."
   type = object({
@@ -86,6 +85,15 @@ variable "network_bindings" {
   }))
 }
 
+variable "ansible_files" {
+  description = "Meta configuration of Ansible inventory for Patroni service."
+  type = object({
+    playbook_file           = string
+    inventory_template_file = string
+  })
+}
+
+
 # Credentials Injection
 variable "credentials_system" {
   description = "System level credentials (ssh user, password, keys)"
@@ -121,10 +129,3 @@ variable "credentials_vault_agent" {
   })
 }
 
-variable "ansible_files" {
-  description = "Meta configuration of Ansible inventory for Vault Core service."
-  type = object({
-    playbook_file           = string
-    inventory_template_file = string
-  })
-}

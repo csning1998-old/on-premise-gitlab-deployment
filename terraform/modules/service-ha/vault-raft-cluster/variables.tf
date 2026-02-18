@@ -85,6 +85,14 @@ variable "network_bindings" {
   }))
 }
 
+variable "ansible_files" {
+  description = "Meta configuration of Ansible inventory for Vault Core service."
+  type = object({
+    playbook_file           = string
+    inventory_template_file = string
+  })
+}
+
 # Credentials Injection
 variable "credentials_system" {
   description = "System level credentials (ssh user, password, keys)"
@@ -94,13 +102,5 @@ variable "credentials_system" {
     password             = string
     ssh_public_key_path  = string
     ssh_private_key_path = string
-  })
-}
-
-variable "ansible_files" {
-  description = "Meta configuration of Ansible inventory for Vault Core service."
-  type = object({
-    playbook_file           = string
-    inventory_template_file = string
   })
 }
