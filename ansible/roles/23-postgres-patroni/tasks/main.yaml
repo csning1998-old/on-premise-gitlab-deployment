@@ -146,7 +146,7 @@
         rule: allow
         port: "{{ item }}"
         proto: tcp
-        src: "172.16.0.0/16"
+        src: "{{ postgres_mtls_node_subnet }}"
       loop:
         - "{{ postgres_port }}"
         - "{{ patroni_restapi_port }}"

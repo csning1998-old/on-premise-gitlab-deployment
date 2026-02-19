@@ -57,7 +57,7 @@
         rule: allow
         port: "{{ etcd_client_port }}"
         proto: tcp
-        src: "{{ postgres_subnet_cidr }}"
+        src: "{{ postgres_mtls_node_subnet }}"
       ignore_errors: true # Prevent error when ufw is not installed
 
 - name: "Section C: Start and Enable etcd Service"

@@ -49,9 +49,10 @@ locals {
       }
 
       cluster_network = {
-        vip          = var.service_vip
-        nat_prefix   = join(".", slice(split(".", local.primary_params.network.nat.gateway), 0, 3))
+        postgres_vip = var.service_vip
+        vault_vip    = regex("://([^:]+)", var.credentials_vault_agent.vault_address)[0]
         access_scope = local.primary_params.network_access_scope
+        nat_prefix   = join(".", slice(split(".", local.primary_params.network.nat.gateway), 0, 3))
       }
     })
   }
