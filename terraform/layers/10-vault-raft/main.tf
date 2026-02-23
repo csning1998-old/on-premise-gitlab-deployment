@@ -1,6 +1,6 @@
 
 module "vault_cluster" {
-  source = "../../modules/service-ha/vault-raft-cluster"
+  source = "../../middleware/service-ha/vault-raft-cluster"
 
   # Identity & Service Definitions
   cluster_name   = local.cluster_name

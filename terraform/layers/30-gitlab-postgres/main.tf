@@ -1,6 +1,6 @@
 
 module "build_gitlab_postgres_cluster" {
-  source = "../../modules/service-ha/patroni-cluster"
+  source = "../../middleware/service-ha/patroni-cluster"
 
   # Identity & Service Definitions
   cluster_name   = local.cluster_name
