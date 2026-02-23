@@ -11,18 +11,20 @@ locals {
 
 # Service Context
 locals {
-  svc_name         = var.service_catalog_name
-  svc_meta         = local.state.topology.service_structure[local.svc_name]
-  svc_fqdn         = local.state.topology.domain_suffix
-  svc_cluster_name = "${local.svc_meta.meta.name}-${local.svc_meta.meta.project_code}"
+  svc_name = var.service_catalog_name
+  svc_fqdn = local.state.topology.domain_suffix
 
-  kubeadm_comp_meta = local.svc_meta.components["frontend"]
-  svc_kubeadm_fqdn  = try(local.kubeadm_comp_meta.dns_san[0], local.svc_fqdn)
+  # Using the standardized keys logic from Layer 00 naming map
+  # gitlab frontend falls under `${ProjectCode}-${Service}-${Component}` -> `gitlab-frontend`
+  svc_kubeadm_identity = local.state.topology.identity_map["${local.svc_name}-frontend"]
+  svc_cluster_name     = local.svc_kubeadm_identity.cluster_name
+  svc_kubeadm_fqdn     = try(local.state.topology.pki_map["${local.svc_name}-frontend"].dns_san[0], local.svc_fqdn)
 }
 
 # Network Context
 locals {
-  net_kubeadm     = local.state.network.network_service_topology[local.svc_name]
+  # Lookups directly into Infrastructure Map from Layer 05
+  net_kubeadm     = local.state.network.infrastructure_map[local.svc_name]
   net_service_vip = local.net_kubeadm.lb_config.vip
 
   # Network Bindings: L2 Physical Attachment of Network Bridge
@@ -53,7 +55,7 @@ locals {
   }
 }
 
-# Security & App Context (sec_ / sys_ / pki_)
+# Security & App Context
 locals {
   sys_vault_addr   = "https://${local.state.vault_sys.service_vip}:443"
   pki_global_ca    = try(local.state.topology.gitlab_kubeadm_pki, null)
@@ -81,7 +83,7 @@ locals {
 
 # Topology Component Construction
 locals {
-  storage_pool_name = "iac-${local.svc_cluster_name}-gitlab-kubeadm"
+  storage_pool_name = local.svc_kubeadm_identity.storage_pool_name
 
   topology_cluster = {
     storage_pool_name = local.storage_pool_name

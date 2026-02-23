@@ -11,19 +11,22 @@ locals {
 
 # Service Context
 locals {
-  svc_name         = var.service_catalog_name
-  svc_meta         = local.state.topology.service_structure[local.svc_name]
-  svc_fqdn         = local.state.topology.domain_suffix
-  svc_cluster_name = "${local.svc_meta.meta.name}-${local.svc_meta.meta.project_code}"
+  svc_name = var.service_catalog_name
+  svc_fqdn = local.state.topology.domain_suffix
 
-  postgres_dep_meta = local.svc_meta.dependencies["postgres"]
-  svc_postgres_fqdn = try(local.postgres_dep_meta.role.dns_san[0], "")
+  # Using the standardized keys logic from Layer 00 naming map
+  # gitlab-postgres falls under `${ProjectCode}-${Service}-${Component}` -> `gitlab-postgres`
+  svc_postgres_identity = local.state.topology.identity_map["${local.svc_name}-postgres"]
+  svc_etcd_identity     = local.state.topology.identity_map["${local.svc_name}-etcd"]
+  svc_cluster_name      = local.svc_postgres_identity.cluster_name
+  svc_postgres_fqdn     = local.state.topology.pki_map["${local.svc_name}-postgres-dep"].dns_san[0]
 }
 
 # Network Context
 locals {
-  net_postgres    = local.state.network.network_service_topology["${local.svc_name}-postgres"]
-  net_etcd        = local.state.network.network_service_topology["${local.svc_name}-etcd"]
+  # Lookups directly into Infrastructure Map from Layer 05
+  net_postgres    = local.state.network.infrastructure_map["${local.svc_name}-postgres"]
+  net_etcd        = local.state.network.infrastructure_map["${local.svc_name}-etcd"]
   net_service_vip = local.net_postgres.lb_config.vip
 
   # Network Bindings: L2 Physical Attachment of Network Bridge
@@ -74,7 +77,7 @@ locals {
   }
 }
 
-# Security & App Context (sec_ / sys_ / pki_)
+# Security & App Context
 locals {
   sys_vault_addr   = "https://${local.state.vault_sys.service_vip}:443"
   pki_global_ca    = try(local.state.topology.gitlab_postgres_pki, null)
@@ -110,7 +113,7 @@ locals {
 
 # Topology Component Construction
 locals {
-  storage_pool_name = "iac-${local.svc_cluster_name}-postgres"
+  storage_pool_name = local.svc_postgres_identity.storage_pool_name
 
   topology_cluster = {
     storage_pool_name = local.storage_pool_name

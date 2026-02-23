@@ -10,23 +10,23 @@ locals {
 # Service Context
 locals {
   svc_name         = var.service_catalog_name
-  svc_meta         = local.state.topology.service_structure[local.svc_name]
+  svc_identity     = local.state.topology.identity_map["${local.svc_name}-core"]
   svc_fqdn         = local.state.topology.domain_suffix
-  svc_cluster_name = "${local.svc_meta.meta.name}-${local.svc_meta.meta.project_code}"
+  svc_cluster_name = local.svc_identity.cluster_name
 }
 
 # Network Context
 locals {
-  net_vault       = local.state.network.network_service_topology[local.svc_name]
-  net_service_vip = local.net_vault.lb_config.vip
+  net_vault_infra = local.state.network.infrastructure_map[local.svc_name]
+  net_service_vip = local.net_vault_infra.lb_config.vip
 
   # Network Bindings: L2 Physical Attachment of Network Bridge
   network_bindings = {
     "vault" = {
-      nat_net_name         = local.net_vault.network.nat.name
-      nat_bridge_name      = local.net_vault.network.nat.bridge_name
-      hostonly_net_name    = local.net_vault.network.hostonly.name
-      hostonly_bridge_name = local.net_vault.network.hostonly.bridge_name
+      nat_net_name         = local.net_vault_infra.network.nat.name
+      nat_bridge_name      = local.net_vault_infra.network.nat.bridge_name
+      hostonly_net_name    = local.net_vault_infra.network.hostonly.name
+      hostonly_bridge_name = local.net_vault_infra.network.hostonly.bridge_name
     }
   }
 
@@ -35,16 +35,16 @@ locals {
     "vault" = {
       network = {
         nat = {
-          gateway = local.net_vault.network.nat.gateway
-          cidrv4  = local.net_vault.network.nat.cidr
-          dhcp    = local.net_vault.network.nat.dhcp
+          gateway = local.net_vault_infra.network.nat.gateway
+          cidrv4  = local.net_vault_infra.network.nat.cidr
+          dhcp    = local.net_vault_infra.network.nat.dhcp
         }
         hostonly = {
-          gateway = local.net_vault.network.hostonly.gateway
-          cidrv4  = local.net_vault.network.hostonly.cidr
+          gateway = local.net_vault_infra.network.hostonly.gateway
+          cidrv4  = local.net_vault_infra.network.hostonly.cidr
         }
       }
-      network_access_scope = local.net_vault.network.hostonly.cidr
+      network_access_scope = local.net_vault_infra.network.hostonly.cidr
     }
   }
 }
@@ -64,7 +64,7 @@ locals {
 
 # Topology Component Construction
 locals {
-  storage_pool_name = "iac-${local.svc_cluster_name}"
+  storage_pool_name = local.svc_identity.storage_pool_name
 
   topology_cluster = {
     storage_pool_name = local.storage_pool_name
