@@ -8,16 +8,15 @@ output "network_slot_topology" {
 }
 
 
-output "network_service_topology" {
-  description = "All infrastructure and application details for each service."
+output "infrastructure_map" {
+  description = "Physical realization bridging Layer 00 Math and HAProxy VIPs, mapped perfectly to O(1) SSoT Identity keys"
 
   value = {
     for seg in local.net_service_segments : seg.name => {
-
-      # 1. Network Infrastructure (L2 Bridge, L3 CIDR/Gateway)
+      # 1. Physical Infrastructure (Libvirt bridges, IPs)
       network = local.net_infrastructure[seg.name]
 
-      # 2. Service Delivery (L3 VIP/VRID, L4 Ports)
+      # 2. HAProxy / Keepalived Details
       lb_config = {
         vip            = seg.vip
         vrid           = seg.vrid
@@ -25,6 +24,9 @@ output "network_service_topology" {
         ports          = seg.ports
         tags           = seg.tags
       }
+
+      # 3. Available Node IP slots for downstream consumption
+      backend_servers = seg.backend_servers
     }
   }
 }

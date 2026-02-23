@@ -9,11 +9,11 @@ locals {
 # 1. Service Context
 locals {
   svc_name         = var.service_catalog_name
-  svc_raw_segments = local.state.topology.network_segments
-  svc_meta         = local.state.topology.service_structure[local.svc_name].meta
+  svc_network_map  = local.state.topology.network_map
+  svc_identity     = local.state.topology.identity_map["${local.svc_name}-core"]
   svc_fqdn         = local.state.topology.domain_suffix
-  svc_cluster_name = "${local.svc_meta.name}-${local.svc_meta.project_code}"
-  svc_node_prefix  = "${local.svc_cluster_name}-node"
+  svc_cluster_name = local.svc_identity.cluster_name
+  svc_node_prefix  = local.svc_identity.node_name_prefix
 }
 
 # 2. Network Context
@@ -22,7 +22,7 @@ locals {
   net_sorted_node_keys = sort(keys(var.node_config))
 
   net_sorted_segment_keys = sort([
-    for k, v in local.svc_raw_segments : k
+    for k, v in local.svc_network_map : k
     if k != local.svc_name
   ])
 
@@ -33,21 +33,21 @@ locals {
 
   # MAC Address Derivation Base (From Layer 00 "central-lb")
   # Example: 52:54:00:0a:a4:f5 (where 0a is VRID 10)
-  net_lb_base_mac_parts = split(":", local.svc_raw_segments[local.svc_name].mac_address)
+  net_lb_base_mac_parts = split(":", local.svc_network_map[local.svc_name].mac_address)
 
   # Infrastructure Network Config
-  net_my_segment = local.svc_raw_segments[local.svc_name]
+  net_my_segment = local.svc_network_map[local.svc_name]
 }
 
 locals {
   # Infrastructure Network Config
   net_infrastructure = {
-    for seg_key, seg_data in local.svc_raw_segments : seg_key => {
+    for seg_key, seg_data in local.svc_network_map : seg_key => {
 
       # 1. HostOnly Network (Internal)
       hostonly = {
         name        = seg_key
-        bridge_name = "br-${substr(md5(seg_key), 0, 8)}"
+        bridge_name = try(local.state.topology.identity_map[seg_key].bridge_name_host, "br-${substr(md5(seg_key), 0, 8)}")
         gateway     = cidrhost(seg_data.cidr_block, 1)
         cidr        = seg_data.cidr_block
         prefix      = tonumber(split("/", seg_data.cidr_block)[1])
@@ -56,7 +56,7 @@ locals {
       # 2. Dedicated NAT Network (External)
       nat = {
         name        = "iac-${seg_key}-nat"
-        bridge_name = "br-${substr(md5(seg_key), 0, 8)}-nat"
+        bridge_name = try(local.state.topology.identity_map[seg_key].bridge_name_nat, "br-${substr(md5(seg_key), 0, 8)}-nat")
         gateway     = seg_data.nat_gateway
         cidr        = seg_data.nat_cidr_block
         prefix      = 24
@@ -74,28 +74,28 @@ locals {
     for seg_key in local.net_sorted_segment_keys : {
       name           = seg_key
       bridge_name    = "br-${substr(replace(seg_key, "-", ""), 0, 6)}-${substr(md5("${seg_key}"), 0, 4)}"
-      cidr           = local.svc_raw_segments[seg_key].cidr_block
-      nat_cidr       = local.svc_raw_segments[seg_key].nat_cidr_block
-      nat_gateway    = local.svc_raw_segments[seg_key].nat_gateway
-      vrid           = local.svc_raw_segments[seg_key].vrid
-      vip            = local.svc_raw_segments[seg_key].vip
-      interface_name = local.svc_raw_segments[seg_key].interface_alias
-      ports          = local.svc_raw_segments[seg_key].ports
-      tags           = local.svc_raw_segments[seg_key].tags
+      cidr           = local.svc_network_map[seg_key].cidr_block
+      nat_cidr       = local.svc_network_map[seg_key].nat_cidr_block
+      nat_gateway    = local.svc_network_map[seg_key].nat_gateway
+      vrid           = local.svc_network_map[seg_key].vrid
+      vip            = local.svc_network_map[seg_key].vip
+      interface_name = local.svc_network_map[seg_key].interface_alias
+      ports          = local.svc_network_map[seg_key].ports
+      tags           = local.svc_network_map[seg_key].tags
 
       node_ips = {
         for node_name, node_spec in var.node_config : local.net_node_naming_map[node_name] =>
-        cidrhost(local.svc_raw_segments[seg_key].cidr_block, node_spec.ip_suffix)
+        cidrhost(local.svc_network_map[seg_key].cidr_block, node_spec.ip_suffix)
       }
       backend_servers = [
         for i in range(
-          local.svc_raw_segments[seg_key].ip_range.end_ip - local.svc_raw_segments[seg_key].ip_range.start_ip + 1
+          local.svc_network_map[seg_key].ip_range.end_ip - local.svc_network_map[seg_key].ip_range.start_ip + 1
           ) : {
           # Name: service-slot-200, service-slot-201...
-          name = "${seg_key}-slot-${local.svc_raw_segments[seg_key].ip_range.start_ip + i}"
+          name = "${seg_key}-slot-${local.svc_network_map[seg_key].ip_range.start_ip + i}"
           ip = cidrhost(
-            local.svc_raw_segments[seg_key].cidr_block,
-            local.svc_raw_segments[seg_key].ip_range.start_ip + i
+            local.svc_network_map[seg_key].cidr_block,
+            local.svc_network_map[seg_key].ip_range.start_ip + i
           )
         }
       ]
@@ -123,7 +123,7 @@ locals {
 # Topology Component Construction
 locals {
   # Payload Construction
-  storage_pool_name = "iac-${local.svc_meta.project_code}-${local.svc_meta.name}"
+  storage_pool_name = local.svc_identity.storage_pool_name
 
   topology_nodes = {
     for node_name, node_spec in var.node_config : local.net_node_naming_map[node_name] => {
@@ -172,15 +172,15 @@ locals {
         [
           for seg_key in local.net_sorted_segment_keys : {
             network_name = seg_key
-            alias        = local.svc_raw_segments[seg_key].interface_alias
+            alias        = local.svc_network_map[seg_key].interface_alias
             mac = format("%s:%02x",
-              join(":", slice(split(":", local.svc_raw_segments[seg_key].mac_address), 0, 5)),
-              (parseint(element(split(":", local.svc_raw_segments[seg_key].mac_address), 5), 16) + index(local.net_sorted_node_keys, node_name)) % 256
+              join(":", slice(split(":", local.svc_network_map[seg_key].mac_address), 0, 5)),
+              (parseint(element(split(":", local.svc_network_map[seg_key].mac_address), 5), 16) + index(local.net_sorted_node_keys, node_name)) % 256
             )
             addresses = [
               format("%s/%s",
-                cidrhost(local.svc_raw_segments[seg_key].cidr_block, node_spec.ip_suffix),
-                split("/", local.svc_raw_segments[seg_key].cidr_block)[1]
+                cidrhost(local.svc_network_map[seg_key].cidr_block, node_spec.ip_suffix),
+                split("/", local.svc_network_map[seg_key].cidr_block)[1]
               )
             ]
           }
