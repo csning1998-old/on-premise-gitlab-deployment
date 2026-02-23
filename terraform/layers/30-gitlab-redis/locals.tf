@@ -1,21 +1,23 @@
 
 # Data Ingestion (Layer 05 Yellow Pages)
 locals {
-  global_topology     = data.terraform_remote_state.topology.outputs
-  central_lb_outputs  = data.terraform_remote_state.central_lb.outputs
-  vault_pki_state     = data.terraform_remote_state.vault_pki.outputs
-  service_meta        = local.global_topology.service_structure[var.service_catalog_name]
-  service_fqdn        = local.global_topology.domain_suffix
-  cluster_name        = "${local.service_meta.meta.name}-${local.service_meta.meta.project_code}"
+  global_topology    = data.terraform_remote_state.topology.outputs
+  central_lb_outputs = data.terraform_remote_state.central_lb.outputs
+  vault_pki_state    = data.terraform_remote_state.vault_pki.outputs
+  # Identity Extraction (O(1))
+  redis_identity = local.global_topology.identity_map["${var.service_catalog_name}-redis"]
+
+  service_fqdn       = local.global_topology.domain_suffix
+  cluster_name       = local.redis_identity.cluster_name
+  redis_service_fqdn = try(local.global_topology.pki_map["${var.service_catalog_name}-redis-dep"].dns_san[0], "")
+
   security_pki_bundle = try(local.global_topology.gitlab_redis_pki, null)
   vault_prod_addr     = "https://${data.terraform_remote_state.vault_raft_config.outputs.service_vip}:443"
 }
 
 locals {
-  redis_dep_meta     = local.service_meta.dependencies["redis"]
-  redis_service_fqdn = try(local.redis_dep_meta.role.dns_san[0], "")
-  redis_topology     = local.central_lb_outputs.network_service_topology[local.redis_topology_key]
-  redis_topology_key = "${var.service_catalog_name}-redis"
+  # O(1) Lookups directly into Infrastructure Map from Layer 05
+  redis_topology = local.central_lb_outputs.infrastructure_map["${var.service_catalog_name}-redis"]
 }
 
 # Network Map Construction (Multi-Tier Support)
@@ -51,7 +53,7 @@ locals {
 
 # Topology Component Construction
 locals {
-  storage_pool_name = "iac-${local.cluster_name}-redis"
+  storage_pool_name = local.redis_identity.storage_pool_name
 
   topology_cluster = {
     storage_pool_name = local.storage_pool_name
