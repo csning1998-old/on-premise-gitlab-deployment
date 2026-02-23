@@ -7,7 +7,13 @@ all:
     redis_tls_node_subnet: "${cluster_network.access_scope}"
     redis_service_domain: "${cluster_identity.domain}"
     redis_initial_master_ip: "${redis_nodes[keys(redis_nodes)[0]].ip}"
+    redis_tls_port: ${cluster_network.redis_tls_port}
     sentinel_quorum: ${floor(length(redis_nodes)/2) + 1}
+    redis_static_routes:
+      - to: "${cluster_network.vault_vip}/32"
+        via: "${cluster_network.redis_vip}"
+        dev: "ens3"
+        metric: 100
 
   children:
     redis_db_master:
