@@ -1,133 +1,101 @@
 
-variable "topology_config" {
-  description = "Standardized compute topology configuration for Redis HA Cluster."
-  type = object({
-    cluster_identity = object({
-      service_name = string
-      component    = string
-      cluster_name = string
-    })
-
-    # Redis Data Nodes (Map)
-    redis_config = object({
-      nodes = map(object({
-        ip   = string
-        vcpu = number
-        ram  = number
-      }))
-      base_image_path = string
-    })
-
-    haproxy_config = object({
-      stats_port = number
-      virtual_ip = string
-
-      # HAProxy Nodes (Map)
-      nodes = map(object({
-        ip   = string
-        vcpu = number
-        ram  = number
-      }))
-      base_image_path = string
-    })
-  })
-
-  # Redis Sentinel Quorum
-  validation {
-    condition     = length(var.topology_config.redis_config.nodes) % 2 != 0
-    error_message = "Redis node count must be an odd number (1, 3, 5, etc.) to ensure a stable Sentinel quorum and prevent split-brain scenarios."
-  }
-
-  # HAProxy Node Requirement
-  validation {
-    condition     = length(var.topology_config.haproxy_config.nodes) > 0
-    error_message = "High Availability architecture requires at least one HAProxy node to route traffic via VIP."
-  }
-
-  # VIP Format Validation
-  validation {
-    condition     = can(cidrnetmask("${var.topology_config.haproxy_config.virtual_ip}/32"))
-    error_message = "The High Availability Virtual IP (VIP) must be a valid IPv4 address."
-  }
-
-  # Redis Node Hardware Specification
-  validation {
-    condition = alltrue([
-      for k, node in var.topology_config.redis_config.nodes :
-      node.vcpu >= 1 && node.ram >= 1024
-    ])
-    error_message = "All Redis data nodes must meet minimum requirements: 1 vCPU and 1024MB RAM."
-  }
-
-  # HAProxy Node Hardware Specification
-  validation {
-    condition = alltrue([
-      for k, node in var.topology_config.haproxy_config.nodes :
-      node.vcpu >= 1 && node.ram >= 512
-    ])
-    error_message = "All HAProxy nodes must meet minimum requirements: 1 vCPU and 512MB RAM."
-  }
-
-  # Redis, HAProxy Node IP Format Validation
-  validation {
-    condition = alltrue(flatten([
-      [for k, node in var.topology_config.redis_config.nodes : can(cidrnetmask("${node.ip}/32"))],
-      [for k, node in var.topology_config.haproxy_config.nodes : can(cidrnetmask("${node.ip}/32"))]
-    ]))
-    error_message = "All provided node IP addresses (Redis and HAProxy) must be valid IPv4 addresses."
-  }
-}
-
-variable "infra_config" {
-  description = "Standardized infrastructure network configuration."
-  type = object({
-    network = object({
-      nat = object({
-        gateway = string
-        cidrv4  = string
-        dhcp = optional(object({
-          start = string
-          end   = string
-        }))
-      })
-      hostonly = object({
-        gateway = string
-        cidrv4  = string
-      })
-    })
-    allowed_subnet = string
-  })
-
-  # Subnet CIDR Format Validation
-  validation {
-    condition = alltrue([
-      can(cidrnetmask(var.infra_config.network.nat.cidrv4)),
-      can(cidrnetmask(var.infra_config.network.hostonly.cidrv4)),
-      can(cidrnetmask(var.infra_config.allowed_subnet))
-    ])
-    error_message = "All network CIDRs (NAT, Hostonly, Allowed Subnet) must be valid CIDR blocks."
-  }
-}
-
-variable "service_domain" {
-  description = "The FQDN for the Redis service"
+variable "cluster_name" {
+  description = "The unique name of the cluster (e.g. gitlab-core)"
   type        = string
 }
 
-# Network Identity for Naming Policy
-variable "network_identity" {
-  description = "Pre-calculated network and bridge names passed from Layer"
+variable "service_vip" {
+  type = string
+}
+
+variable "service_domain" {
+  description = "The FQDN for the Load Balancer service"
+  type        = string
+}
+
+variable "security_pki_bundle" {
+  description = "PKI certificates passed from Layer 00 via Layer 10"
+  type        = any
+  default     = null
+}
+
+variable "topology_cluster" {
+  description = "Standardized compute topology supporting multi-component architecture."
   type = object({
+    storage_pool_name = string
+
+    # Key: Component Name (e.g., "node", whatever if it matches `locals.topology_cluster.components.name`.)
+    components = map(object({
+      base_image_path = string
+      role            = string
+      network_tier    = optional(string, "default")
+
+      nodes = map(object({
+        ip_suffix = number
+        vcpu      = number
+        ram       = number
+
+        data_disks = optional(list(object({
+          name_suffix = string
+          capacity    = number
+        })), [])
+      }))
+    }))
+  })
+}
+
+variable "network_parameters" {
+  description = "Map of L3 network configurations keyed by tier name."
+  type = map(object({
+    network = object({
+      nat = object({
+        gateway = string,
+        cidrv4  = string,
+        dhcp    = optional(any)
+      })
+      hostonly = object({
+        gateway = string,
+        cidrv4  = string
+      })
+    })
+    network_access_scope = string
+  }))
+
+  # Network CIDR validation
+  validation {
+    condition = alltrue(flatten([
+      for k, v in var.network_parameters : [
+        can(cidrnetmask(v.network.nat.cidrv4)),
+        can(cidrnetmask(v.network.hostonly.cidrv4)),
+        can(cidrnetmask(v.network_access_scope))
+      ]
+    ]))
+    error_message = "All network CIDRs must be valid IPv4 CIDR ranges."
+  }
+}
+
+# Network Identity for Naming Policy
+variable "network_bindings" {
+  description = "Map of L2 network bindings keyed by tier name."
+  type = map(object({
     nat_net_name         = string
     nat_bridge_name      = string
     hostonly_net_name    = string
     hostonly_bridge_name = string
-    storage_pool_name    = string
+  }))
+}
+
+variable "ansible_files" {
+  description = "Meta configuration of Ansible inventory for Patroni service."
+  type = object({
+    playbook_file           = string
+    inventory_template_file = string
   })
 }
 
+
 # Credentials Injection
-variable "vm_credentials" {
+variable "credentials_system" {
   description = "System level credentials (ssh user, password, keys)"
   sensitive   = true
   type = object({
@@ -138,23 +106,25 @@ variable "vm_credentials" {
   })
 }
 
-variable "db_credentials" {
-  description = "Database level credentials (patroni, replication)"
+variable "credentials_redis" {
+  description = "Redis level credentials"
   sensitive   = true
   type = object({
-    redis_requirepass = string
-    redis_masterauth  = string
-    redis_vrrp_secret = string
+    requirepass = string
+    masterauth  = string
+    vrrp_secret = string
   })
 }
 
-variable "vault_agent_config" {
-  description = "Vault Agent Configuration"
+variable "credentials_vault_agent" {
+  description = "Vault Agent Credentials"
   sensitive   = true
   type = object({
-    role_id     = string
-    secret_id   = string
-    ca_cert_b64 = string
-    role_name   = string # PKI Role Name
+    role_id       = string
+    secret_id     = string
+    ca_cert_b64   = string
+    role_name     = string # PKI Role Name
+    vault_address = string
+    common_name   = string
   })
 }
