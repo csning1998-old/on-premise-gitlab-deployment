@@ -13,6 +13,14 @@ variable "service_domain" {
   type        = string
 }
 
+variable "service_ports" {
+  description = "Port mappings for the service"
+  type = map(object({
+    frontend_port = number
+    backend_port  = number
+  }))
+}
+
 variable "security_pki_bundle" {
   description = "PKI certificates passed from Layer 00 via Layer 10"
   type        = any

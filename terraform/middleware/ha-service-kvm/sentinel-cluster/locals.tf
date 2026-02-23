@@ -48,10 +48,11 @@ locals {
       }
 
       cluster_network = {
-        redis_vip    = var.service_vip
-        vault_vip    = regex("://([^:]+)", var.credentials_vault_agent.vault_address)[0]
-        access_scope = local.primary_params.network_access_scope
-        nat_prefix   = join(".", slice(split(".", local.primary_params.network.nat.gateway), 0, 3))
+        redis_vip      = var.service_vip
+        redis_tls_port = var.service_ports["main"].frontend_port
+        vault_vip      = regex("://([^:]+)", var.credentials_vault_agent.vault_address)[0]
+        access_scope   = local.primary_params.network_access_scope
+        nat_prefix     = join(".", slice(split(".", local.primary_params.network.nat.gateway), 0, 3))
       }
     })
   }
@@ -60,11 +61,12 @@ locals {
     {
       ansible_user = var.credentials_system.username
 
-      vault_ca_cert_b64     = var.credentials_vault_agent.ca_cert_b64
-      vault_agent_role_id   = var.credentials_vault_agent.role_id
-      vault_agent_secret_id = var.credentials_vault_agent.secret_id
-      vault_addr            = var.credentials_vault_agent.vault_address
-      vault_role_name       = var.credentials_vault_agent.role_name
+      vault_ca_cert_b64       = var.credentials_vault_agent.ca_cert_b64
+      vault_agent_role_id     = var.credentials_vault_agent.role_id
+      vault_agent_secret_id   = var.credentials_vault_agent.secret_id
+      vault_addr              = var.credentials_vault_agent.vault_address
+      vault_role_name         = var.credentials_vault_agent.role_name
+      vault_agent_common_name = var.credentials_vault_agent.common_name
 
       redis_requirepass = var.credentials_redis.requirepass
       redis_masterauth  = var.credentials_redis.masterauth

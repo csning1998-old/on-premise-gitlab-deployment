@@ -1,11 +1,11 @@
-
 module "redis_gitlab" {
   source = "../../middleware/ha-service-kvm/sentinel-cluster"
 
   # Identity & Service Definitions
-  cluster_name   = local.cluster_name
-  service_vip    = local.service_vip
-  service_domain = local.service_fqdn
+  cluster_name   = local.svc_cluster_name
+  service_vip    = local.net_service_vip
+  service_domain = local.svc_redis_fqdn
+  service_ports  = local.net_redis.lb_config.ports
 
   # Topology (Compute & Storage)
   topology_cluster = local.topology_cluster
@@ -15,18 +15,18 @@ module "redis_gitlab" {
   network_parameters = local.network_parameters
 
   # Credentials & Security
-  credentials_system = local.credentials_system
-  credentials_redis  = local.credentials_redis
+  credentials_system = local.sec_system_creds
+  credentials_redis  = local.sec_redis_creds
 
   # Ansible Configuration
   ansible_files = var.ansible_files
 
   # Layer 00 Artifacts (Root CA) for Ansible trust store
-  security_pki_bundle = local.security_pki_bundle
+  security_pki_bundle = local.pki_global_ca
 
   # Vault Agent Identity Injection
   credentials_vault_agent = merge(
-    local.vault_agent_identity,
+    local.sec_vault_agent_identity,
     {
       secret_id = vault_approle_auth_backend_role_secret_id.sentinel_agent.secret_id
     }
