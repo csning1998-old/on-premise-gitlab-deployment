@@ -1,68 +1,49 @@
 
-variable "topology_config" {
-  description = "Standardized compute topology configuration for MicroK8s HA Cluster."
-  type = object({
-    cluster_identity = object({
-      service_name = string
-      component    = string
-      cluster_name = string
-    })
-
-    # MicroK8s Nodes (Map)
-    microk8s_config = object({
-      nodes = map(object({
-        ip   = string
-        vcpu = number
-        ram  = number
-      }))
-      base_image_path = string
-    })
-
-    haproxy_config = object({
-      virtual_ip = string
-      # If not using MetalLB or built-in HA, then the HAProxy node is not mandatory
-      nodes = optional(map(object({
-        ip   = string
-        vcpu = number
-        ram  = number
-      })), {})
-      base_image_path = string
-    })
-  })
-
-  # MicroK8s Dqlite Quorum
-  validation {
-    condition     = length(var.topology_config.microk8s_config.nodes) % 2 != 0
-    error_message = "MicroK8s node count must be an odd number (1, 3, 5, etc.) to ensure a stable Dqlite quorum."
-  }
-
-  # Required MicroK8s hardware specification (2vCPU/4GB)
-  validation {
-    condition = alltrue([
-      for k, node in var.topology_config.microk8s_config.nodes :
-      node.vcpu >= 2 && node.ram >= 4096
-    ])
-    error_message = "MicroK8s nodes require at least 2 vCPUs and 4096MB RAM to prevent OOM kills."
-  }
-
-  # Required MicroK8s VIP format check
-  validation {
-    condition     = can(cidrnetmask("${var.topology_config.haproxy_config.virtual_ip}/32"))
-    error_message = "The High Availability Virtual IP (VIP) must be a valid IPv4 address."
-  }
-
-  # Required MicroK8s node IP format check
-  validation {
-    condition = alltrue([
-      for k, node in var.topology_config.microk8s_config.nodes : can(cidrnetmask("${node.ip}/32"))
-    ])
-    error_message = "All MicroK8s node IPs must be valid IPv4 addresses."
-  }
+variable "cluster_name" {
+  description = "The name of the MicroK8s cluster (e.g., 30-harbor-microk8s)"
+  type        = string
 }
 
-variable "infra_config" {
-  description = "Standardized infrastructure network configuration."
+variable "service_vip" {
+  description = "The Virtual IP address of the MicroK8s cluster"
+  type        = string
+}
+
+variable "topology_cluster" {
+  description = "The topology configuration for the cluster extracted from Layer 00"
   type = object({
+    cluster_name      = string
+    storage_pool_name = string
+    components = map(object({
+      role            = string
+      base_image_path = string
+      network_tier    = string
+      nodes = map(object({
+        ip_suffix = number
+        vcpu      = number
+        ram       = number
+        data_disks = optional(list(object({
+          name_suffix = string
+          capacity    = number
+        })), [])
+      }))
+    }))
+  })
+}
+
+variable "network_bindings" {
+  description = "Network binding mappings from Layer 05. Key is the network tier."
+  type = map(object({
+    nat_net_name         = string
+    nat_bridge_name      = string
+    hostonly_net_name    = string
+    hostonly_bridge_name = string
+  }))
+}
+
+variable "network_parameters" {
+  description = "Detailed network characteristics from Layer 05. Key is the network tier."
+  type = map(object({
     network = object({
       nat = object({
         gateway = string
@@ -77,16 +58,49 @@ variable "infra_config" {
         cidrv4  = string
       })
     })
-    allowed_subnet = string
-  })
+    network_access_scope = string
+  }))
+}
 
-  # Required infrastructure network CIDR format check
-  validation {
-    condition = alltrue([
-      can(cidrnetmask(var.infra_config.network.nat.cidrv4)),
-      can(cidrnetmask(var.infra_config.network.hostonly.cidrv4)),
-      can(cidrnetmask(var.infra_config.allowed_subnet))
-    ])
-    error_message = "All network CIDRs must be valid."
-  }
+variable "credentials_system" {
+  description = "System credentials for SSH and VM operations (Root Level)"
+  type = object({
+    username             = string
+    password             = string
+    ssh_private_key_path = string
+    ssh_public_key_path  = string
+  })
+  sensitive = true
+}
+
+variable "credentials_vault_agent" {
+  description = "Vault agent credentials for obtaining PKI certificates"
+  type = object({
+    role_id       = string
+    secret_id     = string
+    role_name     = string
+    ca_cert_b64   = string
+    vault_address = string
+    common_name   = string
+  })
+  sensitive = true
+}
+
+variable "security_pki_bundle" {
+  description = "Initial PKI certificate bundle (optional, fallback if Vault agent fails)"
+  type = object({
+    ca_cert     = string
+    server_cert = string
+    server_key  = string
+  })
+  sensitive = true
+  default   = null
+}
+
+variable "ansible_files" {
+  description = "Ansible playbooks and templates configuration"
+  type = object({
+    inventory_template_file = string
+    playbook_file           = string
+  })
 }

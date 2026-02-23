@@ -1,96 +1,64 @@
 
 module "hypervisor_kvm" {
-  source = "../../cluster-provision/hypervisor-kvm"
+  source = "../../../modules/cluster-provision/hypervisor-kvm"
 
-  # VM Configuration
   vm_config = {
-    all_nodes_map = local.all_nodes_map
-  }
-
-  # VM Credentials from Vault
-  credentials = {
-    username            = data.vault_generic_secret.iac_vars.data["vm_username"]
-    password            = data.vault_generic_secret.iac_vars.data["vm_password"]
-    ssh_public_key_path = data.vault_generic_secret.iac_vars.data["ssh_public_key_path"]
-  }
-
-  # Libvirt Network & Storage Configuration
-  libvirt_infrastructure = {
-    network = {
-      nat = {
-        name_network = local.nat_net_name
-        name_bridge  = local.nat_bridge_name
-        mode         = "nat"
-        ips = {
-          address = var.infra_config.network.nat.gateway
-          prefix  = tonumber(split("/", var.infra_config.network.nat.cidrv4)[1])
-          dhcp    = var.infra_config.network.nat.dhcp
-        }
-      }
-      hostonly = {
-        name_network = local.hostonly_net_name
-        name_bridge  = local.hostonly_bridge_name
-        mode         = "route"
-        ips = {
-          address = var.infra_config.network.hostonly.gateway
-          prefix  = tonumber(split("/", var.infra_config.network.hostonly.cidrv4)[1])
-          dhcp    = null
-        }
+    all_nodes_map = {
+      for k, v in local.flat_node_map : k => {
+        ip              = v.ip
+        vcpu            = v.vcpu
+        ram             = v.ram
+        base_image_path = v.base_image_path
+        data_disks      = v.data_disks
+        network_tier    = v.network_tier
       }
     }
-    storage_pool_name = local.storage_pool_name
   }
+
+  create_networks        = false
+  credentials            = local.vm_credentials_for_hypervisor
+  libvirt_infrastructure = local.hypervisor_kvm_infrastructure
 }
 
 module "ssh_manager" {
-  source = "../../cluster-provision/ssh-manager"
-
-  config_name = var.topology_config.cluster_identity.cluster_name
-  nodes       = [for k, v in local.all_nodes_map : { key = k, ip = v.ip }]
-
-  vm_credentials = {
-    username             = data.vault_generic_secret.iac_vars.data["vm_username"]
-    ssh_private_key_path = data.vault_generic_secret.iac_vars.data["ssh_private_key_path"]
-  }
+  source         = "../../../modules/cluster-provision/ssh-manager"
   status_trigger = module.hypervisor_kvm.vm_status_trigger
+
+  nodes = [
+    for k, v in local.flat_node_map : {
+      key = k
+      ip  = v.ip
+    }
+  ]
+
+  config_name = {
+    cluster_name = var.cluster_name
+  }
+
+  credentials_vm = local.vm_credentials_for_ssh
 }
 
 module "ansible_runner" {
-  source = "../../cluster-provision/ansible-runner"
+  source         = "../../../modules/cluster-provision/ansible-runner"
+  status_trigger = module.ssh_manager.ssh_access_ready_trigger
+
+  credentials_vm = local.vm_credentials_for_ssh
 
   ansible_config = {
-    root_path       = local.ansible_root_path
+    root_path       = local.ansible.root_path
     ssh_config_path = module.ssh_manager.ssh_config_file_path
-    playbook_file   = "playbooks/30-provision-microk8s.yaml"
-    inventory_file  = "inventory-${var.topology_config.cluster_identity.cluster_name}.yaml"
+    playbook_file   = local.ansible.playbook_file
+    inventory_file  = local.ansible.inventory_file
   }
 
-  inventory_content = templatefile("${path.module}/../../../templates/inventory-microk8s-cluster.yaml.tftpl", {
-    ansible_ssh_user = data.vault_generic_secret.iac_vars.data["vm_username"]
-    service_name     = var.topology_config.cluster_identity.service_name
-
-    microk8s_nodes = local.all_nodes_map
-
-    # Network information
-    microk8s_ingress_vip       = var.topology_config.haproxy_config.virtual_ip
-    microk8s_allowed_subnet    = var.infra_config.allowed_subnet
-    microk8s_nat_subnet_prefix = local.nat_network_subnet_prefix
-  })
-
-  vm_credentials = {
-    username             = data.vault_generic_secret.iac_vars.data["vm_username"]
-    ssh_private_key_path = data.vault_generic_secret.iac_vars.data["ssh_private_key_path"]
-  }
-
-  extra_vars = {}
+  inventory_content = local.ansible.inventory_contents
+  extra_vars        = local.ansible_extra_vars
 
   # Cleanup old Kubeconfig to ensure fetching the latest
   pre_run_commands = [
-    "rm -f ${local.ansible_root_path}/fetched/${var.topology_config.cluster_identity.service_name}/kubeconfig",
-    "mkdir -p ${local.ansible_root_path}/fetched/${var.topology_config.cluster_identity.service_name}"
+    "rm -f ${local.ansible.root_path}/fetched/${split("-", var.cluster_name)[1]}/kubeconfig",
+    "mkdir -p ${local.ansible.root_path}/fetched/${split("-", var.cluster_name)[1]}"
   ]
-
-  status_trigger = module.ssh_manager.ssh_access_ready_trigger
 }
 
 # Read Ansible fetched Kubeconfig
@@ -99,7 +67,7 @@ data "external" "fetched_kubeconfig" {
 
   program = ["/bin/bash", "-c", <<-EOT
     set -e
-    KUBECONFIG_PATH="${local.ansible_root_path}/fetched/${var.topology_config.cluster_identity.service_name}/kubeconfig"
+    KUBECONFIG_PATH="${local.ansible.root_path}/fetched/${split("-", var.cluster_name)[1]}/kubeconfig"
     if [ ! -f "$KUBECONFIG_PATH" ]; then
       echo '{}'
       exit 0
