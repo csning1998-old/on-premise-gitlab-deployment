@@ -3,7 +3,7 @@ output "network_slot_topology" {
   description = "Computed topology including calculated VIPs and Node IPs per segment."
 
   value = {
-    for seg in local.network_service_segments : seg.name => seg.backend_servers
+    for seg in local.net_service_segments : seg.name => seg.backend_servers
   }
 }
 
@@ -12,10 +12,10 @@ output "network_service_topology" {
   description = "All infrastructure and application details for each service."
 
   value = {
-    for seg in local.network_service_segments : seg.name => {
+    for seg in local.net_service_segments : seg.name => {
 
       # 1. Network Infrastructure (L2 Bridge, L3 CIDR/Gateway)
-      network = local.network_infrastructure[seg.name]
+      network = local.net_infrastructure[seg.name]
 
       # 2. Service Delivery (L3 VIP/VRID, L4 Ports)
       lb_config = {
@@ -31,5 +31,5 @@ output "network_service_topology" {
 
 output "central_lb_info" {
   description = "Connection details for the Central LB itself."
-  value       = local.network_infrastructure[var.service_catalog_name]
+  value       = local.net_infrastructure[var.service_catalog_name]
 }
