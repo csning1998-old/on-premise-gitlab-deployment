@@ -23,7 +23,7 @@ locals {
 # Ansible Configuration
 locals {
   ansible = {
-    root_path      = abspath("${path.module}/../../../../ansible")
+    root_path      = abspath("${path.module}/../../../ansible")
     playbook_file  = "playbooks/${var.ansible_playbook_file}"
     inventory_file = "inventory-${var.cluster_name}.yaml"
   }
