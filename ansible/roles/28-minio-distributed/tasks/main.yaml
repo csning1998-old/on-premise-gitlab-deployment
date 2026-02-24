@@ -53,6 +53,7 @@
 
 - name: "Section C: Configure Network Routing"
   become: true
+  when: minio_static_routes is defined and minio_static_routes | length > 0
   block:
     - name: "Step C1. Deploy Routing Fix Service"
       ansible.builtin.template:
