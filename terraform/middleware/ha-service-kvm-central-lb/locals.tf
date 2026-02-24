@@ -13,10 +13,10 @@ locals {
       ip = node.ip
     }
   }
-  inventory_template = "${path.module}/../../../templates/inventory-load-balancer-cluster.yaml.tftpl"
+  inventory_template = "${path.module}/../../templates/inventory-load-balancer-cluster.yaml.tftpl"
 
   ansible = {
-    root_path          = abspath("${path.module}/../../../../ansible")
+    root_path          = abspath("${path.module}/../../../ansible")
     playbook_file      = "playbooks/10-provision-core-services.yaml"
     inventory_file     = "inventory-${var.topology_cluster.cluster_name}.yaml"
     inventory_template = local.inventory_template
