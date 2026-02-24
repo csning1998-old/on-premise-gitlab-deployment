@@ -47,11 +47,12 @@
     - name: "Step C2. Enable and Start Routing Fix"
       ansible.builtin.systemd:
         name: fix-vault-routes.service
-        state: started
+        state: restarted
         enabled: true
         daemon_reload: true
 
 - name: "Section D: Configure Vault Agent"
+  become: true
   block:
     - name: "Step D0. Ensure Vault Binary is installed"
       ansible.builtin.include_role:

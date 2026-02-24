@@ -73,6 +73,7 @@
       when: route_service_config.changed
 
 - name: "Section D: Certificate"
+  become: true
   block:
     - name: "Step D1. Ensure Vault Binary is installed"
       ansible.builtin.include_role:
