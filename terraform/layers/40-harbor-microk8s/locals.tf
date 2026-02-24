@@ -57,7 +57,6 @@ locals {
 # Security & App Context
 locals {
   sys_vault_addr   = "https://${local.state.vault_sys.service_vip}:443"
-  pki_global_ca    = try(local.state.topology.harbor_microk8s_pki, null)
   pki_vault_ca_b64 = local.state.topology.vault_pki.ca_cert
 
   # System Credentials (OS/SSH)
@@ -88,7 +87,7 @@ locals {
   topology_cluster = {
     cluster_name      = local.svc_cluster_name
     storage_pool_name = local.storage_pool_name
-    components        = var.harbor_microk8s_compute
+    components        = var.harbor_microk8s_config
   }
 }
 
@@ -96,7 +95,7 @@ locals {
 locals {
   # Reconstruct nodes map for Ansible Inventory rendering
   flat_node_map = merge([
-    for comp_name, comp_data in var.harbor_microk8s_compute : {
+    for comp_name, comp_data in var.harbor_microk8s_config : {
       for node_suffix, node_data in comp_data.nodes :
       "${local.svc_cluster_name}-${comp_name}-${node_suffix}" => {
         ip   = cidrhost(local.network_parameters[comp_data.network_tier].network.hostonly.cidrv4, node_data.ip_suffix)
@@ -115,25 +114,18 @@ locals {
   ansible_inventory_content = templatefile("${path.module}/../../templates/${var.ansible_files.inventory_template_file}", {
     ansible_ssh_user           = local.sec_system_creds.username
     service_name               = local.svc_cluster_name
-    microk8s_nodes             = try(local.nodes_by_role["node"], {})
+    microk8s_nodes             = local.nodes_by_role["microk8s"]
     microk8s_ingress_vip       = local.net_service_vip
     microk8s_allowed_subnet    = local.network_parameters["default"].network_access_scope
     microk8s_nat_subnet_prefix = join(".", slice(split(".", local.network_parameters["default"].network.nat.gateway), 0, 3))
   })
 
-  ansible_extra_vars = merge(
-    {
-      ansible_user          = local.sec_system_creds.username
-      vault_ca_cert_b64     = local.sec_vault_agent_identity.ca_cert_b64
-      vault_agent_role_id   = local.sec_vault_agent_identity.role_id
-      vault_agent_secret_id = vault_approle_auth_backend_role_secret_id.microk8s_agent.secret_id
-      vault_addr            = local.sys_vault_addr
-      vault_role_name       = local.sec_vault_agent_identity.role_name
-    },
-    local.pki_global_ca != null ? {
-      vault_server_cert = local.pki_global_ca.server_cert
-      vault_server_key  = local.pki_global_ca.server_key
-      vault_ca_cert     = local.pki_global_ca.ca_cert
-    } : {}
-  )
+  ansible_extra_vars = {
+    ansible_user          = local.sec_system_creds.username
+    vault_ca_cert_b64     = local.sec_vault_agent_identity.ca_cert_b64
+    vault_agent_role_id   = local.sec_vault_agent_identity.role_id
+    vault_agent_secret_id = vault_approle_auth_backend_role_secret_id.microk8s_agent.secret_id
+    vault_addr            = local.sys_vault_addr
+    vault_role_name       = local.sec_vault_agent_identity.role_name
+  }
 }

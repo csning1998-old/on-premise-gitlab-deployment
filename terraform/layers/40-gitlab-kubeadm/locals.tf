@@ -58,7 +58,6 @@ locals {
 # Security & App Context
 locals {
   sys_vault_addr   = "https://${local.state.vault_sys.service_vip}:443"
-  pki_global_ca    = try(local.state.topology.gitlab_kubeadm_pki, null)
   pki_vault_ca_b64 = local.state.topology.vault_pki.ca_cert
 
   # System Credentials (OS/SSH)
@@ -112,8 +111,8 @@ locals {
   }
 
   ansible_inventory_content = templatefile("${path.module}/../../templates/${var.ansible_files.inventory_template_file}", {
-    kubeadm_master_nodes = try(local.nodes_by_role["master"], {})
-    kubeadm_worker_nodes = try(local.nodes_by_role["worker"], {})
+    kubeadm_master_nodes = local.nodes_by_role["master"]
+    kubeadm_worker_nodes = local.nodes_by_role["worker"]
 
     cluster_identity = {
       name = local.svc_cluster_name
@@ -129,19 +128,12 @@ locals {
     }
   })
 
-  ansible_extra_vars = merge(
-    {
-      ansible_user          = local.sec_system_creds.username
-      vault_ca_cert_b64     = local.sec_vault_agent_identity.ca_cert_b64
-      vault_agent_role_id   = local.sec_vault_agent_identity.role_id
-      vault_agent_secret_id = vault_approle_auth_backend_role_secret_id.kubeadm_agent.secret_id
-      vault_addr            = local.sys_vault_addr
-      vault_role_name       = local.sec_vault_agent_identity.role_name
-    },
-    local.pki_global_ca != null ? {
-      vault_server_cert = local.pki_global_ca.server_cert
-      vault_server_key  = local.pki_global_ca.server_key
-      vault_ca_cert     = local.pki_global_ca.ca_cert
-    } : {}
-  )
+  ansible_extra_vars = {
+    ansible_user          = local.sec_system_creds.username
+    vault_ca_cert_b64     = local.sec_vault_agent_identity.ca_cert_b64
+    vault_agent_role_id   = local.sec_vault_agent_identity.role_id
+    vault_agent_secret_id = vault_approle_auth_backend_role_secret_id.kubeadm_agent.secret_id
+    vault_addr            = local.sys_vault_addr
+    vault_role_name       = local.sec_vault_agent_identity.role_name
+  }
 }

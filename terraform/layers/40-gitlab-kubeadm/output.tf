@@ -4,11 +4,7 @@ output "service_vip" {
   value       = local.net_service_vip
 }
 
-output "security_pki_bundle" {
-  description = "PKI artifacts retrieved from the global topology."
-  value       = local.pki_global_ca
-  sensitive   = true
-}
+
 
 output "credentials_system" {
   description = "System-level access credentials for the cluster nodes."

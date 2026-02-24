@@ -10,7 +10,7 @@ variable "vault_dev_addr" {
   default     = "https://127.0.0.1:8200"
 }
 
-variable "harbor_microk8s_compute" {
+variable "harbor_microk8s_config" {
   description = "Compute topology for Harbor Microk8s cluster"
   type = map(object({
     role            = string

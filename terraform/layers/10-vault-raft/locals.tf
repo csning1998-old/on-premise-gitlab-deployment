@@ -51,7 +51,7 @@ locals {
 
 # Security Context
 locals {
-  pki_global_ca = try(local.state.topology.vault_pki, null) # PKI Artifacts
+  pki_global_ca = local.state.topology.vault_pki # PKI Artifacts
 
   # System Level Credentials (OS/SSH)
   sec_system_creds = {

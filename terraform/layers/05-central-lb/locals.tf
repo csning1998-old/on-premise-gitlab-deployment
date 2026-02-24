@@ -47,7 +47,7 @@ locals {
       # 1. HostOnly Network (Internal)
       hostonly = {
         name        = seg_key
-        bridge_name = try(local.state.topology.identity_map[seg_key].bridge_name_host, "br-${substr(md5(seg_key), 0, 8)}")
+        bridge_name = local.state.topology.identity_map[seg_key].bridge_name_host
         gateway     = cidrhost(seg_data.cidr_block, 1)
         cidr        = seg_data.cidr_block
         prefix      = tonumber(split("/", seg_data.cidr_block)[1])
@@ -56,7 +56,7 @@ locals {
       # 2. Dedicated NAT Network (External)
       nat = {
         name        = "iac-${seg_key}-nat"
-        bridge_name = try(local.state.topology.identity_map[seg_key].bridge_name_nat, "br-${substr(md5(seg_key), 0, 8)}-nat")
+        bridge_name = local.state.topology.identity_map[seg_key].bridge_name_nat
         gateway     = seg_data.nat_gateway
         cidr        = seg_data.nat_cidr_block
         prefix      = 24
@@ -105,7 +105,7 @@ locals {
 
 # 3. Security & Credentials Context (sec_ / pki_)
 locals {
-  pki_global_ca = try(local.state.topology.vault_pki, null)
+  pki_global_ca = local.state.topology.vault_pki
 
   sec_vm_creds = {
     username             = data.vault_generic_secret.iac_vars.data["vm_username"]
