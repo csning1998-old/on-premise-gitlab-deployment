@@ -18,7 +18,7 @@ locals {
   # gitlab frontend falls under `${ProjectCode}-${Service}-${Component}` -> `gitlab-frontend`
   svc_kubeadm_identity = local.state.topology.identity_map["${local.svc_name}-frontend"]
   svc_cluster_name     = local.svc_kubeadm_identity.cluster_name
-  svc_kubeadm_fqdn     = try(local.state.topology.pki_map["${local.svc_name}-frontend"].dns_san[0], local.svc_fqdn)
+  svc_kubeadm_fqdn     = local.state.topology.pki_map["${local.svc_name}-frontend"].dns_san[0]
 }
 
 # Network Context
@@ -123,9 +123,9 @@ locals {
       vip            = local.net_service_vip
       pod_subnet     = var.kubernetes_cluster_configuration.pod_subnet
       nat_prefix     = join(".", slice(split(".", local.network_parameters["default"].network.nat.gateway), 0, 3))
-      registry_host  = try(local.state.topology.pki_map["harbor-frontend-dep"].dns_san[0], "")
-      http_nodeport  = try(local.net_kubeadm.lb_config.ports["http"].backend_port, 30080)
-      https_nodeport = try(local.net_kubeadm.lb_config.ports["https"].backend_port, 30443)
+      registry_host  = local.state.topology.pki_map["harbor-frontend"].dns_san[0]
+      http_nodeport  = local.net_kubeadm.lb_config.ports["ingress-http"].backend_port
+      https_nodeport = local.net_kubeadm.lb_config.ports["ingress-https"].backend_port
     }
   })
 

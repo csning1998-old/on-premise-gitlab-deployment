@@ -17,7 +17,7 @@ locals {
   # Using the standardized keys logic from Layer 00 naming map
   svc_microk8s_identity = local.state.topology.identity_map["${local.svc_name}-frontend"]
   svc_cluster_name      = local.svc_microk8s_identity.cluster_name
-  svc_microk8s_fqdn     = try(local.state.topology.pki_map["${local.svc_name}-frontend"].dns_san[0], "")
+  svc_microk8s_fqdn     = local.state.topology.pki_map["${local.svc_name}-frontend"].dns_san[0]
 }
 
 # Network Context

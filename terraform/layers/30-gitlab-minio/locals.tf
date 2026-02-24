@@ -17,7 +17,7 @@ locals {
   # Using the standardized keys logic from Layer 00 naming map
   svc_minio_identity = local.state.topology.identity_map["${local.svc_name}-minio"]
   svc_cluster_name   = local.svc_minio_identity.cluster_name
-  svc_minio_fqdn     = try(local.state.topology.pki_map["${local.svc_name}-minio-dep"].dns_san[0], "")
+  svc_minio_fqdn     = local.state.topology.pki_map["${local.svc_name}-minio-dep"].dns_san[0]
 }
 
 # Network Context
