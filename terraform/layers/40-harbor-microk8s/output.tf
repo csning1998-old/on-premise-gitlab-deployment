@@ -8,9 +8,3 @@ output "harbor_microk8s_virtual_ip" {
   description = "MicroK8s virtual IP for Harbor"
   value       = local.net_service_vip
 }
-
-# output "kubeconfig_content" {
-#   description = "The content of the Kubeconfig file fetched from the cluster."
-#   value       = module.microk8s_harbor.kubeconfig_content
-#   sensitive   = true
-# }

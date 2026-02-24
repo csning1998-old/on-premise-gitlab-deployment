@@ -62,5 +62,19 @@ path "secret/data/on-premise-gitlab-deployment/dev-harbor/*" {
   capabilities = ["read"]
 }
 EOT
+
+    "harbor-frontend" = <<EOT
+# Allow uploading Harbor MicroK8s Kubeconfig to Vault (KV v2)
+path "secret/data/on-premise-gitlab-deployment/infrastructure/kubeconfig/harbor" {
+  capabilities = ["create", "update", "read"]
+}
+EOT
+
+    "gitlab-frontend" = <<EOT
+# Allow uploading GitLab Kubeadm Kubeconfig to Vault (KV v2)
+path "secret/data/on-premise-gitlab-deployment/infrastructure/kubeconfig/gitlab" {
+  capabilities = ["create", "update", "read"]
+}
+EOT
   }
 }

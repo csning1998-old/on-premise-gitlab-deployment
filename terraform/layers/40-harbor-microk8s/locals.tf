@@ -127,5 +127,6 @@ locals {
     vault_agent_secret_id = vault_approle_auth_backend_role_secret_id.microk8s_agent.secret_id
     vault_addr            = local.sys_vault_addr
     vault_role_name       = local.sec_vault_agent_identity.role_name
+    service_name          = local.svc_name
   }
 }
