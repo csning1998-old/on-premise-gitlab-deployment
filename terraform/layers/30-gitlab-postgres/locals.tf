@@ -151,7 +151,7 @@ locals {
     }
     cluster_network = {
       postgres_vip = local.net_service_vip
-      vault_vip    = regex("://([^:]+)", local.sys_vault_addr)[0]
+      vault_vip    = local.state.vault_sys.service_vip
       access_scope = local.network_parameters["postgres"].network_access_scope
       nat_prefix   = join(".", slice(split(".", local.network_parameters["postgres"].network.nat.gateway), 0, 3))
     }
