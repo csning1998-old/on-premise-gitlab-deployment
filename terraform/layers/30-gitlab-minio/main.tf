@@ -2,35 +2,27 @@
 # Call the Identity Module to generate AppRole & Secret ID
 
 module "minio_gitlab" {
-  source = "../../middleware/ha-service-kvm/minio-distributed-cluster"
+  source = "../../middleware/ha-service-kvm/ha-cluster"
+
+  use_minio_hypervisor = true
 
   # Identity & Service Definitions
-  cluster_name   = local.svc_cluster_name
-  service_vip    = local.net_service_vip
-  service_domain = local.svc_minio_fqdn
-  service_ports  = local.net_minio.lb_config.ports
+  cluster_name = local.svc_cluster_name
 
   # Topology (Compute & Storage)
   topology_cluster = local.topology_cluster
 
-  # Network Infrastructure with Dual-Tier
+  # Network Infrastructure
   network_bindings   = local.network_bindings
   network_parameters = local.network_parameters
 
-  # Credentials & Security
+  # System Credentials
   credentials_system = local.sec_system_creds
-  credentials_db     = local.sec_db_creds
 
-  # Layer 00 Artifacts (Root CA) for Ansible trust store
-  security_pki_bundle = local.pki_global_ca
-
-  # Vault Agent Identity Injection
-  credentials_vault_agent = merge(
-    local.sec_vault_agent_identity,
-    {
-      secret_id = vault_approle_auth_backend_role_secret_id.patroni_agent.secret_id
-    }
-  )
+  # Generic Ansible Configuration
+  ansible_inventory_content = local.ansible_inventory_content
+  ansible_extra_vars        = local.ansible_extra_vars
+  ansible_playbook_file     = "20-provision-data-services.yaml"
 }
 
 # This timer is to wait for MinIO Cluster to initialize the storage.

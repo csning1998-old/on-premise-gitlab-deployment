@@ -109,3 +109,61 @@ resource "vault_approle_auth_backend_role_secret_id" "sentinel_agent" {
     "timestamp" = timestamp()
   })
 }
+
+# Ansible Configuration Rendering
+locals {
+  # Reconstruct nodes map for Ansible Inventory rendering
+  flat_node_map = merge([
+    for comp_name, comp_data in var.gitlab_redis_config : {
+      for node_suffix, node_data in comp_data.nodes :
+      "${local.svc_cluster_name}-${comp_name}-${node_suffix}" => {
+        ip   = cidrhost(local.network_parameters[comp_data.network_tier].network.hostonly.cidrv4, node_data.ip_suffix)
+        role = comp_data.role
+      }
+    }
+  ]...)
+
+  nodes_by_role = {
+    for role in distinct(values(local.flat_node_map).*.role) : role => {
+      for name, node in local.flat_node_map : name => node
+      if node.role == role
+    }
+  }
+
+  ansible_inventory_content = templatefile("${path.module}/../../templates/${var.ansible_files.inventory_template_file}", {
+    redis_nodes = try(local.nodes_by_role["redis"], {})
+
+    cluster_identity = {
+      name        = local.svc_cluster_name
+      domain      = local.svc_redis_fqdn
+      common_name = local.sec_vault_agent_identity.common_name
+    }
+
+    cluster_network = {
+      redis_vip      = local.net_service_vip
+      vault_vip      = regex("://([^:]+)", local.sys_vault_addr)[0]
+      access_scope   = local.network_parameters["redis"].network_access_scope
+      redis_tls_port = try(local.net_redis.lb_config.ports["main"].frontend_port, 6379)
+    }
+  })
+
+  ansible_extra_vars = merge(
+    {
+      ansible_user            = local.sec_system_creds.username
+      vault_ca_cert_b64       = local.sec_vault_agent_identity.ca_cert_b64
+      vault_agent_role_id     = local.sec_vault_agent_identity.role_id
+      vault_agent_secret_id   = vault_approle_auth_backend_role_secret_id.sentinel_agent.secret_id
+      vault_addr              = local.sys_vault_addr
+      vault_role_name         = local.sec_vault_agent_identity.role_name
+      vault_agent_common_name = local.sec_vault_agent_identity.common_name
+      redis_masterauth        = local.sec_redis_creds.masterauth
+      redis_requirepass       = local.sec_redis_creds.requirepass
+      redis_vrrp_secret       = local.sec_redis_creds.vrrp_secret
+    },
+    local.pki_global_ca != null ? {
+      vault_server_cert = local.pki_global_ca.server_cert
+      vault_server_key  = local.pki_global_ca.server_key
+      vault_ca_cert     = local.pki_global_ca.ca_cert
+    } : {}
+  )
+}

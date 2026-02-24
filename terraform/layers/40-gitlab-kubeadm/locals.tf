@@ -102,3 +102,58 @@ resource "vault_approle_auth_backend_role_secret_id" "kubeadm_agent" {
     "timestamp" = timestamp()
   })
 }
+
+# Ansible Configuration Rendering
+locals {
+  # Reconstruct nodes map for Ansible Inventory rendering
+  flat_node_map = merge([
+    for comp_name, comp_data in var.gitlab_kubeadm_config : {
+      for node_suffix, node_data in comp_data.nodes :
+      "${local.svc_cluster_name}-${comp_name}-${node_suffix}" => {
+        ip   = cidrhost(local.network_parameters[comp_data.network_tier].network.hostonly.cidrv4, node_data.ip_suffix)
+        role = comp_data.role
+      }
+    }
+  ]...)
+
+  nodes_by_role = {
+    for role in distinct(values(local.flat_node_map).*.role) : role => {
+      for name, node in local.flat_node_map : name => node
+      if node.role == role
+    }
+  }
+
+  ansible_inventory_content = templatefile("${path.module}/../../templates/${var.ansible_files.inventory_template_file}", {
+    kubeadm_master_nodes = try(local.nodes_by_role["master"], {})
+    kubeadm_worker_nodes = try(local.nodes_by_role["worker"], {})
+
+    cluster_identity = {
+      name = local.svc_cluster_name
+    }
+
+    cluster_network = {
+      vip            = local.net_service_vip
+      pod_subnet     = var.kubernetes_cluster_configuration.pod_subnet
+      nat_prefix     = join(".", slice(split(".", local.network_parameters["default"].network.nat.gateway), 0, 3))
+      registry_host  = try(local.state.topology.pki_map["harbor-frontend-dep"].dns_san[0], "")
+      http_nodeport  = try(local.net_kubeadm.lb_config.ports["http"].backend_port, 30080)
+      https_nodeport = try(local.net_kubeadm.lb_config.ports["https"].backend_port, 30443)
+    }
+  })
+
+  ansible_extra_vars = merge(
+    {
+      ansible_user          = local.sec_system_creds.username
+      vault_ca_cert_b64     = local.sec_vault_agent_identity.ca_cert_b64
+      vault_agent_role_id   = local.sec_vault_agent_identity.role_id
+      vault_agent_secret_id = vault_approle_auth_backend_role_secret_id.kubeadm_agent.secret_id
+      vault_addr            = local.sys_vault_addr
+      vault_role_name       = local.sec_vault_agent_identity.role_name
+    },
+    local.pki_global_ca != null ? {
+      vault_server_cert = local.pki_global_ca.server_cert
+      vault_server_key  = local.pki_global_ca.server_key
+      vault_ca_cert     = local.pki_global_ca.ca_cert
+    } : {}
+  )
+}
