@@ -80,8 +80,8 @@ locals {
 
   sec_vault_agent_identity = {
     vault_address = local.sys_vault_addr
-    role_id       = try(local.state.vault_pki.workload_identities_dependencies[local.sec_vault_identity_key].role_id, "")
-    role_name     = try(local.state.vault_pki.pki_configuration.dependency_roles[local.sec_vault_identity_key].name, "")
+    role_id       = local.state.vault_pki.workload_identities_dependencies[local.sec_vault_identity_key].role_id
+    role_name     = local.state.vault_pki.pki_configuration.dependency_roles[local.sec_vault_identity_key].name
     ca_cert_b64   = local.pki_vault_ca_b64
     common_name   = local.svc_minio_fqdn
   }
@@ -95,18 +95,6 @@ locals {
     storage_pool_name = local.storage_pool_name
     components        = var.gitlab_minio_config
   }
-}
-
-# Call the Identity Module to generate AppRole & Secret ID
-resource "vault_approle_auth_backend_role_secret_id" "patroni_agent" {
-  backend   = local.state.vault_pki.workload_identities_dependencies[local.sec_vault_identity_key].auth_path
-  role_name = local.state.vault_pki.workload_identities_dependencies[local.sec_vault_identity_key].role_name
-
-  # Metadata for Vault Audit Log
-  metadata = jsonencode({
-    "source"    = "terraform-layer-30-gitlab-minio"
-    "timestamp" = timestamp()
-  })
 }
 
 # Ansible Configuration Rendering
@@ -153,7 +141,7 @@ locals {
       ansible_user            = local.sec_system_creds.username
       vault_ca_cert_b64       = local.sec_vault_agent_identity.ca_cert_b64
       vault_agent_role_id     = local.sec_vault_agent_identity.role_id
-      vault_agent_secret_id   = vault_approle_auth_backend_role_secret_id.patroni_agent.secret_id
+      vault_agent_secret_id   = vault_approle_auth_backend_role_secret_id.minio_agent.secret_id
       vault_addr              = local.sys_vault_addr
       vault_role_name         = local.sec_vault_agent_identity.role_name
       vault_agent_common_name = local.sec_vault_agent_identity.common_name

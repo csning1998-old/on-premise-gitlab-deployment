@@ -1,6 +1,4 @@
 
-# Call the Identity Module to generate AppRole & Secret ID
-
 module "minio_gitlab" {
   source = "../../middleware/ha-service-kvm/ha-cluster"
 
