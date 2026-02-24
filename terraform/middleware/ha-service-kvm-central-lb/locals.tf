@@ -66,3 +66,35 @@ locals {
     keepalived_auth_pass = var.credentials_application.keepalived_auth_pass
   }
 }
+
+locals {
+  lb_cluster_vm_config = {
+    storage_pool_name = var.topology_cluster.storage_pool_name
+    nodes             = var.topology_cluster.load_balancer_config.nodes
+  }
+
+  lb_cluster_network_config = {
+    network = {
+      nat = {
+        name_network = var.network_bindings.nat_net_name
+        name_bridge  = var.network_bindings.nat_bridge_name
+        mode         = "nat"
+        ips = {
+          address = var.network_parameters.network.nat.gateway
+          prefix  = tonumber(split("/", var.network_parameters.network.nat.cidrv4)[1])
+          dhcp    = var.network_parameters.network.nat.dhcp
+        }
+      }
+      hostonly = {
+        name_network = var.network_bindings.hostonly_net_name
+        name_bridge  = var.network_bindings.hostonly_bridge_name
+        mode         = "route"
+        ips = {
+          address = var.network_parameters.network.hostonly.gateway
+          prefix  = tonumber(split("/", var.network_parameters.network.hostonly.cidrv4)[1])
+          dhcp    = null
+        }
+      }
+    }
+  }
+}
