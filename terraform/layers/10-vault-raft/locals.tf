@@ -131,7 +131,7 @@ locals {
     {
       ansible_user = local.sec_system_creds.username
     },
-    local.pki_global_ca != null ? {
+    local.pki_global_ca != null && length(keys(local.pki_global_ca)) > 0 ? {
       vault_server_cert = local.pki_global_ca.server_cert
       vault_server_key  = local.pki_global_ca.server_key
       vault_ca_cert     = local.pki_global_ca.ca_cert
