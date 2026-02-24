@@ -1,4 +1,8 @@
 
+locals {
+  kvm_module_ref = var.use_minio_hypervisor ? module.hypervisor_kvm_minio[0] : module.hypervisor_kvm[0]
+}
+
 output "cluster_nodes" {
   description = "The physical KVM nodes provisioned for this cluster."
   value       = local.kvm_module_ref.provisioned_nodes
