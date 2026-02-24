@@ -104,8 +104,7 @@ locals {
 # Ansible Configuration Rendering
 locals {
   ansible_inventory_content = templatefile("${path.module}/../../templates/${var.ansible_files.inventory_template_file}", {
-    ansible_ssh_user = local.sec_system_creds.username
-    service_name     = local.svc_name
+    service_name = local.svc_name
 
     dev_harbor_nodes = {
       "${local.svc_node_name}" = { ip = local.net_node_ip }
@@ -118,9 +117,10 @@ locals {
     }
 
     cluster_network = {
-      dev_harbor_vip      = local.net_config.lb_config.vip
       vault_vip           = local.state.vault_sys.service_vip
+      nat_gateway         = local.network_parameters["default"].network.nat.gateway
       access_scope        = local.network_parameters["default"].network_access_scope
+      dev_harbor_vip      = local.net_config.lb_config.vip
       dev_harbor_tls_port = local.net_config.lb_config.ports["https"].frontend_port
     }
   })

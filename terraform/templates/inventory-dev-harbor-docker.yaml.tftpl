@@ -1,7 +1,6 @@
 ---
 all:
   vars:
-    ansible_user: "${ansible_ssh_user}"
     service_identifier: "${service_name}"
     
     dev_harbor_cluster_ips: ${jsonencode([for node in dev_harbor_nodes : node.ip])}
@@ -9,7 +8,6 @@ all:
     dev_harbor_service_domain: "${cluster_identity.domain}"
     dev_harbor_tls_port: ${cluster_network.dev_harbor_tls_port}
     
-    dev_harbor_vip: "${cluster_network.dev_harbor_vip}"
     dev_harbor_static_routes:
       - to: "${cluster_network.vault_vip}/32"
         via: "${cluster_network.dev_harbor_vip}"
