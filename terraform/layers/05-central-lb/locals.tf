@@ -26,6 +26,14 @@ locals {
     if k != local.svc_name
   ])
 
+  # Centralized Bridge Naming Logic (Internal to Layer 05)
+  net_bridge_naming = {
+    for seg_key, seg_data in local.svc_network_map : seg_key => {
+      host = "br-${substr(md5("${local.svc_name}-${seg_key}"), 0, 8)}"
+      nat  = "br-${substr(md5("${local.svc_name}-${seg_key}"), 0, 8)}-nat"
+    }
+  }
+
   net_node_naming_map = {
     for idx, key in local.net_sorted_node_keys :
     key => "${local.svc_node_prefix}-${format("%02d", idx)}"
@@ -47,7 +55,7 @@ locals {
       # 1. HostOnly Network (Internal)
       hostonly = {
         name        = seg_key
-        bridge_name = local.state.topology.identity_map[seg_key].bridge_name_host
+        bridge_name = local.net_bridge_naming[seg_key].host
         gateway     = cidrhost(seg_data.cidr_block, 1)
         cidr        = seg_data.cidr_block
         prefix      = tonumber(split("/", seg_data.cidr_block)[1])
@@ -56,7 +64,7 @@ locals {
       # 2. Dedicated NAT Network (External)
       nat = {
         name        = "iac-${seg_key}-nat"
-        bridge_name = local.state.topology.identity_map[seg_key].bridge_name_nat
+        bridge_name = local.net_bridge_naming[seg_key].nat
         gateway     = seg_data.nat_gateway
         cidr        = seg_data.nat_cidr_block
         prefix      = 24
@@ -73,7 +81,7 @@ locals {
   net_service_segments = [
     for seg_key in local.net_sorted_segment_keys : {
       name           = seg_key
-      bridge_name    = "br-${substr(replace(seg_key, "-", ""), 0, 6)}-${substr(md5("${seg_key}"), 0, 4)}"
+      bridge_name    = local.net_bridge_naming[seg_key].host
       cidr           = local.svc_network_map[seg_key].cidr_block
       nat_cidr       = local.svc_network_map[seg_key].nat_cidr_block
       nat_gateway    = local.svc_network_map[seg_key].nat_gateway
