@@ -33,7 +33,7 @@ template {
 {{ '{{- end -}}' }}
 EOH
   # Logic: Check if harbor-nginx container is running. If yes, reload nginx. If not (first install), do nothing.
-  command = "(docker ps -q -f name=harbor-nginx | grepㄋ -q . && docker exec -t harbor-nginx nginx -s reload) || true"
+  command = "(docker ps -q -f name=harbor-nginx | grep -q . && docker exec -t harbor-nginx nginx -s reload) || true"
 }
 
 template {
