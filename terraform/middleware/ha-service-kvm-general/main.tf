@@ -3,18 +3,7 @@ module "hypervisor_kvm" {
   count  = var.use_minio_hypervisor ? 0 : 1
   source = "../../modules/cluster-provision/hypervisor-kvm"
 
-  vm_config = {
-    all_nodes_map = {
-      for k, v in local.flat_node_map : k => {
-        ip              = v.ip
-        vcpu            = v.vcpu
-        ram             = v.ram
-        base_image_path = v.base_image_path
-        data_disks      = v.data_disks
-        network_tier    = v.network_tier
-      }
-    }
-  }
+  vm_config = local.vm_config
 
   create_networks        = false
   credentials            = local.vm_credentials_for_hypervisor
@@ -25,18 +14,7 @@ module "hypervisor_kvm_minio" {
   count  = var.use_minio_hypervisor ? 1 : 0
   source = "../../modules/cluster-provision/hypervisor-kvm-minio"
 
-  vm_config = {
-    all_nodes_map = {
-      for k, v in local.flat_node_map : k => {
-        ip              = v.ip
-        vcpu            = v.vcpu
-        ram             = v.ram
-        base_image_path = v.base_image_path
-        data_disks      = v.data_disks
-        network_tier    = v.network_tier
-      }
-    }
-  }
+  vm_config = local.vm_config
 
   create_networks        = false
   credentials            = local.vm_credentials_for_hypervisor
