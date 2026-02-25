@@ -54,5 +54,5 @@ module "ansible_runner" {
     inventory_file  = local.ansible.inventory_file
   }
 
-  extra_vars = nonsensitive(local.ansible_extra_vars)
+  extra_vars = local.ansible_extra_vars
 }
