@@ -9,6 +9,7 @@ output "credentials_system" {
   value       = local.sec_system_creds
   sensitive   = true
 }
+
 output "credentials_postgres" {
   description = "Database-level credentials for Patroni and PostgreSQL replication."
   value       = local.sec_postgres_creds

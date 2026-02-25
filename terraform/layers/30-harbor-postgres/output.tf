@@ -9,20 +9,11 @@ output "credentials_system" {
   value       = local.sec_system_creds
   sensitive   = true
 }
+
 output "credentials_postgres" {
   description = "Database-level credentials for Patroni and PostgreSQL replication."
   value       = local.sec_postgres_creds
   sensitive   = true
-}
-
-output "network_bindings" {
-  description = "L2 network identity mapping for VM interface attachment (Verified from KVM)."
-  value       = module.build_harbor_postgres_cluster.network_bindings
-}
-
-output "network_parameters" {
-  description = "L3 network configurations including gateways (Verified from KVM)."
-  value       = module.build_harbor_postgres_cluster.network_parameters
 }
 
 output "topology_cluster" {
