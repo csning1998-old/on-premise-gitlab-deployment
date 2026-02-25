@@ -4,8 +4,6 @@ output "service_vip" {
   value       = local.net_service_vip
 }
 
-
-
 output "credentials_system" {
   description = "System-level access credentials (SSH) for the cluster nodes."
   value       = local.sec_system_creds
