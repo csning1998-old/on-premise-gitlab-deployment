@@ -1,0 +1,16 @@
+version = 2
+
+[grpc]
+    address = "/run/containerd/containerd.sock"
+
+[plugins."io.containerd.grpc.v1.cri"]
+    # Path for per-registry host configuration (certs.d/<registry>/hosts.toml)
+    config_path = "{{ kubeadm_base.config_paths.certs_dir }}"
+
+    [plugins."io.containerd.grpc.v1.cri".containerd]
+
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+            runtime_type = "io.containerd.runc.v2"
+
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+                SystemdCgroup = true
