@@ -14,14 +14,11 @@ variable "bootstrap_harbor_config" {
   description = "Compute topology for Bootstrap Harbor service (Single Node)"
   type = object({
     role            = string
-    network_tier    = string
     base_image_path = string
-
     node = object({
-      ip_suffix       = number
-      vcpu            = number
-      ram             = number
-      base_image_path = string
+      ip_suffix = number
+      vcpu      = number
+      ram       = number
 
       data_disks = optional(list(object({
         name_suffix = string

@@ -1,18 +1,26 @@
 
 module "bootstrap_harbor" {
-  source = "../../middleware/standalone-service-kvm-general"
+  source = "../../middleware/ha-service-kvm-general"
 
-  cluster_name       = local.svc_cluster_name
-  component_name     = local.comp_name
-  node_suffix        = local.svc_node_suffix
-  topology_node      = local.topology_node
-  network_parameters = local.network_parameters
-  network_bindings   = local.network_bindings
+  # Identity & Service Definitions
+  svc_identity = local.svc_identity
+  node_identities = {
+    (var.bootstrap_harbor_config.role) = local.svc_identity
+  }
 
-  credentials_system = local.sec_system_creds
+  # Topology (Compute & Storage) — single node wrapped in HA-compatible structure
+  topology_cluster = local.topology_cluster
 
-  # Generic Ansible Configuration
-  ansible_inventory_content = local.ansible_inventory_content
-  ansible_extra_vars        = local.ansible_extra_vars
-  ansible_playbook_file     = var.ansible_files.playbook_file
+  # Network Infrastructure
+  network_infrastructure_map = local.network_infrastructure_map
+
+  # Security & Credentials
+  credentials_system            = local.sec_system_creds
+  security_vault_agent_identity = local.sec_vault_agent_identity
+
+  # Ansible Configuration
+  ansible_inventory_template_file = var.ansible_files.inventory_template_file
+  ansible_playbook_file           = var.ansible_files.playbook_file
+  ansible_template_vars           = local.ansible_template_vars
+  ansible_extra_vars              = local.ansible_extra_vars
 }

@@ -16,16 +16,6 @@ output "credentials_app" {
   sensitive   = true
 }
 
-output "network_bindings" {
-  description = "L2 network identity mapping (Verified from KVM Module)."
-  value       = module.bootstrap_harbor.network_bindings
-}
-
-output "network_parameters" {
-  description = "L3 network configurations (Verified from KVM Module)."
-  value       = module.bootstrap_harbor.network_parameters
-}
-
 output "topology_node" {
   description = "The actual provisioned configuration for Bootstrap Harbor node."
   value       = module.bootstrap_harbor.cluster_nodes
