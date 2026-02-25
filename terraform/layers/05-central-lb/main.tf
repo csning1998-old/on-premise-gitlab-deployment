@@ -20,9 +20,11 @@ module "central_lb_cluster" {
   credentials_vm          = local.sec_vm_creds
   credentials_application = local.sec_haproxy_creds
 
-  # Infrastructure Setup
-  network_infrastructure_map = local.net_infrastructure
-  network_service_segments   = local.net_service_segments
+  # Infrastructure Setup (Networks are managed by 04-network-topology layer)
+  network_infrastructure_map = {
+    (local.svc_name) = local.net_lb_config
+  }
+  network_service_segments = local.net_service_segments
 
   # Embedded Ansible Configurations
   ansible_inventory_template_file = "inventory-load-balancer-cluster.yaml.tftpl"
