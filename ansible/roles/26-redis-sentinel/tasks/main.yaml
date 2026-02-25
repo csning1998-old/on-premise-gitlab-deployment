@@ -122,9 +122,6 @@
         enabled: true
         daemon_reload: true
 
-    - name: "Step D7.1. Flush handlers to restart Vault Agent immediately if config changed"
-      ansible.builtin.meta: flush_handlers
-
     - name: "Step D8. Wait for Certificates"
       ansible.builtin.wait_for:
         path: /etc/redis/certs/server.crt
