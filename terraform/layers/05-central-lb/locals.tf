@@ -10,7 +10,7 @@ locals {
 locals {
   svc_name         = var.service_catalog_name
   svc_network_map  = local.state.topology.network_map
-  svc_identity     = local.state.topology.identity_map["${local.svc_name}-core"]
+  svc_identity     = local.state.topology.identity_map[local.svc_name]
   svc_fqdn         = local.state.topology.domain_suffix
   svc_cluster_name = local.svc_identity.cluster_name
   svc_node_prefix  = local.svc_identity.node_name_prefix
