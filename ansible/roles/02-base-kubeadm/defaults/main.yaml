@@ -1,10 +1,13 @@
 ---
+# Containerd sandbox (pause) image. Override via inventory to use Harbor proxy
+# in air-gap environments, e.g. 172.16.143.250/k8s-proxy/pause:3.10.1
+containerd_pause_image: "registry.k8s.io/pause:3.10.1"
+
 kubeadm_base:
   versions:
     repo_major: "v1.32"
     binary_full: "v1.32.0"
     package_spec: "1.32.0-1.1"
-    containerd: "1.7.24"
 
   binaries:
     - name: "crictl"
@@ -18,6 +21,15 @@ kubeadm_base:
       distribution: "{{ ansible_distribution_release }}"
       components: "main restricted universe multiverse"
       gpg_keyring_path: null
+
+    - id: "docker"
+      url_base: "https://download.docker.com/linux/ubuntu"
+      filename: "docker"
+      distribution: "{{ ansible_distribution_release }}"
+      components: "stable"
+      version_key: ""
+      gpg_keyring_path: "/etc/apt/keyrings/docker.gpg"
+      gpg_key_temp_path: "/tmp/docker.gpg"
 
     - id: "kubernetes"
       url_base: "https://pkgs.k8s.io/core:/stable:"
@@ -35,9 +47,7 @@ kubeadm_base:
         - "linux-headers-{{ ansible_kernel }}"
         - "perl"
         - "libelf-dev"
-        - "curl"
-        - "gnupg"
-      containerd:
+      cri:
         - "containerd.io"
       kubernetes:
         - "kubelet"
@@ -47,13 +57,7 @@ kubeadm_base:
   config_paths:
     modules: "/etc/modules-load.d/k8s.conf"
     sysctl: "/etc/sysctl.d/k8s.conf"
-    containerd_dir: "/etc/containerd"
-    containerd_config: "/etc/containerd/config.toml"
-    certs_dir: "/etc/containerd/certs.d"
-
-  cri:
-    socket: "unix:///run/containerd/containerd.sock"
-    cgroup_driver: "systemd"
+    containerd: "/etc/containerd/config.toml"
 
 # Binaries (crictl)
 _kubeadm_base_crictl_data: "{{ kubeadm_base.binaries | selectattr('name', 'equalto', 'crictl') | first }}"
@@ -63,6 +67,7 @@ _kubeadm_base_crictl_temp_path: "/tmp/{{ _kubeadm_base_crictl_archive_name }}"
 
 # Apt Repos (Data Lookups)
 _kubeadm_base_repo_community_data: "{{ kubeadm_base.apt_repositories | selectattr('id', 'equalto', 'ubuntu_community') | first }}"
+_kubeadm_base_repo_docker_data: "{{ kubeadm_base.apt_repositories | selectattr('id', 'equalto', 'docker') | first }}"
 _kubeadm_base_repo_k8s_data: "{{ kubeadm_base.apt_repositories | selectattr('id', 'equalto', 'kubernetes') | first }}"
 
 # Apt Repos (Computed Strings)
@@ -71,6 +76,13 @@ _kubeadm_base_repo_community_string: >
   {{ _kubeadm_base_repo_community_data.url_base }}
   {{ _kubeadm_base_repo_community_data.distribution }}
   {{ _kubeadm_base_repo_community_data.components }}
+
+_kubeadm_base_repo_docker_gpg_url: "https://download.docker.com/linux/ubuntu/gpg"
+_kubeadm_base_repo_docker_string: >
+  deb [arch=amd64 signed-by={{ _kubeadm_base_repo_docker_data.gpg_keyring_path }}]
+  {{ _kubeadm_base_repo_docker_data.url_base }}
+  {{ _kubeadm_base_repo_docker_data.distribution }}
+  {{ _kubeadm_base_repo_docker_data.components }}
 
 _kubeadm_base_repo_k8s_version: "{{ kubeadm_base.versions[_kubeadm_base_repo_k8s_data.version_key] }}"
 _kubeadm_base_repo_k8s_url_full: "{{ _kubeadm_base_repo_k8s_data.url_base }}/{{ _kubeadm_base_repo_k8s_version }}/deb/"
