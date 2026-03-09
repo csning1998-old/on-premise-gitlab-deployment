@@ -33,7 +33,7 @@ template {
 {{ '{{- end -}}' }}
 EOH
   # Logic: Check if harbor-nginx container is running. If yes, reload nginx. If not (first install), do nothing.
-  command = "(docker ps -q -f name=harbor-nginx | grep -q . && docker exec -t harbor-nginx nginx -s reload) || true"
+  command = "cp {{ harbor_cert_path }} /data/harbor/secret/cert/server.crt 2>/dev/null || true; (docker ps -q -f name=^nginx$ | grep -q . && docker exec -i nginx nginx -s reload) || true"
 }
 
 template {
@@ -43,7 +43,7 @@ template {
 {{ '{{ .Data.private_key }}' }}
 {{ '{{- end -}}' }}
 EOH
-  command = "chmod 0600 {{ harbor_key_path }}"
+  command = "chmod 0600 {{ harbor_key_path }}; cp {{ harbor_key_path }} /data/harbor/secret/cert/server.key 2>/dev/null || true"
 }
 
 # CA Certificate (Trust Anchor)
