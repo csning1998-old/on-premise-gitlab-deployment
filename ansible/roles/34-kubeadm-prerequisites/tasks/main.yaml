@@ -30,11 +30,7 @@
     - name: "Step A3. Force update of CA certificates"
       ansible.builtin.command: update-ca-certificates
       changed_when: false
-
-    - name: "Step A4. Restart Containerd to apply OS trust store changes"
-      ansible.builtin.systemd:
-        name: containerd
-        state: restarted
+      notify: Restart containerd service
 
 - name: "Block B: Configure Containerd Registry endpoint"
   become: true
