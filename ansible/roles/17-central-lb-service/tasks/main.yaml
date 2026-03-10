@@ -82,10 +82,9 @@
 
     - name: "Step D2. Add ip rules for VIPs"
       ansible.builtin.command:
-        cmd: "ip rule add from {{ item.vip }} table rt_{{ item.name | replace('-', '_') }}"
+        cmd: 'bash -c ''set -euo pipefail; if ! ip rule show | grep -q "{{ item.vip }} "; then ip rule add from {{ item.vip }} table rt_{{ item.name | replace("-", "_") }}; echo changed; fi'''
       register: ip_rule_out
-      failed_when: false
-      changed_when: ip_rule_out.rc == 0
+      changed_when: "'changed' in ip_rule_out.stdout"
       loop: "{{ lb_service_segments }}"
 
     - name: "Step D3. Add ip routes for VIPs"
