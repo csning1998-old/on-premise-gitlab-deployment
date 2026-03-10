@@ -35,36 +35,25 @@
 - name: "Block B: Configure Containerd Registry endpoint"
   become: true
   block:
-    - name: "Step B1. Ensure /etc/containerd/certs.d directory exists for registry {{ kubeadm_registry_host }}"
+    - name: "Step B1. Ensure /etc/containerd/certs.d directories exist"
       ansible.builtin.file:
-        path: "/etc/containerd/certs.d/{{ kubeadm_registry_host }}"
+        path: "/etc/containerd/certs.d/{{ item }}"
         state: directory
         owner: root
         group: root
         mode: "0755"
+      loop:
+        - "{{ kubeadm_registry_host }}"
+        - "{{ kubeadm_registry_vip }}"
 
     - name: "Step B2. Deploy hosts.toml for Harbor Registry"
       ansible.builtin.template:
         src: hosts.toml.j2
-        dest: "/etc/containerd/certs.d/{{ kubeadm_registry_host }}/hosts.toml"
+        dest: "/etc/containerd/certs.d/{{ item }}/hosts.toml"
         owner: root
         group: root
         mode: "0644"
       notify: Restart containerd service
-
-    - name: "Step B3. Ensure /etc/containerd/certs.d directory exists for registry {{ kubeadm_registry_vip }}"
-      ansible.builtin.file:
-        path: "/etc/containerd/certs.d/{{ kubeadm_registry_vip }}"
-        state: directory
-        owner: root
-        group: root
-        mode: "0755"
-
-    - name: "Step B4. Deploy hosts.toml for Harbor Registry (IP)"
-      ansible.builtin.template:
-        src: hosts.toml.j2
-        dest: "/etc/containerd/certs.d/{{ kubeadm_registry_vip }}/hosts.toml"
-        owner: root
-        group: root
-        mode: "0644"
-      notify: Restart containerd service
+      loop:
+        - "{{ kubeadm_registry_host }}"
+        - "{{ kubeadm_registry_vip }}"
