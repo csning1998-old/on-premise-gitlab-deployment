@@ -3,6 +3,7 @@
   hosts: master
   become: true
   roles:
+    - 34-kubeadm-prerequisites
     - 35-kubeadm-ha-haproxy
 
 - name: "Play 2: Initialize the primary master node"
@@ -27,6 +28,7 @@
   hosts: workers
   become: true
   roles:
+    - 34-kubeadm-prerequisites
     - 39-kubeadm-join-workers
 
 - name: "Play 6: Setup Kubeconfig Vault Storage"
