@@ -15,10 +15,9 @@ terraform {
 
 # Bootstrap Provider (Podman Vault)
 provider "vault" {
-  alias           = "bootstrapper"
-  address         = var.vault_dev_addr
-  token           = trimspace(file(abspath("${path.root}/../../../vault/keys/root-token.txt")))
-  skip_tls_verify = true
+  alias   = "bootstrapper"
+  address = var.vault_dev_addr
+  token   = trimspace(file(abspath("${path.root}/../../../vault/keys/root-token.txt")))
 }
 
 # Production Provider (Layer 10 Vault)
@@ -32,5 +31,4 @@ provider "harbor" {
   url      = "https://${data.terraform_remote_state.harbor_core.outputs.service_vip}"
   username = "admin"
   password = data.vault_generic_secret.dev_harbor_app.data["dev_harbor_admin_password"]
-  insecure = true
 }
