@@ -75,19 +75,43 @@ resource "libvirt_pool" "storage_pool" {
   }
 }
 
-resource "libvirt_volume" "os_disk" {
+locals {
+  # Extract a map of unique base images to avoid creating duplicate base volumes (Copy-on-Write)
+  unique_base_images = toset([for k, v in var.vm_config.all_nodes_map : abspath(v.base_image_path)])
 
+  base_image_map = {
+    for path in local.unique_base_images : basename(path) => path
+  }
+}
+
+resource "libvirt_volume" "base_image" {
   depends_on = [libvirt_pool.storage_pool]
+  for_each   = local.base_image_map
+
+  name   = "base-${each.key}"
+  pool   = libvirt_pool.storage_pool.name
+  format = "qcow2"
+
+  create = {
+    content = {
+      url = each.value
+    }
+  }
+}
+
+resource "libvirt_volume" "os_disk" {
+  depends_on = [libvirt_pool.storage_pool, libvirt_volume.base_image]
 
   for_each = var.vm_config.all_nodes_map
   name     = "${each.key}-os.qcow2"
   pool     = libvirt_pool.storage_pool.name
   format   = "qcow2"
+  capacity = 42949672960 # 40 GiB (Must match or exceed the base image virtual size; Variable control needed.)
 
-  create = {
-    content = {
-      url = abspath(each.value.base_image_path)
-    }
+  # Use Copy-on-Write
+  backing_store = {
+    path   = libvirt_volume.base_image[basename(abspath(each.value.base_image_path))].path
+    format = "qcow2"
   }
 }
 
