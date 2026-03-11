@@ -90,9 +90,9 @@
 
     - name: "Step D3. Add ip routes for VIPs"
       ansible.builtin.command:
-        cmd: "ip route replace default via {{ item.cidr | regex_replace('\\.0/24$', '.1') }} dev {{ item.interface_alias }} table rt_{{ item.name | replace('-', '_') }}"
+        cmd: "ip route add default via {{ item.cidr | regex_replace('\\.0/24$', '.1') }} dev {{ item.interface_alias }} table rt_{{ item.name | replace('-', '_') }}"
       register: ip_route_out
-      failed_when: ip_route_out.rc != 0
+      failed_when: "ip_route_out.rc != 0 and 'File exists' not in ip_route_out.stderr"
       changed_when: ip_route_out.rc == 0
       loop: "{{ lb_service_segments }}"
 
@@ -102,10 +102,10 @@
       # ensures the reply uses the correct interface without relying on host-level forwarding.
       ansible.builtin.command:
         cmd: >
-          ip route replace {{ item.1.cidr }} dev {{ item.1.interface_alias }}
+          ip route add {{ item.1.cidr }} dev {{ item.1.interface_alias }}
           scope link table rt_{{ item.0.name | replace('-', '_') }}
       register: ip_route_seg_out
-      failed_when: ip_route_seg_out.rc != 0
+      failed_when: "ip_route_seg_out.rc != 0 and 'File exists' not in ip_route_seg_out.stderr"
       changed_when: ip_route_seg_out.rc == 0
       loop: "{{ lb_service_segments | product(lb_service_segments) | list }}"
       loop_control:
