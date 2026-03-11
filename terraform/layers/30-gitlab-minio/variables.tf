@@ -30,6 +30,14 @@ variable "gitlab_minio_config" {
   }))
 }
 
+variable "ansible_files" {
+  description = "Meta configuration of Ansible inventory for Bootstrap Harbor service."
+  type = object({
+    playbook_file           = string
+    inventory_template_file = string
+  })
+}
+
 variable "gitlab_minio_tenants" {
   description = "Map of buckets and users to create for GitLab"
   type = map(object({

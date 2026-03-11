@@ -40,6 +40,11 @@ gitlab_minio_config = {
   }
 }
 
+ansible_files = {
+  playbook_file           = "20-provision-data-services.yaml"
+  inventory_template_file = "inventory-minio-cluster.yaml.tftpl"
+}
+
 gitlab_minio_tenants = {
   "gitlab-artifacts" = {
     user_name      = "gitlab-artifacts-user"
