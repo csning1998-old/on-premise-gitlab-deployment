@@ -2,8 +2,6 @@
 module "minio_harbor" {
   source = "../../middleware/ha-service-kvm-general"
 
-  use_minio_hypervisor = true
-
   # Identity & Service Definitions
   svc_identity = local.svc_minio_identity
   node_identities = {

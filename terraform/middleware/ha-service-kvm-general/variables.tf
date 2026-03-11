@@ -99,13 +99,6 @@ variable "ansible_playbook_file" {
   type        = string
 }
 
-# Extensibility Flags
-variable "use_minio_hypervisor" {
-  description = "Flag to determine if the specific hypervisor-kvm-minio module should be used (handles raw block devices for MinIO)"
-  type        = bool
-  default     = false
-}
-
 # System Credentials
 variable "credentials_system" {
   description = "System level credentials (ssh user, password, keys)"

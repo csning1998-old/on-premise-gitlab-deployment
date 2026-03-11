@@ -2,7 +2,7 @@
 module "minio_gitlab" {
   source = "../../middleware/ha-service-kvm-general"
 
-  use_minio_hypervisor = true
+  # use_minio_hypervisor = true
 
   # Identity & Service Definitions
   svc_identity = local.svc_minio_identity
