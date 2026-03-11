@@ -14,6 +14,7 @@ gitlab_minio_config = {
           { name_suffix = "drive2", capacity_gib = 10 }
         ]
       }
+      # Uncomment the following lines for HA setup, abide by node % 4 != 0.
       # "01" = {
       #   ip_suffix = 201, vcpu = 2, ram_size = 3072, os_disk_capacity_gib = 40
       #   data_disks = [
