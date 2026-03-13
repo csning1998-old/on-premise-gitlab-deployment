@@ -2,7 +2,7 @@
 # State Object
 locals {
   state = {
-    topology = data.terraform_remote_state.topology.outputs
+    metadata = data.terraform_remote_state.metadata.outputs
     network  = data.terraform_remote_state.network.outputs
   }
 }
@@ -10,14 +10,15 @@ locals {
 # 1. Service Context
 locals {
   svc_name         = var.service_catalog_name
-  svc_network_map  = local.state.topology.network_map
-  svc_identity     = local.state.topology.identity_map[local.svc_name]
-  svc_fqdn         = local.state.topology.domain_suffix
+  # From `00-foundation-metadata`
+  svc_fqdn         = local.state.metadata.global_domain_suffix
+  svc_network_map  = local.state.metadata.global_network_map
+  svc_identity     = local.state.metadata.global_identity_map[local.svc_name]
   svc_cluster_name = local.svc_identity.cluster_name
   svc_node_prefix  = local.svc_identity.node_name_prefix
 }
 
-# 2. Network Context (delegated to 04-network-topology)
+# 2. Network Context (delegated to `05-foundation-network`)
 locals {
   # Deterministic Ordering
   net_sorted_node_keys = sort(keys(var.node_config))
@@ -27,10 +28,10 @@ locals {
     key => "${local.svc_node_prefix}-${format("%02d", idx)}"
   }
 
-  # MAC Address Derivation Base (From Layer 00 "central-lb")
+  # MAC Address Derivation Base
   net_lb_base_mac_parts = split(":", local.svc_network_map[local.svc_name].mac_address)
 
-  # Delegated from 04-network-topology
+  # Delegated from `05-foundation-network`
   net_infrastructure = local.state.network.infrastructure_map
   net_lb_config      = local.state.network.central_lb_info
   net_access_scope   = local.net_lb_config.hostonly.cidr
@@ -38,7 +39,7 @@ locals {
 }
 
 locals {
-  # Service Segments: augment from 04 with node_ips computed here (depends on var.node_config)
+  # Service Segments: augment from `05-foundation-network` with node_ips computed here (depends on `var.node_config`)
   # Services tagged "self-managed-lb" run their own HA stack (e.g. Kubeadm Stacked Control Plane)
   # and must NOT appear here, as they own their VIP independently.
   net_service_segments = [
@@ -54,7 +55,7 @@ locals {
 
 # 3. Security & Credentials Context (sec_ / pki_)
 locals {
-  pki_global_ca = local.state.topology.vault_pki
+  pki_global_ca = local.state.metadata.global_vault_pki
 
   sec_vm_creds = {
     username             = data.vault_generic_secret.iac_vars.data["vm_username"]
@@ -79,7 +80,7 @@ locals {
   }
 }
 
-# Topology Component Construction
+# metadata Component Construction
 locals {
   # Payload Construction
   storage_pool_name = local.svc_identity.storage_pool_name

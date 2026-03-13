@@ -7,7 +7,6 @@ output "network_slot_topology" {
   }
 }
 
-
 output "infrastructure_map" {
   description = "Physical realization bridging Layer 00 Math and HAProxy VIPs, mapped perfectly to O(1) SSoT Identity keys"
   value       = data.terraform_remote_state.network.outputs.infrastructure_map

@@ -13,11 +13,3 @@ provider "vault" {
   address      = var.vault_dev_addr
   ca_cert_file = abspath("${path.root}/../../../vault/tls/ca.pem")
 }
-
-data "vault_generic_secret" "iac_vars" {
-  path = "secret/on-premise-gitlab-deployment/variables"
-}
-
-data "vault_generic_secret" "infra_vars" {
-  path = "secret/on-premise-gitlab-deployment/infrastructure"
-}
