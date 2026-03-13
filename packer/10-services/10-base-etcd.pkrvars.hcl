@@ -2,7 +2,7 @@
 # This file defines the variables for building the 'registry-base' image.
 
 build_spec = {
-  suffix   = "09-base-etcd"
+  suffix   = "10-base-etcd"
   vnc_port = 5999
 }
 
