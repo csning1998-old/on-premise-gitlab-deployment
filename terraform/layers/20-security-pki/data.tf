@@ -1,15 +1,15 @@
 
-data "terraform_remote_state" "topology" {
+data "terraform_remote_state" "metadata" {
   backend = "local"
   config = {
-    path = "${path.root}/../00-global-topology/terraform.tfstate"
+    path = "${path.root}/../00-foundation-metadata/terraform.tfstate"
   }
 }
 
 data "terraform_remote_state" "vault_raft_config" {
   backend = "local"
   config = {
-    path = "${path.root}/../10-vault-raft/terraform.tfstate"
+    path = "${path.root}/../15-shared-vault/terraform.tfstate"
   }
 }
 

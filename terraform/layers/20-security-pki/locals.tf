@@ -1,12 +1,12 @@
 
 # 1. Global Topology and Bootstrap CA.
-# Note: The bootstrap-ca.crt file is written by Layer 10 (10-vault-raft).
+# Note: The bootstrap-ca.crt file is written by Layer 10 (15-shared-vault).
 # Layer 20 references it via the path below for the Vault provider's ca_cert_file.
 locals {
-  global_topology     = data.terraform_remote_state.topology.outputs
-  root_domain         = local.global_topology.domain_suffix
-  root_ca_common_name = local.global_topology.pki_settings.root_ca_common_name
-  bootstrap_ca_path   = abspath("${path.root}/../10-vault-raft/tls/bootstrap-ca.crt")
+  metadata     = data.terraform_remote_state.metadata.outputs
+  root_domain         = local.metadata.global_domain_suffix
+  root_ca_common_name = local.metadata.global_pki_settings.root_ca_common_name
+  bootstrap_ca_path   = abspath("${path.root}/../15-shared-vault/tls/bootstrap-ca.crt")
 }
 
 # 2. TTL Policy for different environments
@@ -19,14 +19,14 @@ locals {
   }
 }
 
-# 3. Generate Vault Roles (Based on SSoT pki_map)
+# 3. Generate Vault Roles (Based on SSoT global_pki_map)
 #    a. Map domains from Global Topology
 #    b. Inject Metadata (OU)
 #    c. Apply TTL Policy
 locals {
-  # Component Roles (Server Certs): 
+  # Component Roles (Server Certs):
   component_roles = {
-    for k, v in local.global_topology.pki_map : k => {
+    for k, v in local.metadata.global_pki_map : k => {
       name            = v.role_name
       allowed_domains = v.dns_san
       ou              = v.ou
@@ -36,9 +36,9 @@ locals {
     if !endswith(k, "-dep")
   }
 
-  # Dependency Roles (Client Certs / Auth): 
+  # Dependency Roles (Client Certs / Auth):
   dependency_roles = {
-    for k, v in local.global_topology.pki_map : k => {
+    for k, v in local.metadata.global_pki_map : k => {
       name            = v.role_name
       allowed_domains = v.dns_san
       ou              = v.ou
@@ -49,7 +49,7 @@ locals {
   }
 }
 
-# 6. Specific Vault Policy for some Workload Identity: 
+# 6. Specific Vault Policy for some Workload Identity:
 #    Key must correspond to service_catalog of "${service_name}-${component_name}"
 locals {
   workload_identity_extra_policies = {
