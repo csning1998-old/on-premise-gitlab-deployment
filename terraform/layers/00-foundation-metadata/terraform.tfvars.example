@@ -14,28 +14,28 @@ pki_settings = {
 }
 
 /** Service Catalog Definition rules:
- * 0. name: define UNIQUE name of the service. 
+ * 0. name: define UNIQUE name of the service.
  *      (e.g. gitlab)
- * 1. owner: define the owner of the service 
+ * 1. owner: define the owner of the service
  *      (e.g. devops, secops...)
- * 2. project_code: define the project code of the service 
+ * 2. project_code: define the project code of the service
  *      (e.g. iac, core...)
- * 3. provider: define the Terraform provider for the service 
+ * 3. provider: define the Terraform provider for the service
  *      (e.g. kvm, aws, gcp, azure, vmware...)
- * 4. runtime: define the runtime of the service 
+ * 4. runtime: define the runtime of the service
  *      (e.g. kubeadm, microk8s, baremetal...)
- * 5. stage: define the stage of the service 
+ * 5. stage: define the stage of the service
  *      (e.g. production, staging, development...)
- * 6. cidr_index: used to calculate subnet 
+ * 6. cidr_index: used to calculate subnet
  *      (e.g. 172.16.X.0/24)
- * 7. tags: define the tags of the service for better governance. 
+ * 7. tags: define the tags of the service for better governance.
  *      (e.g. ["with-128-etcd", "with-127-postgres"])
  *     * Note: Services tagged `self-managed-lb` run their own HA stack. Refer to Central LB Layer for more details.
- * 8. ip_range: define the IP range of the service. 
+ * 8. ip_range: define the IP range of the service.
  *      (e.g. { start_ip = 200, end_ip = 220 })
- * 9. component: define the component of the service. 
+ * 9. component: define the component of the service.
  *      (e.g. frontend, backend, database...)
- *    - subdomains: define the subdomains of the component. 
+ *    - subdomains: define the subdomains of the component.
  *        (e.g. gitlab, kas...)
  * 10. dependencies: define the external dependency of a specific component. Leave empty if no external dependency.
  *      (e.g. postgres, redis, minio...)
@@ -230,11 +230,11 @@ service_catalog = [
     dependencies = {}
   },
   {
-    name         = "bootstrap-harbor"
+    name         = "harbor-bootstapper"
     owner        = "devops"
     project_code = "core"
     provider     = "kvm"
-    runtime      = "baremetal"
+    runtime      = "docker"
     stage        = "production"
     cidr_index   = 137
     tags         = []
@@ -244,7 +244,7 @@ service_catalog = [
       "https" = { frontend_port = 443, backend_port = 443 }
     }
     components = {
-      "frontend" = { subdomains = ["bootstrap-harbor"] }
+      "frontend" = { subdomains = ["harbor-bootstapper"] }
     }
     dependencies = {}
   }
