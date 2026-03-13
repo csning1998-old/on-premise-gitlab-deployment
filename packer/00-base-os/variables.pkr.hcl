@@ -1,14 +1,16 @@
 
 # This file defines all variables for the data-driven Packer build.
 
-# Build Control Variables 
+# Build Control Variables
 
-variable "build_spec" {
-  type = object({
-    suffix   = string
-    vnc_port = number
-  })
-  description = "Defines the specific parameters for this build type."
+variable "build_name" {
+  type        = string
+  description = "The name of the build, derived from the var-file name."
+}
+
+variable "vnc_port" {
+  type        = number
+  description = "VNC port for the build."
 }
 
 # Common Variables, from *.pkrvars.hcl or command line
@@ -24,11 +26,12 @@ variable "common_spec" {
 
 variable "os_spec" {
   type = object({
-    vm_name      = string
+    distro       = string
+    version      = string
     iso_url      = string
     iso_checksum = string
   })
-  description = "Defines OS-specific metadata (ISO, default hostname)."
+  description = "Defines OS-specific metadata (ISO, distro, version)."
 }
 
 variable "net_bridge" {

@@ -1,14 +1,16 @@
 
 # This file defines all variables for the data-driven Packer build.
 
-# Build Control Variables 
+# Build Control Variables
 
-variable "build_spec" {
-  type = object({
-    suffix   = string
-    vnc_port = number
-  })
-  description = "Defines the specific parameters for this build type."
+variable "build_name" {
+  type        = string
+  description = "The name of the build, derived from the var-file name."
+}
+
+variable "vnc_port" {
+  type        = number
+  description = "VNC port for the build."
 }
 
 # Common Variables, from *.pkrvars.hcl or command line
@@ -24,14 +26,21 @@ variable "common_spec" {
 
 variable "os_spec" {
   type = object({
-    vm_name      = string
+    distro  = string
+    version = string
   })
-  description = "Defines OS-specific metadata (default hostname prefix)."
+  description = "Defines OS-specific metadata (distro, version)."
 }
 
 variable "source_image" {
   type = string
   description = "The relative path to the base image to use as a backing file."
+}
+
+variable "source_image_checksum" {
+  type    = string
+  default = "none"
+  description = "The checksum of the source image. If 'none', the HCL will attempt to auto-discover it from a .sha256 file."
 }
 
 variable "net_bridge" {

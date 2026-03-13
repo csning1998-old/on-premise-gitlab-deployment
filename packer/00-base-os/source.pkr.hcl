@@ -6,17 +6,17 @@ locals {
   ssh_password        = vault("secret/data/on-premise-gitlab-deployment/variables", "ssh_password")
   ssh_password_hash   = vault("secret/data/on-premise-gitlab-deployment/variables", "ssh_password_hash")
 
-  # The final hostname is dynamically composed from variables.
-  final_hostname = "${var.os_spec.vm_name}-${var.build_spec.suffix}"
-  final_vm_name = "${local.final_hostname}.qcow2"
+  # The final hostname is simple.
+  final_hostname = var.build_name
+  final_vm_name = "${var.os_spec.distro}-${var.os_spec.version}-updated.qcow2"
 }
 
 source "qemu" "ubuntu" {
   # Dynamic Settings from Variables
   vm_name          = local.final_vm_name
-  output_directory = "../output/${var.build_spec.suffix}"
-  vnc_port_min     = var.build_spec.vnc_port
-  vnc_port_max     = var.build_spec.vnc_port
+  output_directory = "../output/${var.build_name}"
+  vnc_port_min     = var.vnc_port
+  vnc_port_max     = var.vnc_port
 
   # Common Settings from Variables
   iso_url      = var.os_spec.iso_url

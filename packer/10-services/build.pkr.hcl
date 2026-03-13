@@ -33,7 +33,7 @@ build {
     playbook_file       = "../../ansible/playbooks/00-provision-base-image.yaml"
     inventory_directory = "../../ansible/"
     user                = local.ssh_username
-    groups              = [var.build_spec.suffix]
+    groups              = [var.build_name]
     
     ansible_env_vars = [
       "ANSIBLE_CONFIG=../../ansible.cfg"
@@ -44,6 +44,15 @@ build {
       "--extra-vars", "ssh_user=${local.ssh_username}",
       "--extra-vars", "ansible_ssh_transfer_method=piped",
       "-v",
+    ]
+  }
+
+  # Generate SHA256 checksum for the artifact
+  post-processor "shell-local" {
+    inline = [
+      "echo 'Generating SHA256 checksum for ${local.final_vm_name}...'",
+      "cd ../output/${var.build_name} && sha256sum ${local.final_vm_name} > ${local.final_vm_name}.sha256",
+      "echo 'Checksum generated at ../output/${var.build_name}/${local.final_vm_name}.sha256'"
     ]
   }
 }
