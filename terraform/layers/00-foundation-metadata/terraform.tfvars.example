@@ -230,7 +230,7 @@ service_catalog = [
     dependencies = {}
   },
   {
-    name         = "harbor-bootstapper"
+    name         = "harbor-bootstrapper"
     owner        = "devops"
     project_code = "core"
     provider     = "kvm"
@@ -244,7 +244,7 @@ service_catalog = [
       "https" = { frontend_port = 443, backend_port = 443 }
     }
     components = {
-      "frontend" = { subdomains = ["harbor-bootstapper"] }
+      "frontend" = { subdomains = ["harbor-bootstrapper"] }
     }
     dependencies = {}
   }
