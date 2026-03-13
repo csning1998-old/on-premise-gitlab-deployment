@@ -43,13 +43,4 @@ build {
       "-v",
     ]
   }
-
-  # Generate SHA256 checksum for the artifact
-  post-processor "shell-local" {
-    inline = [
-      "echo 'Generating SHA256 checksum for ${local.final_vm_name}...'",
-      "cd ../output/${var.build_name} && sha256sum ${local.final_vm_name} > ${local.final_vm_name}.sha256",
-      "echo 'Checksum generated at ../output/${var.build_name}/${local.final_vm_name}.sha256'"
-    ]
-  }
 }
