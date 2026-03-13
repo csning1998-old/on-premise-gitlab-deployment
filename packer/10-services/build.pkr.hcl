@@ -21,10 +21,7 @@ build {
   provisioner "shell" {
     execute_command = "echo '${local.ssh_password}' | {{ .Vars }} sudo -S -E bash '{{ .Path }}'"
     inline = [
-      "echo 'Skipping heavy OS updates in service layer'",
-      "apt-get update",
-      "apt-get install -y openssh-sftp-server",
-      "systemctl restart ssh"
+      "echo 'Skipping heavy OS updates in service layer'"
     ]
   }
 
@@ -34,7 +31,7 @@ build {
     inventory_directory = "../../ansible/"
     user                = local.ssh_username
     groups              = [var.build_name]
-    
+
     ansible_env_vars = [
       "ANSIBLE_CONFIG=../../ansible.cfg"
     ]
