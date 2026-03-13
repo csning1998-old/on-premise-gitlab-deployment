@@ -16,11 +16,10 @@ packer_artifact_cleaner() {
 
   if [[ "$target_layer" == "all" ]]; then
     log_print "INFO" "Preparing to clean all Packer output directories..."
-    if [ -z "${ALL_PACKER_BASES[*]}" ]; then
+    if [ -z "$ALL_PACKER_BASES" ]; then
       log_print "WARN" "ALL_PACKER_BASES is empty. Cannot clean 'all'."
     else
-      # Support both array and string formats
-      layers_to_clean=("${ALL_PACKER_BASES[@]}")
+      read -r -a layers_to_clean <<< "$ALL_PACKER_BASES"
     fi
   else
     layers_to_clean=("$target_layer")
@@ -93,6 +92,21 @@ packer_build_executor() {
     ."
 
   run_command "${cmd}" "${target_packer_dir}"
+
+  # --- DEDUPLICATION: Post-build Operations ---
+  # Generate checksum for the artifact (moved from HCL post-processor to shell script)
+  local output_dir="${PACKER_DIR}/output/${base_name}"
+  
+  # Discover the .qcow2 file in the output directory (assuming one per build)
+  local image_file=$(find "${output_dir}" -maxdepth 1 -name "*.qcow2" -printf "%f\n" | head -n 1)
+  
+  if [ -n "$image_file" ]; then
+    log_print "TASK" "Generating SHA256 checksum for ${image_file}..."
+    pushd "${output_dir}" > /dev/null
+    sha256sum "${image_file}" > "${image_file}.sha256"
+    popd > /dev/null
+    log_print "INFO" "Checksum generated at output/${base_name}/${image_file}.sha256"
+  fi
 
   log_print "OK" "Packer build complete. New image for [${base_name}] is ready."
   log_divider
