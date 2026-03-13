@@ -26,7 +26,7 @@ harbor_admin_password: "{{ harbor_bootstrapper_admin_password }}"
 
 # Database config
 database:
-  password: "{{ dev_harbor_db_password }}"
+  password: "{{ harbor_bootstrapper_pg_db_password }}"
   max_idle_conns: 50
   max_open_conns: 100
   conn_max_lifetime: 5m
