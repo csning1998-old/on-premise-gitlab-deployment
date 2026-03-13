@@ -104,7 +104,7 @@ packer_menu_handler() {
       break
 
     elif [[ "$build_base" == "Build ALL Packer Images" ]]; then
-      log_print "STEP" "Executing Batch Build for ALL Packer Images..."      
+      log_print "STEP" "Executing Batch Build for ALL Packer Images..."
       if ! ssh_key_verifier; then break; fi
       libvirt_service_manager
       packer_artifact_cleaner "all"

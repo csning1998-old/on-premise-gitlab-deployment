@@ -7,7 +7,10 @@ locals {
   ssh_public_key_path = vault("secret/data/on-premise-gitlab-deployment/variables", "ssh_public_key_path")
 
   # The final hostname is dynamically composed from variables.
-  final_vm_name = "${var.common_spec.vm_name}-${var.build_spec.suffix}.qcow2"
+  final_hostname = "${var.common_spec.vm_name}-${var.build_spec.suffix}"
+  final_vm_name = "${local.final_hostname}.qcow2"
+
+  is_base_layer = var.build_spec.suffix == "00-base-apt-updated"
 }
 
 source "qemu" "ubuntu" {
@@ -18,11 +21,14 @@ source "qemu" "ubuntu" {
   vnc_port_max     = var.build_spec.vnc_port
 
   # Common Settings from Variables
-  iso_url      = var.common_spec.iso_url
-  iso_checksum = var.common_spec.iso_checksum
-  cpus         = var.common_spec.cpus
-  memory       = var.common_spec.memory
-  disk_size    = var.common_spec.disk_size
+  cpus      = var.common_spec.cpus
+  memory    = var.common_spec.memory
+  disk_size = var.common_spec.disk_size
+
+  # Source Configuration
+  iso_url      = local.is_base_layer ? var.common_spec.iso_url : "./output/00-base-apt-updated/ubuntu-server-24-00-base-apt-updated.qcow2"
+  iso_checksum = local.is_base_layer ? var.common_spec.iso_checksum : "none"
+  disk_image   = !local.is_base_layer
 
   # Common Hardcoded Settings
   disk_interface = "virtio"
@@ -35,23 +41,24 @@ source "qemu" "ubuntu" {
   format         = "qcow2"
 
   # Cloud-Init & Autoinstall
-  http_directory = "./http"
+  http_directory = local.is_base_layer ? "./http" : null
   cd_content = {
     "/user-data" = templatefile("${path.root}/http/user-data", {
-      hostname      = local.final_vm_name
+      hostname      = local.final_hostname
       username      = local.ssh_username
       password_hash = local.ssh_password_hash
     })
-    "/meta-data" = file("${path.root}/http/meta-data")
+    "/meta-data" = "instance-id: ${local.final_hostname}\nlocal-hostname: ${local.final_hostname}"
   }
   cd_label = "cidata"
 
   # Boot & SSH
-  boot_wait = "5s"
-  boot_command = [
+  boot_wait = local.is_base_layer ? "5s" : "0s"
+  boot_command = local.is_base_layer ? [
     "<wait2s>", "e<wait>", "<down><down><down><end>",
     " autoinstall ds=nocloud;", "<f10>"
-  ]
+  ] : null
+
   ssh_username     = local.ssh_username
   ssh_password     = local.ssh_password
   ssh_timeout      = "10m"
