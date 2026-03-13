@@ -1,7 +1,7 @@
 
 build_spec = {
-  suffix   = "10-base-etcd"
-  vnc_port = 5999
+  suffix   = "10-base-minio"
+  vnc_port = 5996
 }
 
 os_spec = {

@@ -1,7 +1,7 @@
 
 build_spec = {
-  suffix   = "10-base-etcd"
-  vnc_port = 5999
+  suffix   = "10A-docker-harbor"
+  vnc_port = 5991
 }
 
 os_spec = {
