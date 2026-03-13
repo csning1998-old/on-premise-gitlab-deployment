@@ -1,15 +1,15 @@
 
-data "terraform_remote_state" "topology" {
+data "terraform_remote_state" "metadata" {
   backend = "local"
   config = {
-    path = "${path.root}/../00-global-topology/terraform.tfstate"
+    path = "${path.root}/../00-foundation-metadata/terraform.tfstate"
   }
 }
 
-data "terraform_remote_state" "network" {
+data "terraform_remote_state" "load_balancer" {
   backend = "local"
   config = {
-    path = "${path.root}/../05-central-lb/terraform.tfstate"
+    path = "${path.root}/../10-shared-load-balancer/terraform.tfstate"
   }
 }
 

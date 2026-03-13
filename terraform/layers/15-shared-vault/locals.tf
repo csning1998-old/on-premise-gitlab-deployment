@@ -2,15 +2,15 @@
 # State Object
 locals {
   state = {
-    topology = data.terraform_remote_state.topology.outputs
-    network  = data.terraform_remote_state.network.outputs
+    metadata = data.terraform_remote_state.metadata.outputs      # Source from `00-foundation-metadata`
+    network  = data.terraform_remote_state.load_balancer.outputs # Source from `10-shared-load-balancer`
   }
 }
 
 # Service Context
 locals {
   svc_name         = var.service_catalog_name
-  svc_raft_comp    = local.state.topology.service_structure[local.svc_name].components["raft"]
+  svc_raft_comp    = local.state.metadata.global_service_structure[local.svc_name].components["raft"]
   svc_identity     = local.svc_raft_comp.identity
   svc_fqdn         = local.svc_raft_comp.role.dns_san[0]
   svc_cluster_name = local.svc_identity.cluster_name
@@ -18,7 +18,7 @@ locals {
 
 # Network Context
 locals {
-  net_vault_infra = local.state.network.infrastructure_map[local.state.topology.service_structure[local.svc_name].network.segment_key]
+  net_vault_infra = local.state.network.infrastructure_map[local.state.metadata.global_service_structure[local.svc_name].network.segment_key]
   net_service_vip = local.net_vault_infra.lb_config.vip
 
   # Single map of raw infrastructures for KVM
@@ -29,7 +29,7 @@ locals {
 
 # Security Context
 locals {
-  pki_global_ca = local.state.topology.vault_pki # PKI Artifacts
+  pki_global_ca = local.state.metadata.global_vault_pki # PKI Artifacts
 
   # System Level Credentials (OS/SSH)
   sec_system_creds = {
