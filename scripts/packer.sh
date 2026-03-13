@@ -16,11 +16,11 @@ packer_artifact_cleaner() {
 
   if [[ "$target_layer" == "all" ]]; then
     log_print "INFO" "Preparing to clean all Packer output directories..."
-    if [ -z "${ALL_PACKER_BASES}" ]; then
+    if [ -z "${ALL_PACKER_BASES[*]}" ]; then
       log_print "WARN" "ALL_PACKER_BASES is empty. Cannot clean 'all'."
     else
-      # Convert space-separated string from .env into an array
-      read -r -a layers_to_clean <<< "${ALL_PACKER_BASES}"
+      # Support both array and string formats
+      layers_to_clean=("${ALL_PACKER_BASES[@]}")
     fi
   else
     layers_to_clean=("$target_layer")
@@ -28,6 +28,7 @@ packer_artifact_cleaner() {
 
   for base_name in "${layers_to_clean[@]}"; do
     log_print "TASK" "Cleaning output for layer: ${base_name}"
+    # Centralized output at packer root level to match HCL '../output'
     rm -rf "${PACKER_DIR}/output/${base_name}"
   done
 
@@ -52,15 +53,22 @@ packer_build_executor() {
     return 1
   fi
 
+  # Determine sub-directory based on base_name prefix
+  local sub_dir="10-services"
+  if [[ "$base_name" == 00-* ]]; then
+    sub_dir="00-os-base"
+  fi
+
+  local target_packer_dir="${PACKER_DIR}/${sub_dir}"
   # Construct the path to the specific var file.
-  local build_var_file="${PACKER_DIR}/${base_name}.pkrvars.hcl"
+  local build_var_file="${target_packer_dir}/${base_name}.pkrvars.hcl"
 
   if [ ! -f "$build_var_file" ]; then
     log_print "FATAL" "Packer var file not found: ${build_var_file}"
     return 1
   fi
 
-  log_print "STEP" "Starting new Packer build for [${base_name}]..."
+  log_print "STEP" "Starting new Packer build for [${base_name}] in [${sub_dir}]..."
 
 	# Ensure we are using the Development Vault context for Packer builds
 	vault_context_handler "dev"
@@ -75,10 +83,10 @@ packer_build_executor() {
 		override_args+=" -var net_device=${PKR_VAR_NET_DEVICE}"
 	fi
 
-  # The command now loads the common values file first, then the specific
-  # build var file, and runs from the root Packer directory.
+  # The command now loads the common values file from one level up, 
+  # then the specific build var file, and runs from the target sub-directory.
   local cmd="packer init . && packer build \
-    -var-file=values.pkrvars.hcl \
+    -var-file=../values.pkrvars.hcl \
     -var-file=${base_name}.pkrvars.hcl \
 		${override_args} \
     ."
@@ -86,7 +94,7 @@ packer_build_executor() {
   # Add this to abort and debug if packer build failed.
   # -on-error=abort \
 
-  run_command "${cmd}" "${PACKER_DIR}"
+  run_command "${cmd}" "${target_packer_dir}"
 
   log_print "OK" "Packer build complete. New base image for [${base_name}] is ready."
   log_divider
