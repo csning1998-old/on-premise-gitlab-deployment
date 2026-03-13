@@ -1,17 +1,11 @@
 
-resource "harbor_registry" "proxy_registries" {
-  for_each = local.proxy_caches
+# Call the Identity Module to generate AppRole & Secret ID
+resource "vault_approle_auth_backend_role_secret_id" "bootstrap_harbor_agent" {
+  backend   = local.state.vault_pki.workload_identities_components[local.sec_vault_identity_key].auth_path
+  role_name = local.state.vault_pki.workload_identities_components[local.sec_vault_identity_key].role_name
 
-  name          = each.value.registry_name
-  endpoint_url  = each.value.endpoint_url
-  provider_name = each.value.provider_name
-}
-
-resource "harbor_project" "proxy_projects" {
-  for_each = local.proxy_caches
-
-  name          = each.value.project_name
-  public        = "true"
-  force_destroy = true
-  registry_id   = harbor_registry.proxy_registries[each.key].registry_id
+  # Metadata for Vault Audit Log
+  metadata = jsonencode({
+    "source" = "terraform-layer-30-bootstrap-harbor"
+  })
 }

@@ -1,5 +1,5 @@
 
-service_catalog_name = "bootstrap-harbor"
+service_catalog_name = "harbor-bootstrapper"
 
 bootstrap_harbor_config = {
   role            = "core"

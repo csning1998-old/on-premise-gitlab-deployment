@@ -3,7 +3,7 @@
 # Note: The bootstrap-ca.crt file is written by Layer 10 (15-shared-vault).
 # Layer 20 references it via the path below for the Vault provider's ca_cert_file.
 locals {
-  metadata     = data.terraform_remote_state.metadata.outputs
+  metadata            = data.terraform_remote_state.metadata.outputs
   root_domain         = local.metadata.global_domain_suffix
   root_ca_common_name = local.metadata.global_pki_settings.root_ca_common_name
   bootstrap_ca_path   = abspath("${path.root}/../15-shared-vault/tls/bootstrap-ca.crt")
@@ -53,9 +53,9 @@ locals {
 #    Key must correspond to service_catalog of "${service_name}-${component_name}"
 locals {
   workload_identity_extra_policies = {
-    "bootstrap-harbor-frontend" = <<EOT
+    "harbor-bootstrapper-frontend" = <<EOT
 # Allow reading Harbor related App Secrets (KV v2)
-path "secret/data/on-premise-gitlab-deployment/dev-harbor/*" {
+path "secret/data/on-premise-gitlab-deployment/harbor-bootstrapper/*" {
   capabilities = ["read"]
 }
 EOT

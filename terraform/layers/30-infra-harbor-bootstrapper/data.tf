@@ -1,4 +1,18 @@
 
+data "terraform_remote_state" "metadata" {
+  backend = "local"
+  config = {
+    path = "${path.root}/../00-foundation-metadata/terraform.tfstate"
+  }
+}
+
+data "terraform_remote_state" "load_balancer" {
+  backend = "local"
+  config = {
+    path = "${path.root}/../10-shared-load-balancer/terraform.tfstate"
+  }
+}
+
 data "terraform_remote_state" "vault_sys" {
   backend = "local"
   config = {
@@ -9,14 +23,7 @@ data "terraform_remote_state" "vault_sys" {
 data "terraform_remote_state" "vault_pki" {
   backend = "local"
   config = {
-    path = "${path.root}/../20-vault-pki/terraform.tfstate"
-  }
-}
-
-data "terraform_remote_state" "harbor_core" {
-  backend = "local"
-  config = {
-    path = "${path.root}/../30-dev-harbor-core/terraform.tfstate"
+    path = "${path.root}/../20-security-pki/terraform.tfstate"
   }
 }
 
@@ -25,6 +32,10 @@ data "vault_generic_secret" "prod_credential" {
   path     = "secret/on-premise-gitlab-deployment/infrastructure"
 }
 
-data "vault_generic_secret" "dev_harbor_app" {
-  path = "secret/on-premise-gitlab-deployment/dev-harbor/app"
+data "vault_generic_secret" "iac_vars" {
+  path = "secret/on-premise-gitlab-deployment/variables"
+}
+
+data "vault_generic_secret" "db_vars" {
+  path = "secret/on-premise-gitlab-deployment/harbor-bootstrapper/app"
 }
