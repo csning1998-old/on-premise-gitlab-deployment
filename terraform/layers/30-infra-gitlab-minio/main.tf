@@ -34,6 +34,9 @@ resource "time_sleep" "wait_for_minio_storage" {
 
 module "minio_gitlab_config" {
   source     = "../../modules/configuration/minio-bucket-setup"
+  providers = {
+    vault = vault.production
+  }
   depends_on = [time_sleep.wait_for_minio_storage]
 
   minio_tenants            = var.gitlab_minio_tenants

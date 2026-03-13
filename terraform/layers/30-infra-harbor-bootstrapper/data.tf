@@ -33,9 +33,11 @@ data "vault_generic_secret" "prod_credential" {
 }
 
 data "vault_generic_secret" "iac_vars" {
-  path = "secret/on-premise-gitlab-deployment/variables"
+  provider = vault.production
+  path     = "secret/on-premise-gitlab-deployment/variables"
 }
 
 data "vault_generic_secret" "db_vars" {
-  path = "secret/on-premise-gitlab-deployment/harbor-bootstrapper/app"
+  provider = vault.production
+  path     = "secret/on-premise-gitlab-deployment/harbor-bootstrapper/app"
 }
