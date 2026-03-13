@@ -15,14 +15,20 @@ variable "build_spec" {
 
 variable "common_spec" {
   type = object({
-    vm_name      = string
-    iso_url      = string
-    iso_checksum = string
     cpus         = number
     memory       = number
     disk_size    = number
   })
-  description = "Defines common parameters shared across all builds."
+  description = "Defines common hardware parameters shareable across any OS."
+}
+
+variable "os_spec" {
+  type = object({
+    vm_name      = string
+    iso_url      = string
+    iso_checksum = string
+  })
+  description = "Defines OS-specific metadata (ISO, default hostname)."
 }
 
 variable "net_bridge" {
