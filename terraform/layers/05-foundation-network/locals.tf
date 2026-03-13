@@ -9,7 +9,7 @@ locals {
 # Network Map Reference
 locals {
   svc_name        = var.service_catalog_name
-  svc_network_map = local.state.topology.network_map
+  svc_network_map = local.state.topology.global_network_map
 }
 
 # Deterministic Bridge Naming (identical logic to 05-central-lb)
