@@ -2,14 +2,14 @@
 # State Object
 locals {
   state = {
-    topology = data.terraform_remote_state.topology.outputs
+    metadata = data.terraform_remote_state.metadata.outputs
   }
 }
 
 # Network Map Reference
 locals {
   svc_name        = var.service_catalog_name
-  svc_network_map = local.state.topology.global_network_map
+  svc_network_map = local.state.metadata.global_network_map
 }
 
 # Deterministic Bridge Naming (identical logic to 05-central-lb)
