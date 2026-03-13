@@ -1,8 +1,11 @@
 
 module "vault_pki_setup" {
   source = "../../modules/configuration/vault-pki-setup"
+  providers = {
+    vault = vault.production
+  }
 
-  vault_addr          = "https://${data.terraform_remote_state.vault_raft_config.outputs.service_vip}:443"
+  vault_addr          = local.sys_vault_addr
   root_domain         = local.root_domain
   root_ca_common_name = local.root_ca_common_name
 
@@ -16,6 +19,9 @@ module "vault_pki_setup" {
 module "vault_workload_identity_components" {
 
   source     = "../../modules/configuration/vault-workload-identity"
+  providers = {
+    vault = vault.production
+  }
   depends_on = [module.vault_pki_setup]
 
   for_each           = local.component_roles
@@ -29,6 +35,9 @@ module "vault_workload_identity_components" {
 module "vault_workload_identity_dependencies" {
 
   source     = "../../modules/configuration/vault-workload-identity"
+  providers = {
+    vault = vault.production
+  }
   depends_on = [module.vault_pki_setup]
 
   for_each           = local.dependency_roles

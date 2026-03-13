@@ -3,9 +3,16 @@
 # Note: The bootstrap-ca.crt file is written by Layer 10 (15-shared-vault).
 # Layer 20 references it via the path below for the Vault provider's ca_cert_file.
 locals {
-  metadata            = data.terraform_remote_state.metadata.outputs
-  root_domain         = local.metadata.global_domain_suffix
-  root_ca_common_name = local.metadata.global_pki_settings.root_ca_common_name
+  state = {
+    metadata  = data.terraform_remote_state.metadata.outputs
+    vault_sys = data.terraform_remote_state.vault_sys.outputs
+  }
+}
+
+locals {
+  sys_vault_addr      = "https://${local.state.vault_sys.service_vip}:443"
+  root_domain         = local.state.metadata.global_domain_suffix
+  root_ca_common_name = local.state.metadata.global_pki_settings.root_ca_common_name
   bootstrap_ca_path   = abspath("${path.root}/../15-shared-vault/tls/bootstrap-ca.crt")
 }
 
@@ -26,7 +33,7 @@ locals {
 locals {
   # Component Roles (Server Certs):
   component_roles = {
-    for k, v in local.metadata.global_pki_map : k => {
+    for k, v in local.state.metadata.global_pki_map : k => {
       name            = v.role_name
       allowed_domains = v.dns_san
       ou              = v.ou
@@ -38,7 +45,7 @@ locals {
 
   # Dependency Roles (Client Certs / Auth):
   dependency_roles = {
-    for k, v in local.metadata.global_pki_map : k => {
+    for k, v in local.state.metadata.global_pki_map : k => {
       name            = v.role_name
       allowed_domains = v.dns_san
       ou              = v.ou

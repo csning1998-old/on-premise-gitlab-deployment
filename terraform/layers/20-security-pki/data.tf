@@ -6,7 +6,7 @@ data "terraform_remote_state" "metadata" {
   }
 }
 
-data "terraform_remote_state" "vault_raft_config" {
+data "terraform_remote_state" "vault_sys" {
   backend = "local"
   config = {
     path = "${path.root}/../15-shared-vault/terraform.tfstate"
