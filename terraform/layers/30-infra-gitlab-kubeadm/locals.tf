@@ -2,18 +2,19 @@
 # State Object
 locals {
   state = {
-    topology        = data.terraform_remote_state.topology.outputs
-    network         = data.terraform_remote_state.network.outputs
+    metadata        = data.terraform_remote_state.metadata.outputs
+    network         = data.terraform_remote_state.load_balancer.outputs
     vault_sys       = data.terraform_remote_state.vault_sys.outputs
     vault_pki       = data.terraform_remote_state.vault_pki.outputs
-    dev_harbor_core = data.terraform_remote_state.dev_harbor_core.outputs
+    harbor_registry = data.terraform_remote_state.harbor_bootstrapper.outputs
+    harbor_proxy    = data.terraform_remote_state.harbor_proxy.outputs
   }
 }
 
 # Service Context
 locals {
   svc_name             = var.service_catalog_name
-  svc_frontend_comp    = local.state.topology.service_structure[local.svc_name].components["frontend"]
+  svc_frontend_comp    = local.state.metadata.global_service_structure[local.svc_name].components["frontend"]
   svc_kubeadm_identity = local.svc_frontend_comp.identity
   svc_cluster_name     = local.svc_kubeadm_identity.cluster_name
   svc_kubeadm_fqdn     = local.svc_frontend_comp.role.dns_san[0]
@@ -22,7 +23,7 @@ locals {
 # Network Context
 locals {
   # Lookups directly into Infrastructure Map from Layer 05
-  net_kubeadm     = local.state.network.infrastructure_map[local.state.topology.service_structure[local.svc_name].network.segment_key]
+  net_kubeadm     = local.state.network.infrastructure_map[local.state.metadata.global_service_structure[local.svc_name].network.segment_key]
   net_service_vip = local.net_kubeadm.lb_config.vip
 
   # Single map of raw infrastructures for KVM
@@ -34,7 +35,7 @@ locals {
 # Security & App Context
 locals {
   sys_vault_addr   = "https://${local.state.vault_sys.service_vip}:443"
-  pki_vault_ca_b64 = local.state.topology.vault_pki.ca_cert
+  pki_vault_ca_b64 = local.state.metadata.global_vault_pki.ca_cert
 
   # System Credentials (OS/SSH)
   sec_system_creds = {
@@ -69,12 +70,13 @@ locals {
 # Ansible Configuration Rendering
 locals {
   ansible_template_vars = {
-    vip              = local.net_service_vip
-    pod_subnet       = var.kubernetes_cluster_configuration.pod_subnet
-    nat_prefix       = join(".", slice(split(".", local.net_kubeadm.network.nat.gateway), 0, 3))
-    registry_host    = local.state.topology.pki_map["bootstrap-harbor-frontend"].dns_san[0]
-    registry_vip     = local.state.dev_harbor_core.service_vip
-    image_repository = "${local.state.dev_harbor_core.service_vip}/k8s-proxy"
+    vip           = local.net_service_vip
+    pod_subnet    = var.kubernetes_cluster_configuration.pod_subnet
+    nat_prefix    = join(".", slice(split(".", local.net_kubeadm.network.nat.gateway), 0, 3))
+    registry_host = local.state.metadata.global_pki_map["harbor-bootstrapper-frontend"].dns_san[0]
+    registry_vip  = local.state.harbor_registry.service_vip
+    # image_repository = "${local.state.harbor_registry.service_vip}/k8s-proxy"
+    image_repository = "${local.state.harbor_registry.service_vip}/${local.state.harbor_proxy.proxy_caches["k8s_io"].project_name}"
     hostonly_gateway = local.net_kubeadm.network.hostonly.gateway
     http_nodeport    = local.net_kubeadm.lb_config.ports["ingress-http"].backend_port
     https_nodeport   = local.net_kubeadm.lb_config.ports["ingress-https"].backend_port

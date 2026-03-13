@@ -1,36 +1,43 @@
 
-data "terraform_remote_state" "topology" {
+data "terraform_remote_state" "metadata" {
   backend = "local"
   config = {
-    path = "${path.root}/../00-global-topology/terraform.tfstate"
+    path = "${path.root}/../00-foundation-metadata/terraform.tfstate"
   }
 }
 
-data "terraform_remote_state" "network" {
+data "terraform_remote_state" "load_balancer" {
   backend = "local"
   config = {
-    path = "${path.root}/../05-central-lb/terraform.tfstate"
+    path = "${path.root}/../10-shared-load-balancer/terraform.tfstate"
   }
 }
 
 data "terraform_remote_state" "vault_sys" {
   backend = "local"
   config = {
-    path = "${path.root}/../10-vault-raft/terraform.tfstate"
+    path = "${path.root}/../15-shared-vault/terraform.tfstate"
   }
 }
 
 data "terraform_remote_state" "vault_pki" {
   backend = "local"
   config = {
-    path = "${path.root}/../20-vault-pki/terraform.tfstate"
+    path = "${path.root}/../20-security-pki/terraform.tfstate"
   }
 }
 
-data "terraform_remote_state" "dev_harbor_core" {
+data "terraform_remote_state" "harbor_bootstrapper" {
   backend = "local"
   config = {
-    path = "${path.root}/../30-dev-harbor-core/terraform.tfstate"
+    path = "${path.root}/../30-infra-harbor-bootstrapper/terraform.tfstate"
+  }
+}
+
+data "terraform_remote_state" "harbor_proxy" {
+  backend = "local"
+  config = {
+    path = "${path.root}/../40-platform-harbor-bootstrapper/terraform.tfstate"
   }
 }
 
