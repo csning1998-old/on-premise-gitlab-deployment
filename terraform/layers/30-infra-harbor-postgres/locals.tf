@@ -2,20 +2,20 @@
 # State Object
 locals {
   state = {
-    network   = data.terraform_remote_state.network.outputs
-    topology  = data.terraform_remote_state.topology.outputs
-    vault_pki = data.terraform_remote_state.vault_pki.outputs
+    metadata  = data.terraform_remote_state.metadata.outputs
+    network   = data.terraform_remote_state.load_balancer.outputs
     vault_sys = data.terraform_remote_state.vault_sys.outputs
+    vault_pki = data.terraform_remote_state.vault_pki.outputs
   }
 }
 
 # Service Context
 locals {
   # Using the standardized keys logic from Layer 00 defining structure
-  svc_etcd_dep          = local.state.topology.service_structure[local.svc_name].dependencies["etcd"]
+  svc_etcd_dep          = local.state.metadata.global_service_structure[local.svc_name].dependencies["etcd"]
   svc_etcd_identity     = local.svc_etcd_dep.identity
   svc_name              = var.service_catalog_name
-  svc_postgres_dep      = local.state.topology.service_structure[local.svc_name].dependencies["postgres"]
+  svc_postgres_dep      = local.state.metadata.global_service_structure[local.svc_name].dependencies["postgres"]
   svc_postgres_fqdn     = local.svc_postgres_dep.role.dns_san[0]
   svc_postgres_identity = local.svc_postgres_dep.identity
 }

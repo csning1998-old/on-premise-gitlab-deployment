@@ -2,8 +2,8 @@
 # State Object
 locals {
   state = {
-    topology  = data.terraform_remote_state.topology.outputs
-    network   = data.terraform_remote_state.network.outputs
+    metadata  = data.terraform_remote_state.metadata.outputs
+    network   = data.terraform_remote_state.load_balancer.outputs
     vault_sys = data.terraform_remote_state.vault_sys.outputs
     vault_pki = data.terraform_remote_state.vault_pki.outputs
   }
@@ -12,7 +12,7 @@ locals {
 # Service Context
 locals {
   svc_name           = var.service_catalog_name
-  svc_minio_dep      = local.state.topology.service_structure[local.svc_name].dependencies["minio"]
+  svc_minio_dep      = local.state.metadata.global_service_structure[local.svc_name].dependencies["minio"]
   svc_minio_identity = local.svc_minio_dep.identity
   svc_cluster_name   = local.svc_minio_identity.cluster_name
   svc_minio_fqdn     = local.svc_minio_dep.role.dns_san[0]
@@ -33,7 +33,7 @@ locals {
 # Security & App Context
 locals {
   sys_vault_addr   = "https://${local.state.vault_sys.service_vip}:443"
-  pki_vault_ca_b64 = local.state.topology.vault_pki.ca_cert
+  pki_vault_ca_b64 = local.state.metadata.global_vault_pki.ca_cert
 
   # System Credentials (OS/SSH)
   sec_system_creds = {
@@ -75,8 +75,8 @@ locals {
 # Ansible Configuration Rendering
 locals {
   ansible_template_vars = {
+    vault_vip             = local.state.vault_sys.service_vip
     minio_vip             = local.net_service_vip
-    vault_vip             = regex("://([^:]+)", local.sys_vault_addr)[0]
     access_scope          = local.net_minio.network.hostonly.cidr
     api_frontend_port     = local.net_minio.lb_config.ports["api"].frontend_port
     console_frontend_port = local.net_minio.lb_config.ports["console"].frontend_port

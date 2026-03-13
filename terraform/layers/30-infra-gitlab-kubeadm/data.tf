@@ -37,7 +37,7 @@ data "terraform_remote_state" "harbor_bootstrapper" {
 data "terraform_remote_state" "harbor_proxy" {
   backend = "local"
   config = {
-    path = "${path.root}/../40-platform-harbor-bootstrapper/terraform.tfstate"
+    path = "${path.root}/../40-provision-harbor-bootstrapper/terraform.tfstate"
   }
 }
 
@@ -47,5 +47,6 @@ data "vault_generic_secret" "prod_credential" {
 }
 
 data "vault_generic_secret" "iac_vars" {
-  path = "secret/on-premise-gitlab-deployment/variables"
+  provider = vault.production
+  path     = "secret/on-premise-gitlab-deployment/variables"
 }

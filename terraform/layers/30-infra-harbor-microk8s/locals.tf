@@ -2,8 +2,8 @@
 # State Object
 locals {
   state = {
-    topology  = data.terraform_remote_state.topology.outputs
-    network   = data.terraform_remote_state.network.outputs
+    metadata  = data.terraform_remote_state.metadata.outputs
+    network   = data.terraform_remote_state.load_balancer.outputs
     vault_sys = data.terraform_remote_state.vault_sys.outputs
     vault_pki = data.terraform_remote_state.vault_pki.outputs
   }
@@ -12,7 +12,7 @@ locals {
 # Service Context
 locals {
   svc_name              = var.service_catalog_name
-  svc_microk8s_comp     = local.state.topology.service_structure[local.svc_name].components["frontend"]
+  svc_microk8s_comp     = local.state.metadata.global_service_structure[local.svc_name].components["frontend"]
   svc_microk8s_identity = local.svc_microk8s_comp.identity
   svc_cluster_name      = local.svc_microk8s_identity.cluster_name
   svc_microk8s_fqdn     = local.svc_microk8s_comp.role.dns_san[0]
@@ -21,7 +21,7 @@ locals {
 # Network Context
 locals {
   # Lookups directly into Infrastructure Map from Layer 05
-  net_microk8s    = local.state.network.infrastructure_map[local.state.topology.service_structure[local.svc_name].network.segment_key]
+  net_microk8s    = local.state.network.infrastructure_map[local.state.metadata.global_service_structure[local.svc_name].network.segment_key]
   net_service_vip = local.net_microk8s.lb_config.vip
 
   # Single map of raw infrastructures for KVM
@@ -33,7 +33,7 @@ locals {
 # Security & App Context
 locals {
   sys_vault_addr   = "https://${local.state.vault_sys.service_vip}:443"
-  pki_vault_ca_b64 = local.state.topology.vault_pki.ca_cert
+  pki_vault_ca_b64 = local.state.metadata.global_vault_pki.ca_cert
 
   # System Credentials (OS/SSH)
   sec_system_creds = {

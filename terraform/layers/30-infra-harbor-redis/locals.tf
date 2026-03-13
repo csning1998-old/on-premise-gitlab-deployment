@@ -2,8 +2,8 @@
 # State Object
 locals {
   state = {
-    topology  = data.terraform_remote_state.topology.outputs
-    network   = data.terraform_remote_state.network.outputs
+    metadata  = data.terraform_remote_state.metadata.outputs
+    network   = data.terraform_remote_state.load_balancer.outputs
     vault_sys = data.terraform_remote_state.vault_sys.outputs
     vault_pki = data.terraform_remote_state.vault_pki.outputs
   }
@@ -12,7 +12,7 @@ locals {
 # Service Context
 locals {
   svc_name           = var.service_catalog_name
-  svc_redis_dep      = local.state.topology.service_structure[local.svc_name].dependencies["redis"]
+  svc_redis_dep      = local.state.metadata.global_service_structure[local.svc_name].dependencies["redis"]
   svc_redis_identity = local.svc_redis_dep.identity
   svc_cluster_name   = local.svc_redis_identity.cluster_name
   svc_redis_fqdn     = local.svc_redis_dep.role.dns_san[0]
@@ -33,7 +33,7 @@ locals {
 # Security & App Context
 locals {
   sys_vault_addr   = "https://${local.state.vault_sys.service_vip}:443"
-  pki_vault_ca_b64 = local.state.topology.vault_pki.ca_cert
+  pki_vault_ca_b64 = local.state.metadata.global_vault_pki.ca_cert
 
   # System Credentials (OS/SSH)
   sec_system_creds = {
@@ -76,7 +76,7 @@ locals {
 locals {
   ansible_template_vars = {
     redis_vip            = local.net_service_vip
-    vault_vip            = regex("://([^:]+)", local.sys_vault_addr)[0]
+    vault_vip            = local.state.vault_sys.service_vip
     access_scope         = local.net_redis.network.hostonly.cidr
     redis_tls_port       = local.net_redis.lb_config.ports["main"].frontend_port
     redis_service_domain = local.sec_vault_agent_identity.common_name
