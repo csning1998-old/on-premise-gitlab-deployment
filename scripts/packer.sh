@@ -84,7 +84,7 @@ packer_build_executor() {
 
   # The command now loads the common values file from one level up,
   # then the specific build var file, and runs from the target sub-directory.
-  local cmd="packer init . && packer build -force \
+  local cmd="packer init . && packer build \
     -var-file=../values.pkrvars.hcl \
     -var-file=${base_name}.pkrvars.hcl \
     -var \"build_name=${base_name}\" \
