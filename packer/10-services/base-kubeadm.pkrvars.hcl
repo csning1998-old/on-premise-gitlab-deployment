@@ -1,4 +1,4 @@
-vnc_port = 5991
+vnc_port = 5994
 os_spec = { 
   distro  = "ubuntu"
   version = "24"
