@@ -8,6 +8,7 @@ output "pki_configuration" {
   description = "PKI Configuration Summary"
   value = {
     path             = module.vault_pki_setup.vault_pki_path
+    ca_cert          = module.vault_pki_setup.pki_root_ca_certificate
     dependency_roles = module.vault_pki_setup.dependency_roles
     component_roles  = module.vault_pki_setup.component_roles
   }
