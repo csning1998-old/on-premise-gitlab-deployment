@@ -1,7 +1,7 @@
 
-# Provider Configuration (Restored)
+# 1. K8s Provider Authentication Context
 locals {
-  kubeconfig   = yamldecode(data.terraform_remote_state.kubeadm_provision.outputs.kubeconfig_content)
+  kubeconfig   = yamldecode(base64decode(data.vault_generic_secret.kubeconfig.data["content_b64"]))
   cluster_info = local.kubeconfig.clusters[0].cluster
   user_info    = local.kubeconfig.users[0].user
 
@@ -13,34 +13,42 @@ locals {
   }
 }
 
-# for platform-trust-engine module
+# 2. Addons & Trust Engine Context
 locals {
-  # K8s API Endpoint for Vault Callback
-  k8s_api_endpoint = "https://${data.terraform_remote_state.kubeadm_provision.outputs.gitlab_kubeadm_virtual_ip}:6443"
+  # SSoT Discovery
+  ssot_gitlab = data.terraform_remote_state.metadata.outputs.global_service_structure["gitlab"]
+  ssot_vault  = data.terraform_remote_state.metadata.outputs.global_service_structure["vault"]
+
+  # FQDNs
+  gitlab_fqdn = local.ssot_gitlab.components["frontend"].role.dns_san[0]
+  vault_fqdn  = local.ssot_vault.components["raft"].role.dns_san[0]
+
+  # K8s API Endpoint for Vault Callback (Standardized)
+  k8s_api_port     = local.ssot_gitlab.meta.ports["api-server"].frontend_port
+  k8s_api_endpoint = "https://${data.terraform_remote_state.kubeadm_provision.outputs.service_vip}:${local.k8s_api_port}"
 
   # Cluster CA from ConfigMap
   k8s_cluster_ca = data.kubernetes_config_map.kube_root_ca.data["ca.crt"]
 
-  # Vault Address
-  vault_address     = "https://${data.terraform_remote_state.vault_pki.outputs.vault_ha_virtual_ip}:443"
-  vault_policy_name = "${local.vault_role_name}-pki-policy"
-  vault_ca_cert     = data.terraform_remote_state.vault_pki.outputs.vault_certificates.ca_cert.ca_cert
+  # Vault Connection (Standardized)
+  vault_api_port    = local.ssot_vault.meta.ports["api"].frontend_port
+  vault_address     = "https://${data.terraform_remote_state.vault_pki.outputs.vault_service_vip}:${local.vault_api_port}"
+  vault_ca_cert     = data.terraform_remote_state.vault_pki.outputs.pki_configuration.ca_cert
   vault_pki_path    = data.terraform_remote_state.vault_pki.outputs.pki_configuration.path
   vault_role_name   = data.terraform_remote_state.vault_pki.outputs.pki_configuration.component_roles["gitlab-frontend"].name
   vault_auth_path   = data.terraform_remote_state.vault_pki.outputs.auth_backend_paths["kubernetes"]
-  # where `vault_auth_path` automatically fetch Auth Path (default is kubernetes, can be retrieved from map if changed).
+  vault_policy_name = "${local.vault_role_name}-pki-policy"
 }
 
-# DNS Configuration
+# 3. DNS Configuration (Standardized)
 locals {
   dns_hosts = {
-    # For Gitlab and Vault ingress VIP, respectively.
-    "${data.terraform_remote_state.kubeadm_provision.outputs.gitlab_kubeadm_virtual_ip}" = "gitlab.iac.local"
-    "${data.terraform_remote_state.vault_pki.outputs.vault_ha_virtual_ip}"               = "vault.iac.local"
+    "${data.terraform_remote_state.kubeadm_provision.outputs.service_vip}" = local.gitlab_fqdn
+    "${data.terraform_remote_state.vault_pki.outputs.vault_service_vip}"   = local.vault_fqdn
 
-    # For dependency roles.
-    "${data.terraform_remote_state.redis.outputs.gitlab_redis_virtual_ip}"       = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles["gitlab-redis"].allowed_domains[0]
-    "${data.terraform_remote_state.postgres.outputs.gitlab_postgres_virtual_ip}" = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles["gitlab-postgres"].allowed_domains[0]
-    "${data.terraform_remote_state.minio.outputs.gitlab_minio_virtual_ip}"       = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles["gitlab-minio"].allowed_domains[0]
+    # Dependency Roles
+    "${data.terraform_remote_state.redis.outputs.service_vip}"    = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles["gitlab-redis-dep"].allowed_domains[0]
+    "${data.terraform_remote_state.postgres.outputs.service_vip}" = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles["gitlab-postgres-dep"].allowed_domains[0]
+    "${data.terraform_remote_state.minio.outputs.service_vip}"    = data.terraform_remote_state.vault_pki.outputs.pki_configuration.dependency_roles["gitlab-minio-dep"].allowed_domains[0]
   }
 }

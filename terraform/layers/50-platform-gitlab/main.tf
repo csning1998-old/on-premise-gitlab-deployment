@@ -1,14 +1,15 @@
 
 module "k8s_calico" {
   source     = "../../modules/kubernetes-addons/tigera-calico"
-  pod_subnet = data.terraform_remote_state.kubeadm_provision.outputs.gitlab_pod_subnet
+  pod_subnet = data.terraform_remote_state.kubeadm_provision.outputs.pod_subnet
 }
 
 # [REFACTORED] Trust Engine Integration
-# Replaces the previous "k8s_cert_manager" module.
-# This standardizes the identity bootstrapping across Harbor (MicroK8s) and GitLab (Kubeadm).
 module "platform_trust_engine" {
   source = "../../modules/kubernetes-addons/platform-trust-engine"
+  providers = {
+    vault = vault.production
+  }
 
   # 1. K8s Cluster Connection (for Vault to call back)
   k8s_connection = {
@@ -25,12 +26,12 @@ module "platform_trust_engine" {
 
   # 3. Issuer Configuration (The "Contract" between K8s and Vault)
   issuer_config = {
-    name             = var.trust_engine_config.issuer_name           # e.g., "vault-issuer"
-    issue_path       = "sign"                                        # Matches Vault PKI path convention
-    vault_role_name  = local.vault_role_name                         # e.g., "gitlab-frontend-role"
-    pki_mount_path   = local.vault_pki_path                          # e.g., "pki/prod"
-    bound_namespaces = var.trust_engine_config.authorized_namespaces # e.g., ["gitlab", "cert-manager"]
-    token_policies   = [local.vault_policy_name]                     # e.g., ["gitlab-frontend-role-pki-policy"]
+    name             = var.trust_engine_config.issuer_name
+    issue_path       = "sign"
+    vault_role_name  = local.vault_role_name
+    pki_mount_path   = local.vault_pki_path
+    bound_namespaces = var.trust_engine_config.authorized_namespaces
+    token_policies   = [local.vault_policy_name]
   }
 
   # 4. Reviewer Identity (The entity that validates tokens)
@@ -50,7 +51,7 @@ module "platform_trust_engine" {
   # Ensure CNI is ready before installing Cert-Manager
   depends_on = [module.k8s_calico]
 }
-
+/*
 module "k8s_metric_server" {
   source     = "../../modules/kubernetes-addons/metric-server"
   depends_on = [module.platform_trust_engine]
@@ -73,3 +74,4 @@ module "coredns_config" {
 
   hosts = local.dns_hosts
 }
+*/
