@@ -30,7 +30,7 @@ provider "vault" {
 provider "vault" {
   alias        = "production"
   address      = local.vault_address
-  ca_cert_file = data.terraform_remote_state.vault_pki.outputs.bootstrap_ca_path
+  ca_cert_file = data.terraform_remote_state.vault_pki.outputs.bootstrap_ca.path
   token        = data.vault_generic_secret.prod_credential.data["prod_vault_root_token"]
 }
 

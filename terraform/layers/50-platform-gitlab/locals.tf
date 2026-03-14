@@ -33,7 +33,7 @@ locals {
   # Vault Connection (Standardized)
   vault_api_port    = local.ssot_vault.meta.ports["api"].frontend_port
   vault_address     = "https://${data.terraform_remote_state.vault_pki.outputs.vault_service_vip}:${local.vault_api_port}"
-  vault_ca_cert     = data.terraform_remote_state.vault_pki.outputs.pki_configuration.ca_cert
+  vault_ca_cert     = data.terraform_remote_state.vault_pki.outputs.bootstrap_ca.content
   vault_pki_path    = data.terraform_remote_state.vault_pki.outputs.pki_configuration.path
   vault_role_name   = data.terraform_remote_state.vault_pki.outputs.pki_configuration.component_roles["gitlab-frontend"].name
   vault_auth_path   = data.terraform_remote_state.vault_pki.outputs.auth_backend_paths["kubernetes"]

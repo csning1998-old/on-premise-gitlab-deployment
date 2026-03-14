@@ -41,7 +41,10 @@ output "auth_backend_paths" {
   value       = module.vault_pki_setup.auth_backend_paths
 }
 
-output "bootstrap_ca_path" {
-  description = "Path to the bootstrap CA certificate (written by Layer 10)"
-  value       = local.bootstrap_ca_path
+output "bootstrap_ca" {
+  description = "Bootstrap CA certificate details"
+  value = {
+    path    = local.bootstrap_ca_path
+    content = file(local.bootstrap_ca_path)
+  }
 }
