@@ -1,5 +1,5 @@
 
-module "k8s_calico" {
+module "tigera_calico" {
   source         = "../../modules/kubernetes-addons/tigera-calico"
   pod_subnet     = data.terraform_remote_state.kubeadm_provision.outputs.pod_subnet
   image_registry = local.harbor_registry
@@ -14,9 +14,9 @@ module "platform_trust_engine" {
   }
 
   # 1. K8s Cluster Connection (for Vault to call back)
-  k8s_connection = {
-    host    = local.k8s_api_endpoint
-    ca_cert = local.k8s_cluster_ca
+  api_server_connection = {
+    host    = local.api_endpoint
+    ca_cert = local.cluster_ca
   }
 
   # 2. Vault Connection (for Cert-Manager to authenticate)
@@ -48,31 +48,33 @@ module "platform_trust_engine" {
     version          = var.cert_manager_config.version
     namespace        = var.cert_manager_config.namespace
     create_namespace = true
+    image_registry   = local.harbor_registry
+    image_repository = "${local.harbor_image_path}/jetstack"
   }
 
   # Ensure CNI is ready before installing Cert-Manager
-  depends_on = [module.k8s_calico]
+  depends_on = [module.tigera_calico]
 }
 /*
-module "k8s_metric_server" {
+module "metric_server" {
   source     = "../../modules/kubernetes-addons/metric-server"
   depends_on = [module.platform_trust_engine]
 }
 
-module "k8s_ingress_nginx" {
+module "ingress_nginx" {
   source     = "../../modules/kubernetes-addons/ingress-nginx"
   depends_on = [module.platform_trust_engine]
 }
 
-module "k8s_storage_local_path" {
+module "storage_local_path" {
   source     = "../../modules/kubernetes-addons/local-path-provisioner"
-  depends_on = [module.k8s_calico]
+  depends_on = [module.tigera_calico]
 }
 
 # CoreDNS Configuration
 module "coredns_config" {
   source     = "../../modules/kubernetes-addons/coredns-config"
-  depends_on = [module.k8s_calico]
+  depends_on = [module.tigera_calico]
 
   hosts = local.dns_hosts
 }

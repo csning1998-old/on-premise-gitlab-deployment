@@ -20,6 +20,6 @@ output "cert_manager_info" {
   description = "Summary of Cert-Manager and Issuer installation"
   value = {
     namespace   = var.cert_manager_config.namespace
-    issuer_name = var.trust_engine_config.issuer_name
+    issuer_name = module.platform_trust_engine.issuer_name
   }
 }

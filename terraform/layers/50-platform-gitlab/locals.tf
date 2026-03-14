@@ -5,11 +5,11 @@ locals {
   cluster_info = local.kubeconfig.clusters[0].cluster
   user_info    = local.kubeconfig.users[0].user
 
-  k8s_provider_auth = {
-    host                   = local.cluster_info.server
-    cluster_ca_certificate = base64decode(local.cluster_info["certificate-authority-data"])
-    client_certificate     = base64decode(local.user_info["client-certificate-data"])
-    client_key             = base64decode(local.user_info["client-key-data"])
+  api_server_connection = {
+    host               = local.cluster_info.server
+    ca_cert            = base64decode(local.cluster_info["certificate-authority-data"])
+    client_certificate = base64decode(local.user_info["client-certificate-data"])
+    client_key         = base64decode(local.user_info["client-key-data"])
   }
 }
 
@@ -28,11 +28,11 @@ locals {
   harbor_image_path = "quay-proxy"
 
   # K8s API Endpoint for Vault Callback (Standardized)
-  k8s_api_port     = local.ssot_gitlab.meta.ports["api-server"].frontend_port
-  k8s_api_endpoint = "https://${data.terraform_remote_state.kubeadm_provision.outputs.service_vip}:${local.k8s_api_port}"
+  api_port     = local.ssot_gitlab.meta.ports["api-server"].frontend_port
+  api_endpoint = "https://${data.terraform_remote_state.kubeadm_provision.outputs.service_vip}:${local.api_port}"
 
   # Cluster CA from ConfigMap
-  k8s_cluster_ca = data.kubernetes_config_map.kube_root_ca.data["ca.crt"]
+  cluster_ca = data.kubernetes_config_map.kube_root_ca.data["ca.crt"]
 
   # Vault Connection (Standardized)
   vault_api_port    = local.ssot_vault.meta.ports["api"].frontend_port
