@@ -7,14 +7,6 @@ data "terraform_remote_state" "metadata" {
   }
 }
 
-# Kubeadm Cluster State
-data "terraform_remote_state" "kubeadm_provision" {
-  backend = "local"
-  config = {
-    path = "../30-infra-gitlab-kubeadm/terraform.tfstate"
-  }
-}
-
 # HashiCorp Vault State
 data "terraform_remote_state" "vault_pki" {
   backend = "local"
@@ -45,6 +37,14 @@ data "terraform_remote_state" "minio" {
   }
 }
 
+# Kubeadm Cluster State
+data "terraform_remote_state" "kubeadm" {
+  backend = "local"
+  config = {
+    path = "../30-infra-gitlab-kubeadm/terraform.tfstate"
+  }
+}
+
 # Harbor Bootstrapper State
 data "terraform_remote_state" "harbor_bootstrapper" {
   backend = "local"
@@ -62,7 +62,7 @@ data "vault_generic_secret" "prod_credential" {
 # 2. Fetch Kubeconfig from Production Vault
 data "vault_generic_secret" "kubeconfig" {
   provider = vault.production
-  path = "secret/on-premise-gitlab-deployment/infrastructure/kubeconfig/gitlab"
+  path     = "secret/on-premise-gitlab-deployment/infrastructure/kubeconfig/gitlab"
 }
 
 # Fetch the Cluster CA

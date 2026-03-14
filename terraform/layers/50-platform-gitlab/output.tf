@@ -10,7 +10,7 @@ output "trust_context" {
 output "ingress_context" {
   description = "Ingress controller details formatted for SSoT consumption"
   value = {
-    load_balancer_ip = data.terraform_remote_state.kubeadm_provision.outputs.service_vip
+    load_balancer_ip = local.state.kubeadm.service_vip
     http_node_port   = local.ssot_gitlab.meta.ports["ingress-http"].backend_port
     https_node_port  = local.ssot_gitlab.meta.ports["ingress-https"].backend_port
   }
