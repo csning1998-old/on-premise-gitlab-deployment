@@ -21,12 +21,12 @@ resource "helm_release" "tigera_operator" {
     yamlencode({
       tigeraOperator = {
         registry = var.image_registry
-        image    = var.image_path != null ? "${var.image_path}/tigera/operator" : "tigera/operator"
+        image    = join("/", compact([var.image_path, "tigera/operator"]))
       }
       installation = {
         enabled            = true
         kubernetesProvider = ""
-        registry           = var.image_path != null ? "${var.image_registry}/${var.image_path}/" : "${var.image_registry}/"
+        registry           = "${join("/", compact([var.image_registry, var.image_path]))}"
         imagePath          = ""
         cni = {
           type = "Calico"
