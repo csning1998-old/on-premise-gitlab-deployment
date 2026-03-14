@@ -3,7 +3,7 @@ module "tigera_calico" {
   source         = "../../modules/kubernetes-addons/tigera-calico"
   pod_subnet     = data.terraform_remote_state.kubeadm_provision.outputs.pod_subnet
   image_registry = local.harbor_registry
-  image_path     = local.harbor_image_path
+  image_path     = local.harbor_quay_proxy
 }
 
 # [REFACTORED] Trust Engine Integration
@@ -49,25 +49,50 @@ module "platform_trust_engine" {
     namespace        = var.cert_manager_config.namespace
     create_namespace = true
     image_registry   = local.harbor_registry
-    image_repository = "${local.harbor_image_path}/jetstack"
+    image_repository = "${local.harbor_quay_proxy}/jetstack"
   }
 
   # Ensure CNI is ready before installing Cert-Manager
   depends_on = [module.tigera_calico]
 }
-/*
+
 module "metric_server" {
-  source     = "../../modules/kubernetes-addons/metric-server"
+  source = "../../modules/kubernetes-addons/metric-server"
+  helm_config = {
+    install          = true
+    version          = var.metric_server_config.version
+    namespace        = var.metric_server_config.namespace
+    create_namespace = true
+    image_registry   = local.harbor_registry
+    image_repository = "${local.harbor_k8s_proxy}/metrics-server"
+  }
   depends_on = [module.platform_trust_engine]
 }
 
 module "ingress_nginx" {
-  source     = "../../modules/kubernetes-addons/ingress-nginx"
+  source = "../../modules/kubernetes-addons/ingress-nginx"
+  helm_config = {
+    install          = true
+    version          = var.ingress_nginx_config.version
+    namespace        = var.ingress_nginx_config.namespace
+    create_namespace = true
+    image_registry   = local.harbor_registry
+    image_repository = "${local.harbor_k8s_proxy}/ingress-nginx"
+  }
   depends_on = [module.platform_trust_engine]
 }
 
 module "storage_local_path" {
-  source     = "../../modules/kubernetes-addons/local-path-provisioner"
+  source = "../../modules/kubernetes-addons/local-path-provisioner"
+  helm_config = {
+    install                 = true
+    version                 = var.local_path_config.version
+    namespace               = var.local_path_config.namespace
+    create_namespace        = true
+    image_registry          = local.harbor_registry
+    image_repository        = "${local.harbor_docker_proxy}/rancher"
+    helper_image_repository = "${local.harbor_docker_proxy}/library"
+  }
   depends_on = [module.tigera_calico]
 }
 
@@ -78,4 +103,3 @@ module "coredns_config" {
 
   hosts = local.dns_hosts
 }
-*/

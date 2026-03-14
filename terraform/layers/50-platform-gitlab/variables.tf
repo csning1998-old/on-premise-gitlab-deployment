@@ -30,3 +30,39 @@ variable "vault_dev_addr" {
   type        = string
   default     = "https://127.0.0.1:8200"
 }
+
+variable "metric_server_config" {
+  description = "Configuration for Metrics Server"
+  type = object({
+    version   = string
+    namespace = string
+  })
+  default = {
+    version   = "3.13.0"
+    namespace = "kube-system"
+  }
+}
+
+variable "ingress_nginx_config" {
+  description = "Configuration for Ingress Nginx"
+  type = object({
+    version   = string
+    namespace = string
+  })
+  default = {
+    version   = "4.13.1"
+    namespace = "ingress-nginx"
+  }
+}
+
+variable "local_path_config" {
+  description = "Configuration for Local Path Provisioner"
+  type = object({
+    version   = string
+    namespace = string
+  })
+  default = {
+    version   = "0.0.35"
+    namespace = "kube-system"
+  }
+}

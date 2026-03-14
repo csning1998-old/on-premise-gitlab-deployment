@@ -45,6 +45,14 @@ data "terraform_remote_state" "minio" {
   }
 }
 
+# Harbor Bootstrapper State
+data "terraform_remote_state" "harbor_bootstrapper" {
+  backend = "local"
+  config = {
+    path = "../40-provision-harbor-bootstrapper/terraform.tfstate"
+  }
+}
+
 # 1. Fetch Production Credential from Bootstrapper Vault
 data "vault_generic_secret" "prod_credential" {
   provider = vault.bootstrapper

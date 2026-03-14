@@ -24,8 +24,10 @@ locals {
   vault_fqdn  = local.ssot_vault.components["raft"].role.dns_san[0]
 
   # Harbor Bootstrapper (Registry Redirection)
-  harbor_registry   = data.terraform_remote_state.metadata.outputs.global_service_structure["harbor-bootstrapper"].components.frontend.role.dns_san[0]
-  harbor_image_path = "quay-proxy"
+  harbor_registry     = data.terraform_remote_state.metadata.outputs.global_service_structure["harbor-bootstrapper"].components.frontend.role.dns_san[0]
+  harbor_quay_proxy   = data.terraform_remote_state.harbor_bootstrapper.outputs.proxy_caches.quay_io.project_name
+  harbor_k8s_proxy    = data.terraform_remote_state.harbor_bootstrapper.outputs.proxy_caches.k8s_io.project_name
+  harbor_docker_proxy = data.terraform_remote_state.harbor_bootstrapper.outputs.proxy_caches.docker_hub.project_name
 
   # K8s API Endpoint for Vault Callback (Standardized)
   api_port     = local.ssot_gitlab.meta.ports["api-server"].frontend_port
