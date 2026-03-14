@@ -180,13 +180,16 @@ vault_dev_engine_enforcer() {
   log_print "TASK" "[Development Vault] Ensuring KV secrets engine is enabled at 'secret/'..."
 
   if [ ! -f "$DEV_ROOT_TOKEN_FILE" ]; then
-		log_print "ERROR" "Root token not found. Cannot configure engine."
-		return 1
+    log_print "ERROR" "Root token not found. Cannot configure engine."
+    return 1
   fi
 
-  if ! VAULT_ADDR="$DEV_VAULT_ADDR" VAULT_TOKEN="$(cat "$DEV_ROOT_TOKEN_FILE")" vault secrets list -ca-cert="${DEV_CA}" -format=json | jq -e '."secret/"' > /dev/null; then
+  local root_token
+  root_token=$(cat "$DEV_ROOT_TOKEN_FILE")
+
+  if ! VAULT_ADDR="$DEV_VAULT_ADDR" VAULT_TOKEN="${root_token}" vault secrets list -ca-cert="${DEV_CA}" -format=json | jq -e '."secret/"' > /dev/null; then
     log_print "TASK" "'secret/' path not found, enabling kv-v2..."
-    VAULT_ADDR="$DEV_VAULT_ADDR" VAULT_TOKEN="$(cat "$DEV_ROOT_TOKEN_FILE")" vault secrets enable -ca-cert="${DEV_CA}" -path=secret kv-v2
+    VAULT_ADDR="$DEV_VAULT_ADDR" VAULT_TOKEN="${root_token}" vault secrets enable -ca-cert="${DEV_CA}" -path=secret kv-v2
   else
     log_print "INFO" "kv-v2 secrets engine is already enabled."
   fi
@@ -263,7 +266,7 @@ vault_dev_unseal_handler() {
     vault_token_sync_handler
     export VAULT_ADDR="${DEV_VAULT_ADDR}"
     export VAULT_CACERT="${DEV_CA}"
-    # Note: No need to export VAULT_TOKEN as it fallback to ~/.vault-token
+    # Note: VAULT_TOKEN is exported by vault_token_sync_handler.
     log_print "INFO" "Vault environment variables set for this session (Synced from ~/.vault-token)."
   fi
 }
