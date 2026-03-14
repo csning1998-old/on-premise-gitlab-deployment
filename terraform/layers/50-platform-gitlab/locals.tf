@@ -23,6 +23,10 @@ locals {
   gitlab_fqdn = local.ssot_gitlab.components["frontend"].role.dns_san[0]
   vault_fqdn  = local.ssot_vault.components["raft"].role.dns_san[0]
 
+  # Harbor Bootstrapper (Registry Redirection)
+  harbor_registry   = data.terraform_remote_state.metadata.outputs.global_service_structure["harbor-bootstrapper"].components.frontend.role.dns_san[0]
+  harbor_image_path = "quay-proxy"
+
   # K8s API Endpoint for Vault Callback (Standardized)
   k8s_api_port     = local.ssot_gitlab.meta.ports["api-server"].frontend_port
   k8s_api_endpoint = "https://${data.terraform_remote_state.kubeadm_provision.outputs.service_vip}:${local.k8s_api_port}"

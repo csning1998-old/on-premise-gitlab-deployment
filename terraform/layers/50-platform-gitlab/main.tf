@@ -1,7 +1,9 @@
 
 module "k8s_calico" {
-  source     = "../../modules/kubernetes-addons/tigera-calico"
-  pod_subnet = data.terraform_remote_state.kubeadm_provision.outputs.pod_subnet
+  source         = "../../modules/kubernetes-addons/tigera-calico"
+  pod_subnet     = data.terraform_remote_state.kubeadm_provision.outputs.pod_subnet
+  image_registry = local.harbor_registry
+  image_path     = local.harbor_image_path
 }
 
 # [REFACTORED] Trust Engine Integration

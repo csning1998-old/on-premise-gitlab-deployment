@@ -19,8 +19,15 @@ resource "helm_release" "tigera_operator" {
   # Configure the Calico network through the operator's custom resources
   values = [
     yamlencode({
+      tigeraOperator = {
+        registry = var.image_registry
+        image    = var.image_path != null ? "${var.image_path}/tigera/operator" : "tigera/operator"
+      }
       installation = {
+        enabled            = true
         kubernetesProvider = ""
+        registry           = var.image_path != null ? "${var.image_registry}/${var.image_path}/" : "${var.image_registry}/"
+        imagePath          = ""
         cni = {
           type = "Calico"
         }
