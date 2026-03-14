@@ -158,6 +158,23 @@ vault_dev_tls_generator() {
   log_print "OK" "Dev Vault TLS Certificates generated."
 }
 
+# Function: Sync ~/.vault-token to .env
+vault_token_sync_handler() {
+  if [ ! -f "$DEV_ROOT_TOKEN_FILE" ]; then
+    log_print "WARN" "Token file $DEV_ROOT_TOKEN_FILE not found. Skipping sync."
+    return 0
+  fi
+
+  log_print "TASK" "Syncing DEV_VAULT_TOKEN in .env from $DEV_ROOT_TOKEN_FILE..."
+  local token
+  token=$(cat "$DEV_ROOT_TOKEN_FILE")
+  env_var_mutator "DEV_VAULT_TOKEN" "${token}"
+  
+  # Also set for current session
+  export DEV_VAULT_TOKEN="${token}"
+  export VAULT_TOKEN="${token}"
+}
+
 # Function: Ensure KV Engine is enabled (Dev Vault)
 vault_dev_engine_enforcer() {
   log_print "TASK" "[Development Vault] Ensuring KV secrets engine is enabled at 'secret/'..."
@@ -202,17 +219,15 @@ vault_dev_init_handler() {
 
   chmod 600 "$DEV_KEYS_DIR"/*
 
-	log_print "TASK" "Automatically updating DEV_VAULT_TOKEN in .env file..."
-  local new_token
-  new_token=$(cat "$DEV_ROOT_TOKEN_FILE")
-  env_var_mutator "DEV_VAULT_TOKEN" "${new_token}"
+  # Sync to .env
+  vault_token_sync_handler
 
-	log_print "INFO" "Keys saved to ${DEV_KEYS_DIR}"
+  log_print "INFO" "Keys saved to ${DEV_KEYS_DIR}"
 
   # Auto Unseal
   vault_dev_unseal_handler
 
-	vault login -address="${DEV_VAULT_ADDR}" -ca-cert="${DEV_VAULT_CACERT}" "${new_token}"
+	vault login -address="${DEV_VAULT_ADDR}" -ca-cert="${DEV_VAULT_CACERT}" "${VAULT_TOKEN}"
 
   # Auto Configure Engine
   vault_dev_engine_enforcer
@@ -243,13 +258,13 @@ vault_dev_unseal_handler() {
 
   log_print "OK" "Dev Vault Unsealed."
 
-  # Export for current session
+  # Export and Sync
   if [ -f "$DEV_ROOT_TOKEN_FILE" ]; then
-		DEV_VAULT_TOKEN=$(cat "$DEV_ROOT_TOKEN_FILE")
-		export DEV_VAULT_TOKEN
-		export VAULT_ADDR="${DEV_VAULT_ADDR}"
-		export VAULT_CACERT="${DEV_CA}"
-		log_print "INFO" "Exported DEV_VAULT_TOKEN and set VAULT_ADDR to Dev Vault for this session."
+    vault_token_sync_handler
+    export VAULT_ADDR="${DEV_VAULT_ADDR}"
+    export VAULT_CACERT="${DEV_CA}"
+    # Note: No need to export VAULT_TOKEN as it fallback to ~/.vault-token
+    log_print "INFO" "Vault environment variables set for this session (Synced from ~/.vault-token)."
   fi
 }
 
