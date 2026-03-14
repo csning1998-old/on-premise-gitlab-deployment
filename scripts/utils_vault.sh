@@ -15,7 +15,7 @@ readonly DEV_KEYS_DIR="${SCRIPT_DIR}/vault/keys"
 readonly DEV_TLS_DIR="${SCRIPT_DIR}/vault/tls"
 readonly DEV_INIT_FILE="${DEV_KEYS_DIR}/init-output.json"
 readonly DEV_UNSEAL_KEY_FILE="${DEV_KEYS_DIR}/unseal.key"
-readonly DEV_ROOT_TOKEN_FILE="${DEV_KEYS_DIR}/root-token.txt"
+readonly DEV_ROOT_TOKEN_FILE="$HOME/.vault-token"
 
 # Production Vault Variables
 readonly PROD_VAULT_ADDR="https://172.16.136.250:443"
@@ -167,12 +167,9 @@ vault_dev_engine_enforcer() {
 		return 1
   fi
 
-  local token
-  token=$(cat "$DEV_ROOT_TOKEN_FILE")
-
-  if ! VAULT_ADDR="$DEV_VAULT_ADDR" VAULT_TOKEN="$token" vault secrets list -ca-cert="${DEV_CA}" -format=json | jq -e '."secret/"' > /dev/null; then
+  if ! VAULT_ADDR="$DEV_VAULT_ADDR" VAULT_TOKEN="$(cat "$DEV_ROOT_TOKEN_FILE")" vault secrets list -ca-cert="${DEV_CA}" -format=json | jq -e '."secret/"' > /dev/null; then
     log_print "TASK" "'secret/' path not found, enabling kv-v2..."
-    VAULT_ADDR="$DEV_VAULT_ADDR" VAULT_TOKEN="$token" vault secrets enable -ca-cert="${DEV_CA}" -path=secret kv-v2
+    VAULT_ADDR="$DEV_VAULT_ADDR" VAULT_TOKEN="$(cat "$DEV_ROOT_TOKEN_FILE")" vault secrets enable -ca-cert="${DEV_CA}" -path=secret kv-v2
   else
     log_print "INFO" "kv-v2 secrets engine is already enabled."
   fi
@@ -197,17 +194,12 @@ vault_dev_init_handler() {
 
   # Extract Keys
   jq -r .unseal_keys_b64[] "$DEV_INIT_FILE" > "$DEV_UNSEAL_KEY_FILE"
+
+  # Save Root Token directly to User Home for Vault Native Fallback
   jq -r .root_token "$DEV_INIT_FILE" > "$DEV_ROOT_TOKEN_FILE"
-  
-  # Also Save to User Home for Vault Native Fallback (Only if extraction succeeded)
-  if [[ -s "$DEV_ROOT_TOKEN_FILE" ]]; then
-    cp "$DEV_ROOT_TOKEN_FILE" "$HOME/.vault-token"
-    chmod 600 "$HOME/.vault-token"
-    log_print "INFO" "Vault root token synced to $HOME/.vault-token"
-  else
-    log_print "ERROR" "Failed to extract root token. $HOME/.vault-token not updated."
-  fi
-  
+  chmod 600 "$DEV_ROOT_TOKEN_FILE"
+  log_print "INFO" "Vault root token saved to $DEV_ROOT_TOKEN_FILE"
+
   chmod 600 "$DEV_KEYS_DIR"/*
 
 	log_print "TASK" "Automatically updating DEV_VAULT_TOKEN in .env file..."
