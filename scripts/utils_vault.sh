@@ -198,6 +198,16 @@ vault_dev_init_handler() {
   # Extract Keys
   jq -r .unseal_keys_b64[] "$DEV_INIT_FILE" > "$DEV_UNSEAL_KEY_FILE"
   jq -r .root_token "$DEV_INIT_FILE" > "$DEV_ROOT_TOKEN_FILE"
+  
+  # Also Save to User Home for Vault Native Fallback (Only if extraction succeeded)
+  if [[ -s "$DEV_ROOT_TOKEN_FILE" ]]; then
+    cp "$DEV_ROOT_TOKEN_FILE" "$HOME/.vault-token"
+    chmod 600 "$HOME/.vault-token"
+    log_print "INFO" "Vault root token synced to $HOME/.vault-token"
+  else
+    log_print "ERROR" "Failed to extract root token. $HOME/.vault-token not updated."
+  fi
+  
   chmod 600 "$DEV_KEYS_DIR"/*
 
 	log_print "TASK" "Automatically updating DEV_VAULT_TOKEN in .env file..."
