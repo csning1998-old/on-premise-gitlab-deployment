@@ -38,6 +38,7 @@
     - name: "Step B0. Ensure local DNS override for Harbor Bootstrapper Registry in /etc/hosts"
       ansible.builtin.lineinfile:
         path: /etc/hosts
+        regexp: '^.*\s+{{ kubeadm_registry_host | regex_escape() }}$'
         line: "{{ kubeadm_registry_vip }} {{ kubeadm_registry_host }}"
         state: present
 
