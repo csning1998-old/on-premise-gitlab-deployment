@@ -71,6 +71,11 @@ variable "service_catalog" {
       health_check_ssl         = optional(bool, false)
     })), {})
 
+    data_disks = optional(list(object({
+      name_suffix  = string
+      capacity_gib = optional(number, 20)
+    })), [])
+
     components = map(object({
       subdomains  = list(string)
       node_groups = optional(list(string), [])
@@ -83,6 +88,11 @@ variable "service_catalog" {
       cidr_index  = number
       tags        = optional(list(string), [])
       node_groups = optional(list(string), [])
+
+      data_disks = optional(list(object({
+        name_suffix  = string
+        capacity_gib = optional(number, 20)
+      })), [])
 
       ip_range = optional(object({
         start_ip = number

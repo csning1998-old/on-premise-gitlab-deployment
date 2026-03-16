@@ -67,6 +67,11 @@ output "global_network_map" {
   value       = local.network_topology
 }
 
+output "global_volume_map" {
+  description = "Pure MECE mapping of calculated storage volume attributes (Pools and physical Data Disks)"
+  value       = local.volume_topology
+}
+
 output "global_pki_map" {
   description = "Pure MECE mapping of DNS SANs and organizational units for certificates"
   value       = local.naming_map
