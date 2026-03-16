@@ -10,7 +10,18 @@ locals {
         vcpu                 = node_data.vcpu
         ram_size             = node_data.ram_size
         os_disk_capacity_gib = node_data.os_disk_capacity_gib
-        attached_volumes     = node_data.attached_volumes
+
+        # Auto-Discovery of Attached Volumes from SSoT Volume Map
+        attached_volumes = concat(
+          node_data.attached_volumes, # Keep manually defined volumes if any
+          [
+            for vol_key, vol_data in var.storage_infrastructure_map : {
+              pool   = vol_data.pool_name
+              volume = vol_data.volume_name
+            }
+            if startswith(vol_key, "${var.node_identities[comp_name].node_name_prefix}-${node_data.ip_suffix}-")
+          ]
+        )
 
         # The Component Level Specifications are Inherited from Component.
         base_image_path = comp_data.base_image_path

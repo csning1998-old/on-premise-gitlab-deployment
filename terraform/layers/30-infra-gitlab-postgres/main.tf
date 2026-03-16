@@ -10,7 +10,8 @@ module "build_gitlab_postgres_cluster" {
   }
 
   # Topology (Compute & Storage)
-  topology_cluster = local.topology_cluster
+  topology_cluster           = local.topology_cluster
+  storage_infrastructure_map = local.state.volume.storage_infrastructure_map
 
   # Network Infrastructure with Dual-Tier
   network_infrastructure_map = local.network_infrastructure_map

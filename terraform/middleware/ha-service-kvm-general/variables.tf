@@ -125,8 +125,15 @@ variable "security_vault_agent_identity" {
   default   = null
 }
 
+
 variable "security_pki_bundle" {
   description = "PKI artifacts passed from vault_pki."
   type        = any
   default     = null
+}
+
+variable "storage_infrastructure_map" {
+  description = "Pure MECE mapping of calculated storage volume attributes, passed from Layer 05 outputs."
+  type        = any
+  default     = {}
 }

@@ -3,8 +3,9 @@
 # State Object
 locals {
   state = {
-    metadata  = data.terraform_remote_state.metadata.outputs
-    network   = data.terraform_remote_state.load_balancer.outputs
+    metadata  = data.terraform_remote_state.metadata.outputs      # Source from `00-foundation-metadata`
+    volume    = data.terraform_remote_state.volume.outputs        # Source from `05-foundation-volume`
+    network   = data.terraform_remote_state.load_balancer.outputs # Source from `10-shared-load-balancer`
     vault_sys = data.terraform_remote_state.vault_sys.outputs
     vault_pki = data.terraform_remote_state.vault_pki.outputs
   }

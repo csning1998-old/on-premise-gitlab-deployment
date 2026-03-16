@@ -100,15 +100,6 @@ resource "libvirt_volume" "os_disk" {
   }
 }
 
-resource "libvirt_volume" "data_disk" {
-  for_each = local.data_disks_flat
-
-  name     = "${each.key}.qcow2"
-  pool     = values(var.libvirt_infrastructure)[0].storage_pool_name
-  format   = "qcow2"
-  capacity = each.value.capacity_gib * 1024 * 1024 * 1024 # Libvirt requires volume capacity to be declared in Bytes.
-}
-
 resource "libvirt_cloudinit_disk" "cloud_init" {
 
   for_each = var.vm_config.all_nodes_map
@@ -186,8 +177,8 @@ resource "libvirt_domain" "nodes" {
         }
       }],
 
-      # 2. Data Disks (vdb, vdc...)
-      [for idx, disk in each.value.data_disks : {
+      # 2. Attached Data Volumes (vdb, vdc...)
+      [for idx, vol in each.value.attached_volumes : {
         device = "disk"
         target = {
           # idx=0 -> vdb, idx=1 -> vdc
@@ -195,8 +186,8 @@ resource "libvirt_domain" "nodes" {
           bus = "virtio"
         }
         source = {
-          pool   = disk.pool
-          volume = disk.volume
+          pool   = vol.pool
+          volume = vol.volume
         }
       }],
 

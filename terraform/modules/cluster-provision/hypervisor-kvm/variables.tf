@@ -17,9 +17,9 @@ variable "vm_config" {
       base_image_path      = string
       network_tier         = string
 
-      data_disks = optional(list(object({
-        name_suffix  = string
-        capacity_gib = number # Typically `vdb`
+      attached_volumes = optional(list(object({
+        pool   = string
+        volume = string
       })), [])
     }))
   })
