@@ -9,7 +9,7 @@ locals {
 
 # 1. Service Context
 locals {
-  svc_name         = var.service_catalog_name
+  svc_name = var.service_catalog_name
   # From `00-foundation-metadata`
   svc_fqdn         = local.state.metadata.global_domain_suffix
   svc_network_map  = local.state.metadata.global_network_map

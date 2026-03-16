@@ -58,21 +58,11 @@ resource "libvirt_network" "service_networks" {
   ]
 }
 
-resource "libvirt_pool" "storage_pool" {
-  name = var.lb_cluster_vm_config.storage_pool_name
-  type = "dir"
-  target = {
-    path = abspath("/var/lib/libvirt/images/${var.lb_cluster_vm_config.storage_pool_name}")
-  }
-}
-
 resource "libvirt_volume" "os_disk" {
 
-  depends_on = [libvirt_pool.storage_pool]
-
   for_each = var.lb_cluster_vm_config.nodes
+  pool     = var.lb_cluster_vm_config.storage_pool_name
   name     = "${each.key}-os.qcow2"
-  pool     = libvirt_pool.storage_pool.name
   format   = "qcow2"
 
   create = {
@@ -83,8 +73,6 @@ resource "libvirt_volume" "os_disk" {
 }
 
 resource "libvirt_cloudinit_disk" "cloud_init" {
-
-  depends_on = [libvirt_pool.storage_pool]
 
   for_each = var.lb_cluster_vm_config.nodes
   name     = "${each.key}-cloud-init.iso"
@@ -122,10 +110,9 @@ resource "libvirt_cloudinit_disk" "cloud_init" {
 
 resource "libvirt_volume" "cloud_init_iso" {
   for_each = var.lb_cluster_vm_config.nodes
-
-  name   = "${each.key}-cloud-init.iso"
-  pool   = libvirt_pool.storage_pool.name
-  format = "iso"
+  pool     = var.lb_cluster_vm_config.storage_pool_name
+  name     = "${each.key}-cloud-init.iso"
+  format   = "iso"
 
   create = {
     content = {
@@ -142,8 +129,7 @@ resource "libvirt_domain" "nodes" {
     libvirt_network.hostonly_networks,
     libvirt_volume.cloud_init_iso,
     libvirt_volume.os_disk,
-    libvirt_cloudinit_disk.cloud_init,
-    libvirt_pool.storage_pool
+    libvirt_cloudinit_disk.cloud_init
   ]
 
   for_each = var.lb_cluster_vm_config.nodes
@@ -173,7 +159,7 @@ resource "libvirt_domain" "nodes" {
           bus = "virtio"
         }
         source = {
-          pool   = libvirt_pool.storage_pool.name
+          pool   = var.lb_cluster_vm_config.storage_pool_name
           volume = libvirt_volume.os_disk[each.key].name
         }
       },
@@ -185,7 +171,7 @@ resource "libvirt_domain" "nodes" {
           bus = "sata"
         }
         source = {
-          pool   = libvirt_pool.storage_pool.name
+          pool   = var.lb_cluster_vm_config.storage_pool_name
           volume = libvirt_volume.cloud_init_iso[each.key].name
         }
       }
