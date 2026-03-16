@@ -3,6 +3,7 @@
 locals {
   state = {
     metadata = data.terraform_remote_state.metadata.outputs      # Source from `00-foundation-metadata`
+    volume   = data.terraform_remote_state.volume.outputs        # Source from `05-foundation-volume`
     network  = data.terraform_remote_state.load_balancer.outputs # Source from `10-shared-load-balancer`
   }
 }
@@ -64,7 +65,13 @@ locals {
         vcpu                 = node_data.vcpu
         ram_size             = node_data.ram_size
         os_disk_capacity_gib = node_data.os_disk_capacity_gib
-        data_disks           = node_data.data_disks
+        attached_volumes = [
+          for vol_key, vol_data in local.state.volume.storage_infrastructure_map : {
+            pool   = vol_data.pool_name
+            volume = vol_data.volume_name
+          }
+          if startswith(vol_data.volume_name, "${local.svc_identity.node_name_prefix}-${node_suffix}-")
+        ]
 
         base_image_path = comp_data.base_image_path
         role            = comp_data.role

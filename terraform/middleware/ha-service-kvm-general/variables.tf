@@ -35,9 +35,9 @@ variable "topology_cluster" {
         ram_size             = number
         os_disk_capacity_gib = number
 
-        data_disks = optional(list(object({
-          name_suffix  = string
-          capacity_gib = number
+        attached_volumes = optional(list(object({
+          pool   = string
+          volume = string
         })), [])
       }))
     }))

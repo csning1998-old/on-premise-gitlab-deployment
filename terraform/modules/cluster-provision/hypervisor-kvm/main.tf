@@ -60,20 +60,6 @@ resource "libvirt_network" "hostonly_net" {
   ]
 }
 
-resource "libvirt_pool" "storage_pool" {
-  name = values(var.libvirt_infrastructure)[0].storage_pool_name
-  type = "dir"
-  target = {
-    path = abspath("/var/lib/libvirt/images/${values(var.libvirt_infrastructure)[0].storage_pool_name}")
-  }
-
-  lifecycle {
-    precondition {
-      condition     = length(distinct([for k, v in var.libvirt_infrastructure : v.storage_pool_name])) <= 1
-      error_message = "All network tiers must use the same storage_pool_name when using this module."
-    }
-  }
-}
 
 locals {
   # Extract a map of unique base images to avoid creating duplicate base volumes (Copy-on-Write)
@@ -85,8 +71,7 @@ locals {
 }
 
 resource "libvirt_volume" "base_image" {
-  depends_on = [libvirt_pool.storage_pool]
-  for_each   = local.base_image_map
+  for_each = local.base_image_map
 
   name   = "base-${each.key}"
   pool   = values(var.libvirt_infrastructure)[0].storage_pool_name
@@ -100,7 +85,7 @@ resource "libvirt_volume" "base_image" {
 }
 
 resource "libvirt_volume" "os_disk" {
-  depends_on = [libvirt_pool.storage_pool, libvirt_volume.base_image]
+  depends_on = [libvirt_volume.base_image]
 
   for_each = var.vm_config.all_nodes_map
   name     = "${each.key}-os.qcow2"
@@ -116,8 +101,7 @@ resource "libvirt_volume" "os_disk" {
 }
 
 resource "libvirt_volume" "data_disk" {
-  depends_on = [libvirt_pool.storage_pool]
-  for_each   = local.data_disks_flat
+  for_each = local.data_disks_flat
 
   name     = "${each.key}.qcow2"
   pool     = values(var.libvirt_infrastructure)[0].storage_pool_name
@@ -126,8 +110,6 @@ resource "libvirt_volume" "data_disk" {
 }
 
 resource "libvirt_cloudinit_disk" "cloud_init" {
-
-  depends_on = [libvirt_pool.storage_pool]
 
   for_each = var.vm_config.all_nodes_map
   name     = "${each.key}-cloud-init.iso"
@@ -167,7 +149,6 @@ resource "libvirt_volume" "cloud_init_iso" {
 resource "libvirt_domain" "nodes" {
 
   depends_on = [
-    libvirt_pool.storage_pool,
     libvirt_volume.os_disk,
     libvirt_cloudinit_disk.cloud_init,
     libvirt_volume.cloud_init_iso

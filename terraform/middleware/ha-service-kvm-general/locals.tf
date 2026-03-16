@@ -10,7 +10,7 @@ locals {
         vcpu                 = node_data.vcpu
         ram_size             = node_data.ram_size
         os_disk_capacity_gib = node_data.os_disk_capacity_gib
-        data_disks           = node_data.data_disks
+        attached_volumes     = node_data.attached_volumes
 
         # The Component Level Specifications are Inherited from Component.
         base_image_path = comp_data.base_image_path
@@ -35,7 +35,7 @@ locals {
         ram_size             = v.ram_size
         os_disk_capacity_gib = v.os_disk_capacity_gib
         base_image_path      = v.base_image_path
-        data_disks           = v.data_disks
+        attached_volumes     = v.attached_volumes
         network_tier         = v.network_tier
       }
     }
