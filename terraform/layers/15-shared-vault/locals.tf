@@ -46,46 +46,12 @@ locals {
   storage_pool_name = local.svc_identity.storage_pool_name
 
   topology_cluster = {
-    storage_pool_name = local.storage_pool_name
     components        = var.vault_config
+    storage_pool_name = local.storage_pool_name
   }
 
   node_identities = {
     "vault" = local.svc_identity
-  }
-}
-
-# Node Processing & Grouping
-locals {
-  flat_node_map = merge([
-    for comp_name, comp_data in local.topology_cluster.components : {
-      for node_suffix, node_data in comp_data.nodes :
-      "${local.svc_identity.node_name_prefix}-${node_suffix}" => {
-        ip                   = cidrhost(local.network_infrastructure_map[comp_data.network_tier].network.hostonly.cidr, node_data.ip_suffix)
-        vcpu                 = node_data.vcpu
-        ram_size             = node_data.ram_size
-        os_disk_capacity_gib = node_data.os_disk_capacity_gib
-        attached_volumes = [
-          for vol_key, vol_data in local.state.volume.storage_infrastructure_map : {
-            pool   = vol_data.pool_name
-            volume = vol_data.volume_name
-          }
-          if startswith(vol_data.volume_name, "${local.svc_identity.node_name_prefix}-${node_suffix}-")
-        ]
-
-        base_image_path = comp_data.base_image_path
-        role            = comp_data.role
-        network_tier    = comp_data.network_tier
-      }
-    }
-  ]...)
-
-  # Group nodes by role for Ansible Inventory
-  nodes_by_role = {
-    for role in distinct(values(local.flat_node_map).*.role) : role => {
-      for name, node in local.flat_node_map : name => node
-      if node.role == role
-    }
   }
 }
 

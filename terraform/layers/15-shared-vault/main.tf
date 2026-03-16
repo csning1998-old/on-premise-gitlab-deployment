@@ -17,7 +17,8 @@ module "vault_cluster" {
   node_identities = local.node_identities
 
   # Topology (Compute & Storage)
-  topology_cluster = local.topology_cluster
+  topology_cluster           = local.topology_cluster
+  storage_infrastructure_map = local.state.volume.storage_infrastructure_map
 
   # Network Infrastructure (L2/L3)
   network_infrastructure_map = local.network_infrastructure_map
