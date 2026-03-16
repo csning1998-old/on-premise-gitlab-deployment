@@ -3,6 +3,7 @@
 locals {
   state = {
     metadata  = data.terraform_remote_state.metadata.outputs
+    volume    = data.terraform_remote_state.volume.outputs
     network   = data.terraform_remote_state.load_balancer.outputs
     vault_sys = data.terraform_remote_state.vault_sys.outputs
     vault_pki = data.terraform_remote_state.vault_pki.outputs

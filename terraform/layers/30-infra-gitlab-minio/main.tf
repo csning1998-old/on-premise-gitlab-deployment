@@ -11,7 +11,8 @@ module "minio_gitlab" {
   }
 
   # Topology (Compute & Storage)
-  topology_cluster = local.topology_cluster
+  topology_cluster           = local.topology_cluster
+  storage_infrastructure_map = local.state.volume.storage_infrastructure_map
 
   # Network Infrastructure
   network_infrastructure_map = local.network_infrastructure_map
