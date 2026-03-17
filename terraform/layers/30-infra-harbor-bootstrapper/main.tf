@@ -24,4 +24,7 @@ module "bootstrap_harbor" {
   ansible_playbook_file           = var.ansible_files.playbook_file
   ansible_template_vars           = local.ansible_template_vars
   ansible_extra_vars              = local.ansible_extra_vars
+
+  # Unified Storage Discovery Configuration
+  service_node_prefix = "${local.state.metadata.global_service_structure[local.svc_name].meta.project_code}-${local.svc_name}-node"
 }
