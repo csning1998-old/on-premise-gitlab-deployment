@@ -10,21 +10,22 @@ locals {
 
 # Service Context
 locals {
-  svc_name         = var.service_catalog_name
-  svc_raft_comp    = local.state.metadata.global_service_structure[local.svc_name].components["raft"]
-  svc_identity     = local.svc_raft_comp.identity
-  svc_fqdn         = local.svc_raft_comp.role.dns_san[0]
+  _svc_vault       = local.state.metadata.global_service_structure["vault"]
+  svc_name         = local._svc_vault.meta.name
+  svc_comp         = local._svc_vault.components[local._svc_vault.meta.component]
+  svc_identity     = local.svc_comp.identity
+  svc_fqdn         = local.svc_comp.role.dns_san[0]
   svc_cluster_name = local.svc_identity.cluster_name
 }
 
 # Network Context
 locals {
-  net_vault_infra = local.state.network.infrastructure_map[local.state.metadata.global_service_structure[local.svc_name].network.segment_key]
+  net_vault_infra = local.state.network.infrastructure_map[local._svc_vault.network.segment_key]
   net_service_vip = local.net_vault_infra.lb_config.vip
 
   # Single map of raw infrastructures for KVM
   network_infrastructure_map = {
-    vault = local.net_vault_infra
+    (local.svc_name) = local.net_vault_infra
   }
 }
 

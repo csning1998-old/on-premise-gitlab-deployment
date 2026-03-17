@@ -1,9 +1,4 @@
 
-variable "service_catalog_name" {
-  description = "The unique service name defined in Layer 00 (e.g. 'vault'). Used to lookup SSoT properties."
-  type        = string
-}
-
 variable "vault_dev_addr" {
   description = "The address of the Vault server"
   type        = string

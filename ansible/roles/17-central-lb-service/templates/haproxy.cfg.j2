@@ -65,10 +65,10 @@ backend be_{{ segment.name | replace('-', '_') }}_{{ port_name }}
 
     {% for server in segment.backend_servers %}
     {# If Vault then TCP Passthrough (no ssl), else if Health Check then HTTPS (check-ssl) #}
-    {% if segment.name == 'vault' %}
+    {% if 'vault' in segment.name %}
     server {{ server.name }} {{ server.ip }}:{{ port_cfg.backend }} check inter 3s fall 3 rise 2 check-ssl verify none
     {% else %}
-    server {{ server.name }} {{ server.ip }}:{{ port_cfg.backend }} check inter 3s fall 3 rise 2{{ ' ssl verify none' if port_cfg.health_check_ssl | default(false) else '' }}
+    server {{ server.name }} {{ server.ip }}:{{ port_cfg.backend }} check inter 3s fall 3 rise 2{{ ' check-ssl verify none' if port_cfg.health_check_ssl | default(false) else '' }}
     {% endif %}
     {% endfor %}
 
