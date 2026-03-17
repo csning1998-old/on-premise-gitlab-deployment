@@ -21,7 +21,7 @@ variable "harbor_microk8s_config" {
       ip_suffix            = number
       vcpu                 = number
       ram_size             = number
-      os_disk_capacity_gib = number
+      os_disk_capacity_gib = optional(number)
     }))
   }))
 }

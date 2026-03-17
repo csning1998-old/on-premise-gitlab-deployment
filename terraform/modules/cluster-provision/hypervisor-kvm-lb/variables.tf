@@ -17,9 +17,11 @@ variable "lb_cluster_vm_config" {
   type = object({
     storage_pool_name = string
     nodes = map(object({
-      vcpu            = number
-      ram             = number
-      base_image_path = string
+      vcpu                 = number
+      ram                  = number
+      base_image_path      = string
+      os_disk_capacity_gib = optional(number, 40)
+
       interfaces = list(object({
         network_name = string
         mac          = string

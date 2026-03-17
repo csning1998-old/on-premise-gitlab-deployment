@@ -1,5 +1,5 @@
 
-/** 
+/**
  * Virtual Machine Configuration
  * Variables defining the specifications and credentials for the VMs.
 */
@@ -13,7 +13,7 @@ variable "vm_config" {
       ip                   = string
       vcpu                 = number
       ram_size             = number
-      os_disk_capacity_gib = number # Typically `vda.vda2`
+      os_disk_capacity_gib = optional(number, 40) # Typically `vda.vda2`
       base_image_path      = string
       network_tier         = string
 
