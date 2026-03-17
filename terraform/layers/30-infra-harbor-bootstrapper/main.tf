@@ -9,7 +9,8 @@ module "bootstrap_harbor" {
   }
 
   # Topology (Compute & Storage) — single node wrapped in HA-compatible structure
-  topology_cluster = local.topology_cluster
+  topology_cluster           = local.topology_cluster
+  storage_infrastructure_map = local.state.volume.storage_infrastructure_map
 
   # Network Infrastructure
   network_infrastructure_map = local.network_infrastructure_map

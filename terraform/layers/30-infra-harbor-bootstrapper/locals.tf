@@ -3,6 +3,7 @@
 locals {
   state = {
     metadata  = data.terraform_remote_state.metadata.outputs
+    volume    = data.terraform_remote_state.volume.outputs
     network   = data.terraform_remote_state.load_balancer.outputs
     vault_pki = data.terraform_remote_state.vault_pki.outputs
     vault_sys = data.terraform_remote_state.vault_sys.outputs
@@ -77,7 +78,6 @@ locals {
             vcpu                 = var.bootstrap_harbor_config.node.vcpu
             ram_size             = var.bootstrap_harbor_config.node.ram_size
             os_disk_capacity_gib = var.bootstrap_harbor_config.node.os_disk_capacity_gib
-            data_disks           = var.bootstrap_harbor_config.node.data_disks
           }
         }
       }
