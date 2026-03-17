@@ -46,7 +46,7 @@ variable "network_baseline" {
 }
 
 variable "service_catalog" {
-  description = "The Single Source of Truth (SSoT) for all services, components, and dependencies."
+  description = "The Single Source of Truth (SSoT) for all services, component, ingress, and dependencies."
   type = list(object({
     name         = string # Must be Unique.
     owner        = string
@@ -56,6 +56,8 @@ variable "service_catalog" {
     stage        = string
     cidr_index   = number
     tags         = optional(list(string), [])
+    component    = optional(string, "frontend")
+    node_groups  = optional(list(string), [])
 
     ip_range = object({
       start_ip = number
@@ -76,10 +78,10 @@ variable "service_catalog" {
       capacity_gib = optional(number, 20)
     })), [])
 
-    components = map(object({
+    ingress = optional(map(object({
       subdomains  = list(string)
       node_groups = optional(list(string), [])
-    }))
+    })), {})
 
     dependencies = optional(map(object({
       component   = string
@@ -223,14 +225,14 @@ variable "service_catalog" {
     error_message = "Project code must only contain lowercase letters and numbers."
   }
 
-  # Validate Component Subdomains Non-Empty
+  # Validate Ingress Subdomains Non-Empty
   validation {
     condition = alltrue(flatten([
       for k, v in var.service_catalog : [
-        for c_k, c_v in v.components : length(c_v.subdomains) > 0
+        for c_k, c_v in v.ingress : length(c_v.subdomains) > 0
       ]
     ]))
-    error_message = "Every component must define at least one subdomain."
+    error_message = "Every ingress entry must define at least one subdomain."
   }
 
   # Validate Global Segment Key Uniqueness (Service vs. Service-Dependency)

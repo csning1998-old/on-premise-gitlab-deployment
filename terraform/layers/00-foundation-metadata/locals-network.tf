@@ -21,7 +21,7 @@ locals {
   network_segments_list = flatten([
     for s in var.service_catalog : concat(
       [{
-        key        = s.name
+        key        = "${s.name}-${s.component}"
         cidr_index = s.cidr_index
         ip_range   = s.ip_range
         ports      = s.ports

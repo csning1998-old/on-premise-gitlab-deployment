@@ -64,33 +64,32 @@ locals {
    *                  - Case B: Secondary Entrypoint: 
    *                            e.g. kas.gitlab.production.iac.local
    */
-  component_roles = flatten([
-    for s in var.service_catalog : [
-      for c_key, c_data in s.components : {
+  component_roles = [
+    for s in var.service_catalog : {
+      key       = "${s.name}-${s.component}"
+      role_name = "${s.project_code}-${s.name}-${s.component}-role"
 
-        key       = "${s.name}-${c_key}"
-        role_name = "${s.project_code}-${s.name}-${c_key}-role"
-
-        dns_san = [
-          for sub in c_data.subdomains :
+      dns_san = flatten([
+        for i_key, i_data in s.ingress : [
+          for sub in i_data.subdomains :
           sub == s.name ?
           "${sub}.${s.stage}.${var.domain_suffix}" :         # Case A
           "${sub}.${s.name}.${s.stage}.${var.domain_suffix}" # Case B
         ]
+      ])
 
-        ou = [
-          "Provider=${s.provider}",
-          "Env=${s.stage}",
-          "Owner=${s.owner}",
-          "Project=${s.project_code}",
-          "Runtime=${s.runtime}",
-          "Tag=${join(",", s.tags)}"
-        ]
+      ou = [
+        "Provider=${s.provider}",
+        "Env=${s.stage}",
+        "Owner=${s.owner}",
+        "Project=${s.project_code}",
+        "Runtime=${s.runtime}",
+        "Tag=${join(",", s.tags)}"
+      ]
 
-        ttl_stage = s.stage
-      }
-    ]
-  ])
+      ttl_stage = s.stage
+    }
+  ]
 
   naming_map = merge(
     { for item in local.dependency_roles : item.key => item },
@@ -103,7 +102,7 @@ locals {
    */
   _all_items = flatten([
     for s in var.service_catalog : concat(
-      [for k, v in s.components : { svc = s, key = k, data = v }],
+      [{ svc = s, key = s.component, data = { node_groups = s.node_groups } }],
       [for k, v in s.dependencies : { svc = s, key = k, data = v }]
     )
   ])
@@ -139,26 +138,5 @@ locals {
     }
   ]...)
 
-  # 3. Use Single Element List for Services Without Components
-  identities_from_services_without_components = {
-    for s in var.service_catalog :
-    "${s.name}" => merge([
-      for hash_prefix in [substr(md5("${s.project_code}-${s.name}"), 0, 8)] : {
-        cluster_name      = "${s.project_code}-${s.name}"
-        storage_pool_name = "iac-${s.project_code}-${s.name}-pool"
-        bridge_name_host  = "br-${hash_prefix}"
-        bridge_name_nat   = "br-${hash_prefix}-nat"
-        node_name_prefix  = "${s.project_code}-${s.name}-node"
-        ansible_inventory = "inventory-${s.project_code}-${s.name}.yaml"
-        ssh_config        = "ssh_${s.project_code}-${s.name}"
-        groups            = {}
-      }
-    ]...)
-    if length(s.components) == 0 && length(s.dependencies) == 0
-  }
-
-  identity_map = merge(
-    local.identities_from_items,
-    local.identities_from_services_without_components
-  )
+  identity_map = local.identities_from_items
 }

@@ -35,12 +35,12 @@ output "global_service_structure" {
   value = {
     for s in var.service_catalog : s.name => {
       meta    = s
-      network = local.network_topology[s.name]
+      network = local.network_topology["${s.name}-${s.component}"]
 
       components = {
-        for c_key, c_val in s.components : c_key => {
-          role     = local.naming_map["${s.name}-${c_key}"]
-          identity = local.identity_map["${s.name}-${c_key}"]
+        (s.component) = {
+          role     = local.naming_map["${s.name}-${s.component}"]
+          identity = local.identity_map["${s.name}-${s.component}"]
         }
       }
 
