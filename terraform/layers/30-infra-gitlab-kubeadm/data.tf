@@ -27,6 +27,13 @@ data "terraform_remote_state" "vault_pki" {
   }
 }
 
+data "terraform_remote_state" "volume" {
+  backend = "local"
+  config = {
+    path = "${path.root}/../05-foundation-volume/terraform.tfstate"
+  }
+}
+
 data "terraform_remote_state" "harbor_bootstrapper" {
   backend = "local"
   config = {
