@@ -1,5 +1,14 @@
 
 locals {
+  # Extract a map of unique base images to avoid creating duplicate base volumes (Copy-on-Write)
+  unique_base_images = toset([for k, v in var.vm_config.all_nodes_map : abspath(v.base_image_path)])
+
+  base_image_map = {
+    for path in local.unique_base_images : basename(path) => path
+  }
+}
+
+locals {
   tier_nat_prefixes = {
     for k, v in var.libvirt_infrastructure : k => join(".", slice(split(".", v.network.nat.ips.address), 0, 3))
   }

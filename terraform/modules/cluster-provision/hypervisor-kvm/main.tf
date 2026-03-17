@@ -60,16 +60,6 @@ resource "libvirt_network" "hostonly_net" {
   ]
 }
 
-
-locals {
-  # Extract a map of unique base images to avoid creating duplicate base volumes (Copy-on-Write)
-  unique_base_images = toset([for k, v in var.vm_config.all_nodes_map : abspath(v.base_image_path)])
-
-  base_image_map = {
-    for path in local.unique_base_images : basename(path) => path
-  }
-}
-
 resource "libvirt_volume" "base_image" {
   for_each = local.base_image_map
 

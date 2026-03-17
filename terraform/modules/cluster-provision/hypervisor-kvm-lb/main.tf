@@ -58,17 +58,31 @@ resource "libvirt_network" "service_networks" {
   ]
 }
 
-resource "libvirt_volume" "os_disk" {
+resource "libvirt_volume" "base_image" {
+  for_each = local.base_image_map
 
-  for_each = var.lb_cluster_vm_config.nodes
-  pool     = var.lb_cluster_vm_config.storage_pool_name
-  name     = "${each.key}-os.qcow2"
-  format   = "qcow2"
+  name   = "base-${each.key}"
+  pool   = var.lb_cluster_vm_config.storage_pool_name
+  format = "qcow2"
 
   create = {
     content = {
-      url = abspath(each.value.base_image_path)
+      url = each.value
     }
+  }
+}
+
+resource "libvirt_volume" "os_disk" {
+  for_each = var.lb_cluster_vm_config.nodes
+
+  pool     = var.lb_cluster_vm_config.storage_pool_name
+  name     = "${each.key}-os.qcow2"
+  format   = "qcow2"
+  capacity = each.value.os_disk_capacity_gib * 1024 * 1024 * 1024
+
+  backing_store = {
+    path   = libvirt_volume.base_image[basename(abspath(each.value.base_image_path))].path
+    format = "qcow2"
   }
 }
 
@@ -127,7 +141,6 @@ resource "libvirt_domain" "nodes" {
     libvirt_network.service_networks,
     libvirt_network.nat_networks,
     libvirt_network.hostonly_networks,
-    libvirt_volume.cloud_init_iso,
     libvirt_volume.os_disk,
     libvirt_cloudinit_disk.cloud_init
   ]
