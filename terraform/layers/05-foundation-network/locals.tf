@@ -6,18 +6,18 @@ locals {
   }
 }
 
-# Network Map Reference
+# Network Map Reference: Dynamically identify the Central LB segment by its tag fingerprint
 locals {
-  svc_name        = var.service_catalog_name
   svc_network_map = local.state.metadata.global_network_map
+  central_lb_key  = [for k, v in local.svc_network_map : k if contains(v.tags, "is-central-lb")][0]
 }
 
-# Deterministic Bridge Naming (identical logic to 05-central-lb)
+# Deterministic Bridge Naming
 locals {
   net_bridge_naming = {
     for seg_key, seg_data in local.svc_network_map : seg_key => {
-      host = "br-${substr(md5("${local.svc_name}-${seg_key}"), 0, 8)}"
-      nat  = "br-${substr(md5("${local.svc_name}-${seg_key}"), 0, 8)}-nat"
+      host = "br-${substr(md5(seg_key), 0, 8)}"
+      nat  = "br-${substr(md5(seg_key), 0, 8)}-nat"
     }
   }
 }
@@ -45,11 +45,11 @@ locals {
   }
 }
 
-# Service Segments (non-CLB) — for outputs consumed by 05-central-lb
+# Service Segments (non-CLB) — for outputs consumed by 10-shared-load-balancer
 locals {
   net_sorted_segment_keys = sort([
     for k, v in local.svc_network_map : k
-    if k != local.svc_name
+    if k != local.central_lb_key && length(v.ports) > 0
   ])
 
   net_service_segments = [
