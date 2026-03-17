@@ -15,6 +15,8 @@ module "central_lb_cluster" {
     }
   }
 
+  svc_network_map = local.svc_network_map
+
   # Secrets & PKI
   security_pki_bundle     = local.pki_global_ca
   credentials_vm          = local.sec_vm_creds

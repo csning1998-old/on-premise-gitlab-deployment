@@ -1,7 +1,4 @@
 
-# This should match the name in the service catalog.
-service_catalog_name = "central-lb"
-
 # LB Nodes definition
 node_config = {
   "lb-node-00" = { ip_suffix = 10, vcpu = 2, ram = 1024 }

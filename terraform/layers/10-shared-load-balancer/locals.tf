@@ -9,8 +9,14 @@ locals {
 
 # 1. Service Context
 locals {
-  svc_name = var.service_catalog_name
-  # From `00-foundation-metadata`
+  # Dynamically find the "central-lb" metadata from the global structure
+  # to avoid hardcoding or using redundant variables.
+  svc_config = [
+    for k, v in local.state.metadata.global_service_structure :
+    v if v.meta.name == "central-lb"
+  ][0]
+
+  svc_name         = local.svc_config.network.segment_key
   svc_fqdn         = local.state.metadata.global_domain_suffix
   svc_network_map  = local.state.metadata.global_network_map
   svc_identity     = local.state.metadata.global_identity_map[local.svc_name]
@@ -27,9 +33,6 @@ locals {
     for idx, key in local.net_sorted_node_keys :
     key => "${local.svc_node_prefix}-${format("%02d", idx)}"
   }
-
-  # MAC Address Derivation Base
-  net_lb_base_mac_parts = split(":", local.svc_network_map[local.svc_name].mac_address)
 
   # Delegated from `05-foundation-network`
   net_infrastructure = local.state.network.infrastructure_map
@@ -86,68 +89,8 @@ locals {
   storage_pool_name = local.svc_identity.storage_pool_name
 
   topology_nodes = {
-    for node_name, node_spec in var.node_config : local.net_node_naming_map[node_name] => {
-      vcpu            = node_spec.vcpu
-      ram             = node_spec.ram
+    for node_name, node_spec in var.node_config : local.net_node_naming_map[node_name] => merge(node_spec, {
       base_image_path = var.base_image_path
-
-      interfaces = flatten([
-        # Interface 1: NAT (Management) [ens3]
-        # Logic: Use Layer 00 Base MAC, but force 4th octet (VRID) to '00' for Management differentiation
-        [{
-          network_name = local.net_lb_config.nat.name
-          mac = format("%s:%s:%s:00:%s:%02x",
-            local.net_lb_base_mac_parts[0], # 52
-            local.net_lb_base_mac_parts[1], # 54
-            local.net_lb_base_mac_parts[2], # 00
-            # 4th octet forced to 00 for NAT
-            local.net_lb_base_mac_parts[4],
-            (parseint(local.net_lb_base_mac_parts[5], 16) + index(local.net_sorted_node_keys, node_name)) % 256
-          )
-          addresses = [] # DHCP
-        }],
-
-        # Interface 2: HostOnly (Internal) [ens4]
-        # Logic: Inherit Layer 00 Base MAC (VRID=10) directly + Node Index
-        [{
-          network_name = local.net_lb_config.hostonly.name
-          mac = format("%s:%s:%s:%s:%s:%02x",
-            local.net_lb_base_mac_parts[0],
-            local.net_lb_base_mac_parts[1],
-            local.net_lb_base_mac_parts[2],
-            local.net_lb_base_mac_parts[3], # Keep VRID (e.g., 0a)
-            local.net_lb_base_mac_parts[4],
-            (parseint(local.net_lb_base_mac_parts[5], 16) + index(local.net_sorted_node_keys, node_name)) % 256
-          )
-          addresses = [
-            format("%s/%s",
-              cidrhost(local.net_my_segment.cidr_block, node_spec.ip_suffix),
-              split("/", local.net_my_segment.cidr_block)[1]
-            )
-          ]
-        }],
-
-        # Interface 3..N: Service Segments [ens5...]
-        # Logic: Use each Segment's Layer 00 MAC + Node Index
-        # Note: net_service_segments already excludes "self-managed-lb" services,
-        # so we re-use it here to stay consistent with the HAProxy configuration.
-        [
-          for seg_key in [for seg in local.net_service_segments : seg.name] : {
-            network_name = seg_key
-            alias        = local.svc_network_map[seg_key].interface_alias
-            mac = format("%s:%02x",
-              join(":", slice(split(":", local.svc_network_map[seg_key].mac_address), 0, 5)),
-              (parseint(element(split(":", local.svc_network_map[seg_key].mac_address), 5), 16) + index(local.net_sorted_node_keys, node_name)) % 256
-            )
-            addresses = [
-              format("%s/%s",
-                cidrhost(local.svc_network_map[seg_key].cidr_block, node_spec.ip_suffix),
-                split("/", local.svc_network_map[seg_key].cidr_block)[1]
-              )
-            ]
-          }
-        ]
-      ])
-    }
+    })
   }
 }

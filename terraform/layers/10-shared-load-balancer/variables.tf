@@ -1,9 +1,4 @@
 
-variable "service_catalog_name" {
-  description = "The name of the service catalog. This should match the name in the service catalog."
-  type        = string
-}
-
 variable "vault_dev_addr" {
   description = "The address of the Vault server"
   type        = string
