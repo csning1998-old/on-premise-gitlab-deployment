@@ -16,12 +16,6 @@ provider "libvirt" {
   uri = "qemu:///system"
 }
 
-# Default Provider
-provider "vault" {
-  address      = var.vault_dev_addr
-  ca_cert_file = local.state.vault_pki.bootstrap_ca.path
-}
-
 # Bootstrap Provider (Podman Vault)
 provider "vault" {
   alias        = "bootstrapper"

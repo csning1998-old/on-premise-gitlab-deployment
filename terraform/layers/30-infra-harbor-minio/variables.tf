@@ -9,12 +9,6 @@ variable "primary_role" {
   type        = string
 }
 
-variable "service_catalog_name" {
-  description = "The name of the service mapped in the Layer 00 Single Source of Truth"
-  type        = string
-  default     = "harbor"
-}
-
 variable "vault_dev_addr" {
   description = "The address of the Vault server"
   type        = string
