@@ -24,7 +24,7 @@ module "vault_cluster" {
   network_infrastructure_map = local.network_infrastructure_map
 
   # Security & Credentials
-  credentials_system = local.sec_system_creds
+  credentials_system = local.sec_vm_creds
 
   # Ansible Configuration
   ansible_inventory_template_file = var.ansible_files.inventory_template_file
