@@ -1,4 +1,9 @@
 
+variable "target_cluster_name" {
+  description = "The physical cluster name target to deploy the service on, retrieved directly from the SSoT mapping."
+  type        = string
+}
+
 variable "vault_dev_addr" {
   description = "The address of the Vault server"
   type        = string

@@ -7,26 +7,35 @@ locals {
   }
 }
 
-# 1. Service Context
+# 1. Unified SSoT Alignment (Flatten nested Layer 00 outputs into a single map)
 locals {
-  # Dynamically find the "central-lb" metadata from the global structure
-  # to avoid hardcoding or using redundant variables.
-  svc_config = [
-    for k, v in local.state.metadata.global_service_structure :
-    v if v.meta.name == "central-lb"
-  ][0]
+  # Zip Identity and Network properties into a single O(1) lookup map.
+  # This serves as the "Universal Segment Dictionary" for this layer.
+  segments_map = merge([
+    for s_name, components in local.state.metadata.global_topology_identity : {
+      for c_name, identity in components : identity.cluster_name => {
+        identity = identity
+        network  = local.state.metadata.global_topology_network[s_name][c_name]
+      }
+    }
+  ]...)
 
-  svc_name         = local.svc_config.network.segment_key
-  svc_fqdn         = local.state.metadata.global_domain_suffix
-  svc_network_map  = local.state.metadata.global_network_map
-  svc_identity     = local.state.metadata.global_identity_map[local.svc_name]
-  svc_cluster_name = local.svc_identity.cluster_name
-  svc_node_prefix  = local.svc_identity.node_name_prefix
+  # Projection for module compatibility (SSoT Network Map)
+  network_map = { for k, v in local.segments_map : k => v.network }
+
+  # Target the Central LB using the unified SSoT key
+  svc_cluster_name = var.target_cluster_name
+  svc_context      = local.segments_map[local.svc_cluster_name]
+
+  svc_identity    = local.svc_context.identity
+  svc_network     = local.svc_context.network
+  svc_fqdn        = local.state.metadata.global_domain_suffix
+  svc_node_prefix = local.svc_identity.node_name_prefix
 }
 
 # 2. Network Context (delegated to `05-foundation-network`)
 locals {
-  # Deterministic Ordering
+  # Deterministic Ordering for node naming
   net_sorted_node_keys = sort(keys(var.node_config))
 
   net_node_naming_map = {
@@ -34,25 +43,25 @@ locals {
     key => "${local.svc_node_prefix}-${format("%02d", idx)}"
   }
 
-  # Delegated from `05-foundation-network`
+  # Handover from `05-foundation-network`
   net_infrastructure = local.state.network.infrastructure_map
   net_lb_config      = local.state.network.central_lb_info
-  net_access_scope   = local.net_lb_config.hostonly.cidr
-  net_my_segment     = local.svc_network_map[local.svc_name]
+
+  # CIDR scopes and specific segment data
+  net_access_scope = local.net_lb_config.hostonly.cidr
 }
 
 locals {
-  # Service Segments: augment from `05-foundation-network` with node_ips computed here (depends on `var.node_config`)
-  # Services tagged "self-managed-lb" run their own HA stack (e.g. Kubeadm Stacked Control Plane)
-  # and must NOT appear here, as they own their VIP independently.
+  # Service Segments: augment from Layer 05 with local node_ips (depends on `var.node_config`)
   net_service_segments = [
     for seg in local.state.network.service_segments : merge(seg, {
       node_ips = {
         for node_name, node_spec in var.node_config : local.net_node_naming_map[node_name] =>
-        cidrhost(local.svc_network_map[seg.name].cidr_block, node_spec.ip_suffix)
+        cidrhost(seg.cidr, node_spec.ip_suffix)
       }
     })
-    if !contains(seg.tags, "self-managed-lb")
+    # Filter: Skip the CLB itself and services with self-managed load balancing (e.g. Kubeadm VIPs)
+    if seg.name != local.svc_cluster_name && !contains(seg.tags, "self-managed-lb")
   ]
 }
 
@@ -60,6 +69,7 @@ locals {
 locals {
   pki_global_ca = local.state.metadata.global_vault_pki
 
+  # System Level Credentials (OS/SSH)
   sec_vm_creds = {
     username             = data.vault_generic_secret.iac_vars.data["vm_username"]
     password             = data.vault_generic_secret.iac_vars.data["vm_password"]
@@ -83,9 +93,8 @@ locals {
   }
 }
 
-# metadata Component Construction
+# 4. Topology Construction
 locals {
-  # Payload Construction
   storage_pool_name = local.svc_identity.storage_pool_name
 
   topology_nodes = {
