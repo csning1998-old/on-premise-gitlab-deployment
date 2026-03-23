@@ -55,7 +55,6 @@ locals {
 
 # 3. Security & Credentials Context (sec_ / pki_)
 locals {
-  pki_global_ca  = local.state.metadata.global_vault_pki # PKI Artifacts
   sys_vault_addr = "https://${local.state.vault_sys.service_vip}:443"
 
   # System Level Credentials (OS/SSH)
@@ -115,10 +114,5 @@ locals {
     redis_requirepass       = local.sec_app_creds.requirepass
     redis_vrrp_secret       = local.sec_app_creds.vrrp_secret
     vault_agent_common_name = local.sec_vault_agent_identity.common_name
-    vault_addr              = local.sys_vault_addr
-    vault_ca_cert_b64       = local.sec_vault_agent_identity.ca_cert_b64
-    vault_agent_role_id     = local.sec_vault_agent_identity.role_id
-    vault_agent_secret_id   = vault_approle_auth_backend_role_secret_id.redis_agent.secret_id
-    vault_role_name         = local.sec_vault_agent_identity.role_name
   }
 }

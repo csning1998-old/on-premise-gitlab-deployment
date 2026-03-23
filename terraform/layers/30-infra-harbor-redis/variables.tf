@@ -21,7 +21,6 @@ variable "service_config" {
     role            = string
     network_tier    = string
     base_image_path = string
-
     nodes = map(object({
       ip_suffix            = number
       vcpu                 = number

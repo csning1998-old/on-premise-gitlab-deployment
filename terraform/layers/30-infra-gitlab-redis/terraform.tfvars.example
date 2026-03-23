@@ -1,7 +1,11 @@
 
-service_catalog_name = "gitlab"
+primary_role = "redis"
 
-gitlab_redis_config = {
+target_clusters = {
+  "redis" = "core-gitlab-redis"
+}
+
+service_config = {
   "redis" = {
     role            = "redis"
     network_tier    = "redis"

@@ -1,7 +1,11 @@
 
-service_catalog_name = "harbor"
+primary_role = "redis"
 
-harbor_redis_config = {
+target_clusters = {
+  redis = "core-harbor-redis"
+}
+
+service_config = {
   "redis" = {
     role            = "redis"
     network_tier    = "redis"
