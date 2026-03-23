@@ -1,4 +1,14 @@
 
+variable "target_clusters" {
+  description = "Mapping of logical component roles to physical SSoT cluster names."
+  type        = map(string)
+}
+
+variable "primary_role" {
+  description = "The logical role designated as the primary service entrypoint."
+  type        = string
+}
+
 variable "service_catalog_name" {
   description = "The name of the service mapped in the Layer 00 Single Source of Truth"
   type        = string
@@ -11,7 +21,7 @@ variable "vault_dev_addr" {
   default     = "https://127.0.0.1:8200"
 }
 
-variable "harbor_minio_config" {
+variable "service_config" {
   description = "Compute configuration for Harbor MinIO service"
   type = map(object({
     role            = string
@@ -32,13 +42,4 @@ variable "ansible_files" {
     playbook_file           = string
     inventory_template_file = string
   })
-}
-
-variable "harbor_minio_tenants" {
-  description = "Map of buckets and users to create for Harbor"
-  type = map(object({
-    user_name      = string
-    enable_version = bool
-    policy_rw      = bool
-  }))
 }
