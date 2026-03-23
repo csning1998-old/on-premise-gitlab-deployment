@@ -40,7 +40,7 @@
         path: "{{ harbor_data_dir }}"
         src: /dev/vdb
         fstype: ext4
-        opts: defaults
+        opts: defaults,noatime,nodiratime
         state: mounted
 
 - name: "Section A: Configure Vault Agent for PKI Rotation"
