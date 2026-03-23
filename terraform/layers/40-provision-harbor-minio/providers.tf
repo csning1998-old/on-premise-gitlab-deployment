@@ -1,17 +1,15 @@
-
 terraform {
   required_providers {
     vault = {
       source  = "hashicorp/vault"
       version = "5.5.0"
     }
-    harbor = {
-      source  = "goharbor/harbor"
-      version = "3.10.1"
+    minio = {
+      source  = "aminueza/minio"
+      version = "3.12.0"
     }
   }
 }
-
 
 # Bootstrap Provider (Podman Vault)
 provider "vault" {
@@ -28,8 +26,10 @@ provider "vault" {
   ca_cert_file = local.state.vault_pki.bootstrap_ca.path
 }
 
-provider "harbor" {
-  url      = "https://${data.terraform_remote_state.harbor_bootstrapper.outputs.service_vip}"
-  username = "admin"
-  password = data.vault_generic_secret.harbor_bootstrapper.data["harbor_bootstrapper_admin_password"]
+provider "minio" {
+  minio_server   = "${data.terraform_remote_state.minio_infra.outputs.service_vip}:${data.terraform_remote_state.minio_infra.outputs.minio_api_port}"
+  minio_user     = data.vault_generic_secret.db_vars.data["minio_root_user"]
+  minio_password = data.vault_generic_secret.db_vars.data["minio_root_password"]
+  minio_ssl      = true
+  minio_insecure = true
 }

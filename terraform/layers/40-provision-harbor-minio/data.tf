@@ -13,10 +13,10 @@ data "terraform_remote_state" "vault_pki" {
   }
 }
 
-data "terraform_remote_state" "harbor_bootstrapper" {
+data "terraform_remote_state" "minio_infra" {
   backend = "local"
   config = {
-    path = "${path.root}/../30-infra-harbor-bootstrapper/terraform.tfstate"
+    path = "${path.module}/../30-infra-harbor-minio/terraform.tfstate"
   }
 }
 
@@ -25,7 +25,7 @@ data "vault_generic_secret" "prod_credential" {
   path     = "secret/on-premise-gitlab-deployment/infrastructure"
 }
 
-data "vault_generic_secret" "harbor_bootstrapper" {
+data "vault_generic_secret" "db_vars" {
   provider = vault.production
-  path     = "secret/on-premise-gitlab-deployment/harbor-bootstrapper/app"
+  path     = "secret/on-premise-gitlab-deployment/harbor/databases"
 }
