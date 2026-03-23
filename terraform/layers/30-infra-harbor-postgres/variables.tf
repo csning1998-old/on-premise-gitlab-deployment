@@ -4,6 +4,11 @@ variable "target_clusters" {
   type        = map(string)
 }
 
+variable "primary_role" {
+  description = "The logical role designated as the primary service entrypoint."
+  type        = string
+}
+
 variable "vault_dev_addr" {
   description = "The address of the Vault server"
   type        = string

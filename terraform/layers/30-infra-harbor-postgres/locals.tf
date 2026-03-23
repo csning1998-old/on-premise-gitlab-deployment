@@ -30,8 +30,8 @@ locals {
     for role, cluster_name in var.target_clusters : role => local.segments_map[cluster_name]
   }
 
-  # Primary component definitions (using "db" as primary for postgres layer)
-  primary_role    = "db"
+  # Primary component definitions
+  primary_role    = var.primary_role
   primary_context = local.components_context[local.primary_role]
 
   svc_identity = local.primary_context.identity
