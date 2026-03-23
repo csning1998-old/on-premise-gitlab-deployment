@@ -1,6 +1,11 @@
 
-variable "service_catalog_name" {
-  description = "The unique service name defined in Layer 00 (e.g. 'vault'). Used to lookup SSoT properties."
+variable "target_clusters" {
+  description = "Map of role to physical cluster names."
+  type        = map(string)
+}
+
+variable "primary_role" {
+  description = "The primary role for this layer (e.g. 'postgres')."
   type        = string
 }
 
@@ -10,13 +15,12 @@ variable "vault_dev_addr" {
   default     = "https://127.0.0.1:8200"
 }
 
-variable "gitlab_postgres_config" {
-  description = "Compute topology for Gitlab Postgres service"
+variable "service_config" {
+  description = "Compute topology for Postgres service"
   type = map(object({
     role            = string
     network_tier    = string
     base_image_path = string
-
     nodes = map(object({
       ip_suffix            = number
       vcpu                 = number
@@ -27,7 +31,7 @@ variable "gitlab_postgres_config" {
 }
 
 variable "ansible_files" {
-  description = "Meta configuration of Ansible inventory for Vault Core service."
+  description = "Meta configuration of Ansible inventory for Postgres service."
   type = object({
     playbook_file           = string
     inventory_template_file = string

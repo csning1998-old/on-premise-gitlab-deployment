@@ -2,11 +2,11 @@
 # State Object
 locals {
   state = {
-    metadata  = data.terraform_remote_state.metadata.outputs
-    volume    = data.terraform_remote_state.volume.outputs
-    network   = data.terraform_remote_state.network.outputs # Handover through Layer 10
-    vault_pki = data.terraform_remote_state.vault_pki.outputs
+    metadata  = data.terraform_remote_state.metadata.outputs # Source from `00-foundation-metadata`
+    volume    = data.terraform_remote_state.volume.outputs   # Source from `05-foundation-volume`
+    network   = data.terraform_remote_state.network.outputs  # Source from `10-shared-load-balancer`
     vault_sys = data.terraform_remote_state.vault_sys.outputs
+    vault_pki = data.terraform_remote_state.vault_pki.outputs
   }
 }
 
@@ -55,7 +55,6 @@ locals {
 
 # 3. Security & Credentials Context (sec_ / pki_)
 locals {
-  pki_global_ca  = local.state.metadata.global_vault_pki # PKI Artifacts
   sys_vault_addr = "https://${local.state.vault_sys.service_vip}:443"
 
   # System Level Credentials (OS/SSH)
