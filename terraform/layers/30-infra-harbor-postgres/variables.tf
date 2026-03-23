@@ -1,7 +1,7 @@
 
-variable "service_catalog_name" {
-  description = "The unique service name defined in Layer 00 (e.g. 'harbor'). Used to lookup SSoT properties."
-  type        = string
+variable "target_clusters" {
+  description = "Mapping of logical component roles to physical SSoT cluster names."
+  type        = map(string)
 }
 
 variable "vault_dev_addr" {
@@ -10,8 +10,8 @@ variable "vault_dev_addr" {
   default     = "https://127.0.0.1:8200"
 }
 
-variable "harbor_postgres_config" {
-  description = "Compute topology for Harbor Postgres service"
+variable "service_config" {
+  description = "Compute topology for service components (e.g. Postgres and Etcd)."
   type = map(object({
     role            = string
     network_tier    = string
@@ -27,7 +27,7 @@ variable "harbor_postgres_config" {
 }
 
 variable "ansible_files" {
-  description = "Meta configuration of Ansible inventory for Vault Core service."
+  description = "Meta configuration of Ansible inventory for the cluster service."
   type = object({
     playbook_file           = string
     inventory_template_file = string
