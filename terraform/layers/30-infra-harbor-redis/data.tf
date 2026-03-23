@@ -13,7 +13,7 @@ data "terraform_remote_state" "volume" {
   }
 }
 
-data "terraform_remote_state" "load_balancer" {
+data "terraform_remote_state" "network" {
   backend = "local"
   config = {
     path = "${path.root}/../10-shared-load-balancer/terraform.tfstate"
@@ -46,5 +46,5 @@ data "vault_generic_secret" "iac_vars" {
 
 data "vault_generic_secret" "db_vars" {
   provider = vault.production
-  path     = "secret/on-premise-gitlab-deployment/gitlab/databases"
+  path     = "secret/on-premise-gitlab-deployment/harbor/databases"
 }

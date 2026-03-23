@@ -1,6 +1,11 @@
 
-variable "service_catalog_name" {
-  description = "The unique service name defined in Layer 00 (e.g. 'harbor'). Used to lookup SSoT properties."
+variable "target_clusters" {
+  description = "Mapping of logical component roles to physical SSoT cluster names."
+  type        = map(string)
+}
+
+variable "primary_role" {
+  description = "The logical role designated as the primary service entrypoint."
   type        = string
 }
 
@@ -10,8 +15,8 @@ variable "vault_dev_addr" {
   default     = "https://127.0.0.1:8200"
 }
 
-variable "harbor_redis_config" {
-  description = "Compute topology for Harbor Redis service."
+variable "service_config" {
+  description = "Compute topology for service components (e.g. Redis cache)."
   type = map(object({
     role            = string
     network_tier    = string
@@ -27,7 +32,7 @@ variable "harbor_redis_config" {
 }
 
 variable "ansible_files" {
-  description = "Meta configuration of Ansible inventory for Harbor Redis service."
+  description = "Meta configuration of Ansible inventory for the cluster service."
   type = object({
     playbook_file           = string
     inventory_template_file = string
