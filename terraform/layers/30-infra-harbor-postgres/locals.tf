@@ -48,6 +48,9 @@ locals {
   network_infrastructure_map = {
     for role, ctx in local.components_context : var.service_config[role].network_tier => local.state.network.infrastructure_map[ctx.identity.cluster_name]
   }
+
+  # Helper for primary network configuration to reduce path redundancy
+  p_net_config = local.network_infrastructure_map[var.service_config[local.primary_role].network_tier]
 }
 
 # 3. Security & Credentials Context (sec_ / pki_)
@@ -71,12 +74,12 @@ locals {
   }
 
   # Component Specific Vault Identities
-  sec_vault_identity_key = local.svc_pki_role.key
+  sec_vault_role_key = local.svc_pki_role.key
   sec_vault_agent_identity = {
     ca_cert_b64   = local.state.vault_sys.security_pki_bundle.ca_cert
     common_name   = local.svc_fqdn
-    role_id       = local.state.vault_pki.workload_identities_components[local.sec_vault_identity_key].role_id
-    role_name     = local.state.vault_pki.pki_configuration.component_roles[local.sec_vault_identity_key].name
+    role_id       = local.state.vault_pki.workload_identities_components[local.sec_vault_role_key].role_id
+    role_name     = local.state.vault_pki.pki_configuration.component_roles[local.sec_vault_role_key].name
     secret_id     = vault_approle_auth_backend_role_secret_id.postgres_agent.secret_id
     vault_address = local.sys_vault_addr
   }
@@ -100,10 +103,10 @@ locals {
 # 5. Ansible Configuration (Dynamic Inventory)
 locals {
   ansible_template_vars = {
-    access_scope = local.network_infrastructure_map[var.service_config[local.primary_role].network_tier].network.hostonly.cidr
-    nat_prefix   = join(".", slice(split(".", local.network_infrastructure_map[var.service_config[local.primary_role].network_tier].network.nat.gateway), 0, 3))
-    postgres_vip = local.network_infrastructure_map[var.service_config[local.primary_role].network_tier].lb_config.vip
+    access_scope = local.p_net_config.network.hostonly.cidr
+    postgres_vip = local.p_net_config.lb_config.vip
     vault_vip    = local.state.vault_sys.service_vip
+    nat_prefix   = join(".", slice(split(".", local.p_net_config.network.nat.gateway), 0, 3))
   }
 
   ansible_extra_vars = {
