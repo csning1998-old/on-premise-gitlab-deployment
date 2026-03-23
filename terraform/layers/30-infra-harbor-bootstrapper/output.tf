@@ -20,3 +20,8 @@ output "topology_node" {
   description = "The actual provisioned configuration for Bootstrap Harbor node."
   value       = module.bootstrap_harbor.cluster_nodes
 }
+
+output "pki_key" {
+  description = "The physical SSoT PKI key associated with the Harbor Bootstrapper service."
+  value       = local.svc_context.pki_key
+}
