@@ -106,7 +106,7 @@ resource "libvirt_cloudinit_disk" "cloud_init" {
       nat_gateway = var.lb_cluster_network_config.network.nat.ips.address
 
       hostonly_mac     = each.value.interfaces[1].mac
-      hostonly_ip_cidr = try(each.value.interfaces[1].addresses[0], "")
+      hostonly_ip_cidr = each.value.interfaces[1].addresses[0]
       hostonly_gateway = var.lb_cluster_network_config.network.hostonly.ips.address
 
       service_interfaces = [
@@ -114,7 +114,7 @@ resource "libvirt_cloudinit_disk" "cloud_init" {
           index       = idx
           os_dev_name = "ens${5 + idx}" # ens3=NAT, ens4=HostOnly, Service start from ens5
           mac_address = iface.mac
-          ip_cidr     = try(iface.addresses[0], "")
+          ip_cidr     = iface.addresses[0]
           alias       = iface.alias
         }
       ]
