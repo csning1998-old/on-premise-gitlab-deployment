@@ -18,8 +18,9 @@ variable "vm_config" {
       network_tier         = string
 
       attached_volumes = optional(list(object({
-        pool   = string
-        volume = string
+        pool        = string
+        volume      = string
+        device_name = optional(string)
       })), [])
     }))
   })

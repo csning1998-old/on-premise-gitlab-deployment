@@ -168,11 +168,10 @@ resource "libvirt_domain" "nodes" {
       }],
 
       # 2. Attached Data Volumes (vdb, vdc...)
-      [for idx, vol in each.value.attached_volumes : {
+      [for vol in each.value.attached_volumes : {
         device = "disk"
         target = {
-          # idx=0 -> vdb, idx=1 -> vdc
-          dev = "vd${substr("bcdefghijklmnopqrstuvwxyz", idx, 1)}"
+          dev = trimprefix(vol.device_name, "/dev/")
           bus = "virtio"
         }
         source = {
