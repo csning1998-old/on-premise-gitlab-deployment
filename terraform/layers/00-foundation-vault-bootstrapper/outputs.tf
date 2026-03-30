@@ -19,3 +19,8 @@ output "secret_id" {
   value       = vault_approle_auth_backend_role_secret_id.terraform_admin.secret_id
   sensitive   = true
 }
+
+output "vault_addr" {
+  description = "The address of the Vault server"
+  value       = var.vault_dev_addr
+}

@@ -3,8 +3,24 @@
 resource "vault_policy" "terraform_admin" {
   name   = "terraform-admin-policy"
   policy = <<EOT
-path "*" {
-  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+# [1] Data Operations: Includes read, create, update, and soft delete of the latest version
+path "secret/data/on-premise-gitlab-deployment/*" {
+  capabilities = ["read", "create", "update", "delete"]
+}
+
+# [2] Metadata Operations: Required for Terraform to read and purge metadata during plan and destroy
+path "secret/metadata/on-premise-gitlab-deployment/*" {
+  capabilities = ["read", "list", "delete"]
+}
+
+# [3] Version Deletion: Allows Terraform to mark specific old versions as deleted
+path "secret/delete/on-premise-gitlab-deployment/*" {
+  capabilities = ["update"]
+}
+
+# [4] Permanent Destruction: Allows Terraform to perform forced physical removal (Destroy)
+path "secret/destroy/on-premise-gitlab-deployment/*" {
+  capabilities = ["update"]
 }
 EOT
 }
@@ -26,4 +42,13 @@ resource "vault_approle_auth_backend_role" "terraform_admin" {
 resource "vault_approle_auth_backend_role_secret_id" "terraform_admin" {
   backend   = vault_auth_backend.approle.path
   role_name = vault_approle_auth_backend_role.terraform_admin.role_name
+}
+
+resource "vault_kv_secret_v2" "terraform_admin_auth" {
+  mount = "secret"
+  name  = "on-premise-gitlab-deployment/credentials"
+  data_json = jsonencode({
+    role_id   = vault_approle_auth_backend_role.terraform_admin.role_id
+    secret_id = vault_approle_auth_backend_role_secret_id.terraform_admin.secret_id
+  })
 }

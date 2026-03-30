@@ -36,9 +36,6 @@
         url: "{{ dev_vault_url }}"
         engine_mount_point: "secret"
         path: "{{ dev_vault_api_path }}"
-        auth_method: "approle"
-        role_id: "{{ vault_approle_role_id }}"
-        secret_id: "{{ vault_approle_secret_id }}"
         validate_certs: false
       register: unseal_secrets
       delegate_to: localhost
