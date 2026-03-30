@@ -6,7 +6,6 @@ resource "vault_policy" "this" {
     path = merge(
       {
         "${var.pki_mount_path}/issue/${var.vault_role_name}" = { capabilities = ["create", "update"] }
-        "auth/token/renew-self"                              = { capabilities = ["update"] }
       },
       var.extra_policy_hcl
     )
