@@ -2,9 +2,10 @@
 # State Object
 locals {
   state = {
-    metadata = data.terraform_remote_state.metadata.outputs
-    volume   = data.terraform_remote_state.volume.outputs
-    network  = data.terraform_remote_state.network.outputs # Handover through Layer 10
+    metadata           = data.terraform_remote_state.metadata.outputs
+    vault_bootstrapper = data.terraform_remote_state.vault_bootstrapper.outputs
+    volume             = data.terraform_remote_state.volume.outputs
+    network            = data.terraform_remote_state.network.outputs # Handover through Layer 10
   }
 }
 
@@ -84,6 +85,11 @@ locals {
   ansible_extra_vars = merge(
     {
       ansible_user = local.sec_vm_creds.username
+      # Vault AppRole for Ansible (to sync secrets back to bootstrapper)
+      vault_approle_role_id   = local.state.vault_bootstrapper.role_id
+      vault_approle_secret_id = local.state.vault_bootstrapper.secret_id
+      dev_vault_url           = var.vault_dev_addr
+      dev_vault_api_path      = "secret/iac_vars/vault/${var.target_cluster_name}"
     },
     local.pki_global_ca != null && length(keys(local.pki_global_ca)) > 0 ? {
       vault_server_cert = local.pki_global_ca.server_cert

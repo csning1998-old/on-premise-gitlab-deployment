@@ -16,5 +16,12 @@ terraform {
 provider "vault" {
   address      = var.vault_dev_addr
   ca_cert_file = abspath("${path.root}/../../../vault/tls/ca.pem")
-}
 
+  auth_login {
+    path = "auth/approle/login"
+    parameters = {
+      role_id   = local.state.vault_bootstrapper.role_id
+      secret_id = local.state.vault_bootstrapper.secret_id
+    }
+  }
+}

@@ -20,7 +20,7 @@
       register: vault_init_check
       until:
         - vault_init_check.rc == 2
-        - (vault_init_check.stdout | from_json).initialized == true
+        - (vault_init_check.stdout | from_json).initialized
       retries: "{{ vault_unseal_retries }}"
       delay: "{{ vault_unseal_delay_seconds }}"
       changed_when: false
@@ -28,7 +28,7 @@
       when:
         - inventory_hostname in groups['vault_follower']
         - vault_status_check.rc == 2
-        - (vault_status_check.stdout | from_json).initialized == false
+        - not (vault_status_check.stdout | from_json).initialized
       no_log: true
 
     - name: "F3. Fetch Unseal Keys from Bootstrap Vault"
@@ -36,20 +36,22 @@
         url: "{{ dev_vault_url }}"
         engine_mount_point: "secret"
         path: "{{ dev_vault_api_path }}"
-        token: "{{ lookup('file', dev_root_token_path) }}"
+        auth_method: "approle"
+        role_id: "{{ vault_approle_role_id }}"
+        secret_id: "{{ vault_approle_secret_id }}"
         validate_certs: false
-      register: bootstrap_secrets
+      register: unseal_secrets
       delegate_to: localhost
       become: false
       when:
         - (vault_init_check.changed is defined and vault_init_check.rc is defined and vault_init_check.rc == 2) or
-          (vault_status_check.rc == 2 and (vault_status_check.stdout | from_json).sealed == true)
+          (vault_status_check.rc == 2 and (vault_status_check.stdout | from_json).sealed)
       no_log: true
 
     - name: "F4. Parse Unseal Keys"
       ansible.builtin.set_fact:
-        vault_unseal_keys: "{{ bootstrap_secrets.secret.prod_vault_unseal_keys }}"
-      when: bootstrap_secrets is not skipped
+        vault_unseal_keys: "{{ unseal_secrets.secret.prod_vault_unseal_keys }}"
+      when: unseal_secrets is not skipped
 
     - name: "F5 Execute Unseal"
       ansible.builtin.command: "vault operator unseal {{ vault_unseal_keys[0] }}"
