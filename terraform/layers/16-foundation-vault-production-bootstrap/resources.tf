@@ -5,38 +5,9 @@ resource "vault_policy" "production_admin" {
   provider = vault.production
   name     = "production-terraform-admin-policy"
 
-  policy = <<EOT
-# [1] KV v2 業務機密：精確鎖定於特定專案路徑，並補齊完整生命週期 API
-path "secret/data/on-premise-gitlab-deployment/*" {
-  capabilities = ["create", "read", "update", "delete"]
-}
-
-path "secret/metadata/on-premise-gitlab-deployment/*" {
-  capabilities = ["read", "list", "delete"]
-}
-
-path "secret/delete/on-premise-gitlab-deployment/*" {
-  capabilities = ["update"]
-}
-
-path "secret/destroy/on-premise-gitlab-deployment/*" {
-  capabilities = ["update"]
-}
-
-# [2] PKI 基礎設施：撤銷全域萬用字元，僅允許針對特定 Role 簽發憑證
-path "pki/issue/gitlab-service-role" {
-  capabilities = ["create", "update"]
-}
-
-path "pki/cert/*" {
-  capabilities = ["read"]
-}
-
-# [3] AppRole 驗證：嚴格禁止修改機制，僅允許讀取專屬的 Role ID
-path "auth/approle/role/gitlab-deployment-role/role-id" {
-  capabilities = ["read"]
-}
-EOT
+  policy = jsonencode({
+    path = local.admin_policy_rules
+  })
 }
 
 # 2. Enable AppRole auth backend on production cluster
