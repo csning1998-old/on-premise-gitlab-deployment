@@ -6,6 +6,13 @@ data "terraform_remote_state" "metadata" {
   }
 }
 
+data "terraform_remote_state" "vault_bootstrapper" {
+  backend = "local"
+  config = {
+    path = "${path.root}/../00-foundation-vault-bootstrapper/terraform.tfstate"
+  }
+}
+
 data "terraform_remote_state" "network" {
   backend = "local"
   config = {
