@@ -54,12 +54,12 @@ resource "vault_generic_secret" "gitlab_db_keys" {
     database = postgresql_database.gitlabhq_production.name
     host     = local.postgres_vip
     port     = local.postgres_rw_port
-    
+
     # TLS Context for the application
     tls = {
-      crt = vault_pki_secret_backend_cert.gitlab_db_client.certificate
-      key = vault_pki_secret_backend_cert.gitlab_db_client.private_key
-      ca  = vault_pki_secret_backend_cert.gitlab_db_client.ca_chain
+      crt = base64encode(vault_pki_secret_backend_cert.gitlab_db_client.certificate)
+      key = base64encode(vault_pki_secret_backend_cert.gitlab_db_client.private_key)
+      ca  = base64encode(vault_pki_secret_backend_cert.gitlab_db_client.ca_chain)
     }
   })
 }
