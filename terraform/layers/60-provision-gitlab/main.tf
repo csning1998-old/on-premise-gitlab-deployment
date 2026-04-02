@@ -53,7 +53,7 @@ module "gitlab_core" {
     redis = {
       host     = local.redis_vip
       port     = local.redis_port
-      password = local.redis_password
+      password = data.vault_kv_secret_v2.gitlab_redis.data["password"]
       scheme   = "rediss"
     }
 
@@ -67,8 +67,8 @@ module "gitlab_core" {
       buckets = {
         for func_key, bucket_name in local.minio_function_map : func_key => {
           name       = bucket_name
-          access_key = data.vault_generic_secret.s3_credentials[func_key].data["access_key"]
-          secret_key = data.vault_generic_secret.s3_credentials[func_key].data["secret_key"]
+          access_key = data.vault_kv_secret_v2.gitlab_s3[func_key].data["access_key"]
+          secret_key = data.vault_kv_secret_v2.gitlab_s3[func_key].data["secret_key"]
         }
       }
     }
