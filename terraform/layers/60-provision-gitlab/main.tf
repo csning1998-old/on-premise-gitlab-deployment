@@ -75,22 +75,23 @@ module "gitlab_core" {
   }
 
   # Internal Secrets of Rails, Gitaly, etc.
+  # Values are sourced from Vault; written by layer 40 to survive layer 60 rebuilds.
   gitlab_secrets = {
     "rails-secret" = {
       key   = "secret"
-      value = random_password.gitlab_internal["rails-secret"].result
+      value = data.vault_kv_secret_v2.gitlab_internal.data["rails_secret_key"]
     }
     "shell-secret" = {
       key   = "secret"
-      value = random_password.gitlab_internal["shell-secret"].result
+      value = data.vault_kv_secret_v2.gitlab_internal.data["gitlab_shell_secret"]
     }
     "gitaly-secret" = {
       key   = "token"
-      value = random_password.gitlab_internal["gitaly-secret"].result
+      value = data.vault_kv_secret_v2.gitlab_internal.data["gitaly_token"]
     }
     "root-password" = {
       key   = "secret"
-      value = random_password.gitlab_internal["root-password"].result
+      value = data.vault_kv_secret_v2.gitlab_internal.data["root_password"]
     }
   }
 
