@@ -105,6 +105,12 @@ data "vault_generic_secret" "s3_credentials" {
   path     = "secret/on-premise-gitlab-deployment/gitlab/s3_credentials/${each.value}"
 }
 
+# GitLab DB Credentials from Layer 40
+data "vault_generic_secret" "gitlab_db_keys" {
+  provider = vault.production
+  path     = "secret/on-premise-gitlab-deployment/gitlab/app/database"
+}
+
 
 # Fetch the Cluster CA
 data "kubernetes_config_map" "kube_root_ca" {
