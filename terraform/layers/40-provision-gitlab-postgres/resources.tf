@@ -1,6 +1,10 @@
 
 # PKI Client Certificate for Postgres Provisioning & Application Access
+# TODO: This certificate uses the 'gitlab-frontend' role identity.
+#       When PostgreSQL RBAC is hardened with cert-based auth (i.e., pg_hba.conf clientcert=verify-full),
+#       a dedicated 'gitlab-provisioner' PKI role should be created and used here instead.
 resource "vault_pki_secret_backend_cert" "gitlab_db_client" {
+
   provider = vault.production
   backend  = local.state.vault_pki.pki_configuration.path
   name     = local.state.vault_pki.pki_configuration.component_roles["gitlab-frontend"].name
