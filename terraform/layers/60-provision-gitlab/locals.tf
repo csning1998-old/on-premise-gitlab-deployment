@@ -51,6 +51,11 @@ locals {
   harbor_quay_proxy   = local.state.harbor_bootstrapper.proxy_caches.quay_io.project_name
   harbor_k8s_proxy    = local.state.harbor_bootstrapper.proxy_caches.k8s_io.project_name
   harbor_docker_proxy = local.state.harbor_bootstrapper.proxy_caches.docker_hub.project_name
+  harbor_gitlab_proxy = local.state.harbor_bootstrapper.proxy_caches.gitlab_com.project_name
+
+  # GitLab CNG image registry and repository routed through Harbor Bootstrapper proxy
+  gitlab_image_registry   = local.fqdn_harbor_bootstrapper
+  gitlab_image_repository = "${local.harbor_gitlab_proxy}/gitlab-org/build/cng"
 
   # K8s API Endpoint for Vault Callback (Standardized)
   api_port     = local.state.metadata.global_topology_network["gitlab"]["frontend"].ports["api-server"].frontend_port

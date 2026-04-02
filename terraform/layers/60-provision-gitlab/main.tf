@@ -7,7 +7,8 @@ resource "kubernetes_namespace" "gitlab_ns" {
 }
 
 module "gitlab_core" {
-  source = "../../modules/kubernetes-addons/helm-chart-gitlab"
+  source     = "../../modules/kubernetes-addons/helm-chart-gitlab"
+  depends_on = [kubernetes_secret.gitlab_postgres_tls]
 
   # Helm Deployment Configuration
   helm_config = {
@@ -32,6 +33,11 @@ module "gitlab_core" {
   }
 
   certificate_config = var.certificate_config
+
+  image_registry = {
+    registry   = local.gitlab_image_registry
+    repository = local.gitlab_image_repository
+  }
 
   # External Services Connection
   external_services = {
@@ -92,8 +98,4 @@ module "gitlab_core" {
   }
 
   ca_bundle = local.ca_bundle_config
-
-  depends_on = [
-    kubernetes_secret.gitlab_postgres_tls,
-  ]
 }

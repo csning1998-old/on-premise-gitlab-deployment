@@ -82,3 +82,12 @@ variable "ca_bundle" {
     secret_name = string
   })
 }
+
+variable "image_registry" {
+  description = "Optional override for the container image repository. When set, all GitLab component images are redirected through the specified registry and repository prefix (e.g. Harbor proxy)."
+  type = object({
+    registry   = string
+    repository = string
+  })
+  default = null
+}
