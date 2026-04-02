@@ -33,9 +33,9 @@ provider "vault" {
 }
 
 provider "minio" {
-  minio_server   = "${data.terraform_remote_state.minio_infra.outputs.service_vip}:${data.terraform_remote_state.minio_infra.outputs.minio_api_port}"
-  minio_user     = data.vault_generic_secret.db_vars.data["minio_root_user"]
-  minio_password = data.vault_generic_secret.db_vars.data["minio_root_password"]
+  minio_server   = "${data.terraform_remote_state.minio.outputs.service_vip}:${data.terraform_remote_state.minio.outputs.minio_api_port}"
+  minio_user     = data.vault_kv_secret_v2.db_vars.data["minio_root_user"]
+  minio_password = data.vault_kv_secret_v2.db_vars.data["minio_root_password"]
   minio_ssl      = true
   minio_insecure = true
 }

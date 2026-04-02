@@ -34,21 +34,29 @@ data "terraform_remote_state" "vault_pki" {
   }
 }
 
-data "terraform_remote_state" "minio_infra" {
+data "terraform_remote_state" "minio" {
   backend = "local"
   config = {
-    path = "${path.module}/../30-infra-gitlab-minio/terraform.tfstate"
+    path = "${path.root}/../30-infra-gitlab-minio/terraform.tfstate"
   }
 }
 
 data "terraform_remote_state" "postgres" {
   backend = "local"
   config = {
-    path = "../30-infra-gitlab-postgres/terraform.tfstate"
+    path = "${path.root}/../30-infra-gitlab-postgres/terraform.tfstate"
   }
 }
 
-data "vault_generic_secret" "db_vars" {
+data "terraform_remote_state" "redis" {
+  backend = "local"
+  config = {
+    path = "${path.root}/../30-infra-gitlab-redis/terraform.tfstate"
+  }
+}
+
+data "vault_kv_secret_v2" "db_vars" {
   provider = vault.production
-  path     = "secret/on-premise-gitlab-deployment/gitlab/databases"
+  mount    = "secret"
+  name     = "on-premise-gitlab-deployment/gitlab/databases"
 }

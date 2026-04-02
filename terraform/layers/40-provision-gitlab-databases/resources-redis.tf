@@ -8,11 +8,12 @@ resource "random_password" "gitlab_redis" {
   special = false
 }
 
-resource "vault_generic_secret" "gitlab_redis_keys" {
+resource "vault_kv_secret_v2" "gitlab_redis_keys" {
   provider = vault.production
-  path     = "secret/on-premise-gitlab-deployment/gitlab/app/redis"
+  mount    = "secret"
+  name     = "on-premise-gitlab-deployment/gitlab/app/redis"
 
   data_json = jsonencode({
-    password = random_password.gitlab_redis.result
+    password = data.vault_kv_secret_v2.db_vars.data["redis_requirepass"]
   })
 }

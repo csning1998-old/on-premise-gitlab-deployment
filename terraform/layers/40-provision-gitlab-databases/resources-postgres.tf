@@ -48,9 +48,10 @@ resource "postgresql_extension" "btree_gist" {
 }
 
 # Write generated credentials and TLS context back to Vault
-resource "vault_generic_secret" "gitlab_db_keys" {
+resource "vault_kv_secret_v2" "gitlab_db_keys" {
   provider = vault.production
-  path     = "secret/on-premise-gitlab-deployment/gitlab/app/database"
+  mount    = "secret"
+  name     = "on-premise-gitlab-deployment/gitlab/app/database"
 
   data_json = jsonencode({
     username = postgresql_role.gitlab.name

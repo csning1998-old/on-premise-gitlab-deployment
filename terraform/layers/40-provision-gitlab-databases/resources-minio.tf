@@ -7,6 +7,6 @@ module "minio_gitlab_config" {
   }
 
   minio_tenants            = var.gitlab_minio_tenants
-  vault_secret_path_prefix = "secret/on-premise-gitlab-deployment/gitlab/app/s3_credentials"
-  minio_server_url         = "https://${data.terraform_remote_state.minio_infra.outputs.service_vip}:${data.terraform_remote_state.minio_infra.outputs.minio_api_port}"
+  vault_secret_path_prefix = "on-premise-gitlab-deployment/gitlab/app/s3_credentials"
+  minio_server_url         = "https://${data.terraform_remote_state.minio.outputs.service_vip}:${data.terraform_remote_state.minio.outputs.minio_api_port}"
 }
