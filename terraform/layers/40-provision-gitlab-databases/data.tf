@@ -1,4 +1,18 @@
 
+data "terraform_remote_state" "metadata" {
+  backend = "local"
+  config = {
+    path = "${path.root}/../00-foundation-metadata/terraform.tfstate"
+  }
+}
+
+data "terraform_remote_state" "network" {
+  backend = "local"
+  config = {
+    path = "${path.root}/../10-shared-load-balancer/terraform.tfstate"
+  }
+}
+
 data "terraform_remote_state" "vault_sys" {
   backend = "local"
   config = {
@@ -24,6 +38,13 @@ data "terraform_remote_state" "minio_infra" {
   backend = "local"
   config = {
     path = "${path.module}/../30-infra-gitlab-minio/terraform.tfstate"
+  }
+}
+
+data "terraform_remote_state" "postgres" {
+  backend = "local"
+  config = {
+    path = "../30-infra-gitlab-postgres/terraform.tfstate"
   }
 }
 
