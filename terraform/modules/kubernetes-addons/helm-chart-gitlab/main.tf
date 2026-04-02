@@ -239,7 +239,7 @@ resource "helm_release" "gitlab" {
         }
         migrations = {
           image = var.image_registry != null ? {
-            repository = "${var.image_registry.registry}/${var.image_registry.repository}/gitlab-migrations-${var.gitlab_config.edition}"
+            repository = "${var.image_registry.registry}/${var.image_registry.repository}/gitlab-toolbox-${var.gitlab_config.edition}"
           } : null
         }
         kas = {

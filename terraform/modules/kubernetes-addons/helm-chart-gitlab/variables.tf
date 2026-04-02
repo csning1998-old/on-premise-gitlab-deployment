@@ -39,7 +39,7 @@ variable "external_services" {
   type = object({
     postgres = object({
       host       = string
-      port       = string
+      port       = number
       password   = string
       username   = string
       database   = string
@@ -49,6 +49,7 @@ variable "external_services" {
       host     = string
       port     = string
       password = string
+      scheme   = string
     })
     minio = object({
       hostname   = optional(string)

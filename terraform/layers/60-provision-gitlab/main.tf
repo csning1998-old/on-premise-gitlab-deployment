@@ -42,24 +42,21 @@ module "gitlab_core" {
   # External Services Connection
   external_services = {
     postgres = {
-      host     = local.gitlab_db.host
-      port     = local.gitlab_db.port
-      password = local.gitlab_db.password
-      username = local.gitlab_db.username
-      database = local.gitlab_db.database
-
-      ssl = {
-        mode = "verify-ca"
-      }
-
+      host       = local.gitlab_db.host
+      port       = local.gitlab_db.port
+      password   = local.gitlab_db.password
+      username   = local.gitlab_db.username
+      database   = local.gitlab_db.database
       ssl_secret = kubernetes_secret.gitlab_postgres_tls.metadata[0].name
     }
+
     redis = {
       host     = local.redis_vip
       port     = local.redis_port
       password = local.redis_password
       scheme   = "rediss"
     }
+
     minio = {
       ip         = local.minio_vip
       hostname   = local.fqdn_minio
