@@ -1,5 +1,16 @@
 
-# Random password for GitLab
+# PKI Client Certificate for Postgres Provisioning & Application Access
+resource "vault_pki_secret_backend_cert" "gitlab_db_client" {
+  provider = vault.production
+  backend  = local.state.vault_pki.pki_configuration.path
+  name     = local.state.vault_pki.pki_configuration.component_roles["gitlab-frontend"].name
+
+  common_name = local.state.vault_pki.pki_configuration.component_roles["gitlab-frontend"].allowed_domains[0]
+
+  ttl = "2160h" # 90 Days
+}
+
+# Random password for GitLab application
 resource "random_password" "gitlab_db_password" {
   length  = 24
   special = false
@@ -21,7 +32,7 @@ resource "postgresql_database" "gitlabhq_production" {
   encoding = "UTF8"
 }
 
-# Enable necessary extensions (GitLab requirements) requires Superuser privileges, so the Provider must use postgres login
+# Enable necessary extensions
 resource "postgresql_extension" "pg_trgm" {
   name     = "pg_trgm"
   database = postgresql_database.gitlabhq_production.name
@@ -32,8 +43,7 @@ resource "postgresql_extension" "btree_gist" {
   database = postgresql_database.gitlabhq_production.name
 }
 
-# SoC: Write generated password back to Vault
-# Use subpath to avoid overwriting the manually created gitlab/app (which contains the root password)
+# Write generated credentials and TLS context back to Vault
 resource "vault_generic_secret" "gitlab_db_keys" {
   provider = vault.production
   path     = "secret/on-premise-gitlab-deployment/gitlab/app/database"
@@ -42,9 +52,14 @@ resource "vault_generic_secret" "gitlab_db_keys" {
     username = postgresql_role.gitlab.name
     password = postgresql_role.gitlab.password
     database = postgresql_database.gitlabhq_production.name
-    # Also record host
-    host = local.postgres_vip
-    port = local.postgres_rw_port
+    host     = local.postgres_vip
+    port     = local.postgres_rw_port
+    
+    # TLS Context for the application
+    tls = {
+      crt = vault_pki_secret_backend_cert.gitlab_db_client.certificate
+      key = vault_pki_secret_backend_cert.gitlab_db_client.private_key
+      ca  = vault_pki_secret_backend_cert.gitlab_db_client.ca_chain
+    }
   })
 }
-
